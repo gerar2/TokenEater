@@ -53,6 +53,11 @@ enum MenuBarRenderer {
         let nextPollSeconds: Int?
         let extraCreditsPct: Int
         let hasExtraCredits: Bool
+        // Multi-profile: the active profile's tag for the `profileLabel`
+        // segment. nil (single profile) draws nothing. Trailing `var`s with
+        // defaults keep the memberwise init source-compatible.
+        var profileLabel: String? = nil
+        var profileColorHex: String? = nil
     }
 
     private static var cachedImage: NSImage?

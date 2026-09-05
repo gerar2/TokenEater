@@ -62,6 +62,8 @@ struct PopoverErrorBanner: View {
                 } else {
                     expiredContent
                 }
+            case .reauthRequired:
+                expiredContent
             case .rateLimited:
                 rateLimitedContent
             case .networkError:

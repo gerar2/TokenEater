@@ -8,6 +8,11 @@ import Foundation
 enum WidgetReloader {
     static let usageKind = "TokenEaterWidget"
     static let pacingKind = "PacingWidget"
+    static let sessionRingKind = "SessionRingWidget"
+    static let pacingGraphKind = "PacingGraphWidget"
+    static let historySparklineKind = "HistorySparklineWidget"
+    static let extraCreditsKind = "ExtraCreditsWidget"
+    static let allKinds = [usageKind, pacingKind, sessionRingKind, pacingGraphKind, historySparklineKind, extraCreditsKind]
 
     private static var pending: DispatchWorkItem?
 
@@ -16,8 +21,9 @@ enum WidgetReloader {
     static func scheduleReload(delay: TimeInterval = 0.5) {
         pending?.cancel()
         let item = DispatchWorkItem {
-            WidgetCenter.shared.reloadTimelines(ofKind: usageKind)
-            WidgetCenter.shared.reloadTimelines(ofKind: pacingKind)
+            for kind in allKinds {
+                WidgetCenter.shared.reloadTimelines(ofKind: kind)
+            }
         }
         pending = item
         DispatchQueue.global(qos: .utility).asyncAfter(

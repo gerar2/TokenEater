@@ -906,3 +906,27 @@
 "notif.body.fable.red.fallback" = "Fable pool almost out";
 "notif.body.fable.green" = "Fable refilled at %@";
 "notif.body.fable.green.fallback" = "Fable refilled, you're back";
+
+/* === multi-profile: foundation === */
+"sidebar.accounts" = "Accounts";
+"sidebar.accounts.subtitle" = "Monitor several Claude accounts side by side.";
+"popoverElement.profileSwitcher" = "Account switcher";
+"menuBarSegment.profileLabel" = "Account tag";
+"error.banner.reauthRequired" = "Sign in again with this account";
+"error.banner.reauthRequired.action" = "Open Accounts";
+"profile.state.ok" = "Connected";
+"profile.state.expiring" = "Token expiring soon";
+"profile.state.awaiting" = "Waiting for Claude Code";
+"profile.state.reauth" = "Sign-in required";
+"profile.state.missing" = "No credentials";
+"profile.state.unknown" = "Checking…";
+"profile.state.disabled" = "Paused";
+"accounts.error.duplicateDir" = "That directory is already linked to a profile.";
+"accounts.error.duplicateAccount" = "This account is already monitored as “%@”.";
+"accounts.error.notFound" = "Profile not found.";
+"accounts.error.noCredentials" = "No Claude Code credentials found there. Sign in with `claude` first.";
+"accounts.error.noRefreshToken" = "The current sign-in has no refresh token, so it cannot be captured.";
+"accounts.error.identityFailed" = "Could not read the account details: %@";
+"accounts.error.cannotRemoveLast" = "Keep at least one profile.";
+"accounts.error.vault" = "Could not store the credentials in the Keychain: %@";
+/* === end multi-profile: foundation === */

@@ -146,6 +146,10 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var pacingHoursEnabled: Bool?
         var pacingStartHour: Int?
         var pacingEndHour: Int?
+        /// Multi-profile catalog (5.14+). Optional so older widget builds
+        /// ignore it and keep reading the top-level `cachedUsage`.
+        var profiles: [SharedProfileSnapshot]?
+        var activeProfileID: String?
     }
 
     /// In-memory cache - avoids redundant disk reads within the same process.
@@ -291,6 +295,56 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var data = loadFresh()
         data.lastWeekDailyTotals = totals
         data.lastWeekTotalsRefreshedAt = refreshedAt
+        save(data)
+    }
+
+    // MARK: - Profiles
+
+    var profileSnapshots: [SharedProfileSnapshot] {
+        load().profiles ?? []
+    }
+
+    var activeProfileID: UUID? {
+        load().activeProfileID.flatMap(UUID.init(uuidString:))
+    }
+
+    func updateProfileCatalog(_ profiles: [SharedProfileSnapshot], activeProfileID: UUID?) {
+        var data = loadFresh()
+        let existing = data.profiles ?? []
+        data.profiles = profiles.map { incoming in
+            var entry = incoming
+            if let old = existing.first(where: { $0.id == incoming.id }) {
+                if entry.cachedUsage == nil { entry.cachedUsage = old.cachedUsage }
+                if entry.lastSyncDate == nil { entry.lastSyncDate = old.lastSyncDate }
+                if entry.credentialState == nil { entry.credentialState = old.credentialState }
+            }
+            return entry
+        }
+        data.activeProfileID = activeProfileID?.uuidString
+        save(data)
+    }
+
+    func updateProfileUsage(profileID: UUID, usage: CachedUsage, syncDate: Date, credentialState: String?) {
+        var data = loadFresh()
+        var list = data.profiles ?? []
+        if let index = list.firstIndex(where: { $0.id == profileID }) {
+            list[index].cachedUsage = usage
+            list[index].lastSyncDate = syncDate
+            list[index].credentialState = credentialState
+        } else {
+            list.append(SharedProfileSnapshot(
+                id: profileID, name: "", colorHex: "",
+                cachedUsage: usage, lastSyncDate: syncDate, credentialState: credentialState
+            ))
+        }
+        data.profiles = list
+        save(data)
+    }
+
+    func removeProfile(id: UUID) {
+        var data = loadFresh()
+        data.profiles?.removeAll { $0.id == id }
+        if data.activeProfileID == id.uuidString { data.activeProfileID = nil }
         save(data)
     }
 

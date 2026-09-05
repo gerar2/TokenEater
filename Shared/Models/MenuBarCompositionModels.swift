@@ -20,6 +20,8 @@ enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
     case sessionPacing, weeklyPacing, fablePacing
     // Status / time
     case sessionReset, serviceStatus
+    // Multi-profile: the active profile's name / colour tag
+    case profileLabel
 
     var id: String { rawValue }
 
@@ -31,7 +33,7 @@ enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
             return .usage
         case .sessionPacing, .weeklyPacing, .fablePacing:
             return .pacing
-        case .sessionReset, .serviceStatus:
+        case .sessionReset, .serviceStatus, .profileLabel:
             return .status
         }
     }
@@ -46,6 +48,7 @@ enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
             switch self {
             case .sessionReset: return [.text, .pill]
             case .serviceStatus: return [.glyph, .pill]
+            case .profileLabel: return [.text, .pill]
             default: return [.text]
             }
         }
@@ -54,7 +57,7 @@ enum MenuBarSegmentKind: String, Codable, CaseIterable, Identifiable {
     /// Presence-gated kinds render nothing (and the editor greys them) when the
     /// account lacks the metric, matching the pre-5.10 menu bar.
     var isPresenceGated: Bool {
-        self == .fable || self == .extraCredits || self == .fablePacing
+        self == .fable || self == .extraCredits || self == .fablePacing || self == .profileLabel
     }
 }
 
@@ -259,6 +262,7 @@ extension MenuBarSegmentKind {
         case .sessionPacing, .weeklyPacing, .fablePacing: return "speedometer"
         case .sessionReset: return "clock.arrow.circlepath"
         case .serviceStatus: return "dot.radiowaves.left.and.right"
+        case .profileLabel: return "person.crop.circle"
         }
     }
 }

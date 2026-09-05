@@ -12,8 +12,20 @@ final class MockTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     /// What `refreshTokenIfChanged()` returns. Tests flip this to simulate an
     /// account swap detected on the Keychain.
     var tokenDidChange = false
+    /// Multi-profile: what `ensureFreshToken` reports and the exposed state.
+    var readiness: TokenReadiness = .ready
+    var ensureFreshTokenCallCount = 0
+    var lastEnsureForce: Bool?
+    var _credentialState: ProfileCredentialState = .unknown
 
     var isBootstrapped: Bool { _isBootstrapped }
+    var credentialState: ProfileCredentialState { _credentialState }
+
+    func ensureFreshToken(force: Bool) async -> TokenReadiness {
+        ensureFreshTokenCallCount += 1
+        lastEnsureForce = force
+        return readiness
+    }
 
     func currentToken() -> String? {
         currentTokenCallCount += 1

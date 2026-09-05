@@ -906,3 +906,27 @@
 "notif.body.fable.red.fallback" = "Pool Fable presque vide";
 "notif.body.fable.green" = "Fable rechargé le %@";
 "notif.body.fable.green.fallback" = "Fable rechargé, t'es de retour";
+
+/* === multi-profile: foundation === */
+"sidebar.accounts" = "Comptes";
+"sidebar.accounts.subtitle" = "Surveillez plusieurs comptes Claude côte à côte.";
+"popoverElement.profileSwitcher" = "Sélecteur de compte";
+"menuBarSegment.profileLabel" = "Étiquette de compte";
+"error.banner.reauthRequired" = "Reconnectez-vous avec ce compte";
+"error.banner.reauthRequired.action" = "Ouvrir Comptes";
+"profile.state.ok" = "Connecté";
+"profile.state.expiring" = "Jeton bientôt expiré";
+"profile.state.awaiting" = "En attente de Claude Code";
+"profile.state.reauth" = "Reconnexion requise";
+"profile.state.missing" = "Aucun identifiant";
+"profile.state.unknown" = "Vérification…";
+"profile.state.disabled" = "En pause";
+"accounts.error.duplicateDir" = "Ce dossier est déjà lié à un profil.";
+"accounts.error.duplicateAccount" = "Ce compte est déjà surveillé sous « %@ ».";
+"accounts.error.notFound" = "Profil introuvable.";
+"accounts.error.noCredentials" = "Aucun identifiant Claude Code trouvé ici. Connectez-vous d’abord avec `claude`.";
+"accounts.error.noRefreshToken" = "La connexion actuelle n’a pas de jeton de rafraîchissement : impossible de la capturer.";
+"accounts.error.identityFailed" = "Impossible de lire les informations du compte : %@";
+"accounts.error.cannotRemoveLast" = "Conservez au moins un profil.";
+"accounts.error.vault" = "Impossible d’enregistrer les identifiants dans le trousseau : %@";
+/* === end multi-profile: foundation === */

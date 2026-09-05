@@ -16,6 +16,8 @@ enum PopoverElementKind: String, Codable, CaseIterable, Identifiable {
     case sessionPacing, weeklyPacing, fablePacing
     // Utility rows
     case watchers, timestamp, planBadge
+    // Multi-profile: tap-to-switch chips for the enabled profiles
+    case profileSwitcher
     // Action buttons
     case openButton, quitButton, refreshButton
 
@@ -29,7 +31,7 @@ enum PopoverElementKind: String, Codable, CaseIterable, Identifiable {
             return .usage
         case .sessionPacing, .weeklyPacing, .fablePacing:
             return .pacing
-        case .watchers, .timestamp, .planBadge:
+        case .watchers, .timestamp, .planBadge, .profileSwitcher:
             return .utility
         case .openButton, .quitButton, .refreshButton:
             return .action
@@ -431,6 +433,7 @@ extension PopoverElementKind {
         case .watchers: return "eye.fill"
         case .timestamp: return "clock"
         case .planBadge: return "checkmark.seal.fill"
+        case .profileSwitcher: return "person.2.crop.square.stack.fill"
         case .openButton: return "diamond.fill"
         case .quitButton: return "power"
         case .refreshButton: return "arrow.clockwise"

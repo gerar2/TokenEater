@@ -120,6 +120,7 @@ enum DiagnosticReporter {
         case .tokenUnavailable: return "tokenUnavailable"
         case .rateLimited: return "rateLimited"
         case .networkError: return "networkError"
+        case .reauthRequired: return "reauthRequired"
         }
     }
 

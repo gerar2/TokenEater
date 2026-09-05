@@ -46,6 +46,17 @@ final class UsageStore: ObservableObject {
     /// Snapshot of the most recent API failure for the diagnostic report.
     /// Cleared on every successful refresh.
     @Published private(set) var lastAPIError: LastAPIError?
+    /// Mirror of the token provider's credential state, refreshed after every
+    /// fetch attempt so the Accounts UI and the overview strip can render it.
+    @Published private(set) var credentialState: ProfileCredentialState = .unknown
+
+    /// The profile this store belongs to (nil for single-source construction
+    /// in tests / legacy paths).
+    let profileID: UUID?
+    /// True when this profile drives the menu bar / popover / dashboard. The
+    /// repository mirrors this store's usage into the legacy widget snapshot
+    /// only while active. Set by `ProfileStore.setActive`.
+    var isActiveProfile: Bool = true
 
     var hasError: Bool { errorState != .none }
 
@@ -122,20 +133,32 @@ final class UsageStore: ObservableObject {
         repository: UsageRepositoryProtocol = UsageRepository(),
         tokenProvider: TokenProviderProtocol = TokenProvider(),
         sharedFileService: SharedFileServiceProtocol = SharedFileService(),
-        notificationService: NotificationServiceProtocol = NotificationService()
+        notificationService: NotificationServiceProtocol = NotificationService(),
+        profileID: UUID? = nil,
+        legacyKeys: Bool = true
     ) {
         self.repository = repository
         self.tokenProvider = tokenProvider
         self.sharedFileService = sharedFileService
         self.notificationService = notificationService
-        self.sessionSamples = Self.loadSessionSamples()
+        self.profileID = profileID
+        // The migrated default profile keeps the unsuffixed key so existing
+        // users keep their pacing history; additional profiles get their own.
+        if let profileID, !legacyKeys {
+            self.sessionSamplesKey = Self.legacySessionSamplesKey + "." + profileID.uuidString
+        } else {
+            self.sessionSamplesKey = Self.legacySessionSamplesKey
+        }
+        self.sessionSamples = Self.loadSessionSamples(key: sessionSamplesKey)
+        self.credentialState = tokenProvider.credentialState
     }
 
     // MARK: - Session pacing samples (#240)
 
-    private static let sessionSamplesKey = "sessionPacingSamples"
+    private static let legacySessionSamplesKey = "sessionPacingSamples"
+    private let sessionSamplesKey: String
 
-    private static func loadSessionSamples() -> [PacingSample] {
+    private static func loadSessionSamples(key sessionSamplesKey: String) -> [PacingSample] {
         guard let data = UserDefaults.standard.data(forKey: sessionSamplesKey),
               let decoded = try? JSONDecoder().decode([PacingSample].self, from: data) else {
             return []
@@ -156,7 +179,7 @@ final class UsageStore: ObservableObject {
             now: Date()
         )
         if let data = try? JSONEncoder().encode(sessionSamples) {
-            UserDefaults.standard.set(data, forKey: Self.sessionSamplesKey)
+            UserDefaults.standard.set(data, forKey: sessionSamplesKey)
         }
     }
 
@@ -194,7 +217,11 @@ final class UsageStore: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let usage = try await repository.refreshUsage(token: token, proxyConfig: proxyConfig)
+            let usage = try await repository.refreshUsage(
+                token: token, proxyConfig: proxyConfig,
+                isActiveProfile: isActiveProfile,
+                credentialState: tokenProvider.credentialState.rawKind
+            )
             applySuccess(usage: usage)
         } catch let error as APIError {
             lastAPIError = error.diagnosticSnapshot
@@ -205,7 +232,11 @@ final class UsageStore: ObservableObject {
                 // Retry once with a fresh token
                 if let freshToken = tokenProvider.currentToken(), freshToken != token {
                     do {
-                        let usage = try await repository.refreshUsage(token: freshToken, proxyConfig: proxyConfig)
+                        let usage = try await repository.refreshUsage(
+                            token: freshToken, proxyConfig: proxyConfig,
+                            isActiveProfile: isActiveProfile,
+                            credentialState: tokenProvider.credentialState.rawKind
+                        )
                         applySuccess(usage: usage)
                         return
                     } catch {
@@ -314,9 +345,14 @@ final class UsageStore: ObservableObject {
         }
     }
 
-    func startAutoRefresh(interval: TimeInterval = 600, thresholds: UsageThresholds = .default) {
+    func startAutoRefresh(interval: TimeInterval = 600, thresholds: UsageThresholds = .default, initialDelay: TimeInterval = 0) {
         autoRefreshTask?.cancel()
         autoRefreshTask = Task { [weak self] in
+            // Multi-profile: loops start staggered so N profiles never burst
+            // the API at the same instant.
+            if initialDelay > 0 {
+                try? await Task.sleep(for: .seconds(initialDelay))
+            }
             // Wait first - reloadConfig already triggers an initial refresh
             try? await Task.sleep(for: .seconds(interval))
             // Fetch profile once on first cycle (deferred from startup to save rate limit)
@@ -389,6 +425,7 @@ final class UsageStore: ObservableObject {
     /// notification + widget side effects. Shared by the nominal path and the
     /// post-401 retry so the two can never drift.
     private func applySuccess(usage: UsageResponse) {
+        credentialState = tokenProvider.credentialState
         updateUI(from: usage)
         appendSessionSample(from: usage)
         errorState = .none

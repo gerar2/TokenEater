@@ -23,6 +23,11 @@ final class SecurityCLIReader: SecurityCLIReaderProtocol, @unchecked Sendable {
     }
 
     func readToken() -> String? {
+        guard let raw = readPayload() else { return nil }
+        return Self.extractToken(fromKeychainPassword: raw)
+    }
+
+    func readPayload() -> String? {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/security")
         task.arguments = ["find-generic-password", "-s", service, "-w"]
@@ -64,7 +69,7 @@ final class SecurityCLIReader: SecurityCLIReaderProtocol, @unchecked Sendable {
               !raw.isEmpty else {
             return nil
         }
-        return Self.extractToken(fromKeychainPassword: raw)
+        return raw
     }
 
     /// Parses the password payload `/usr/bin/security` returned for the
