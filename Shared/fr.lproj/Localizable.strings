@@ -993,3 +993,11 @@
 "settings.accounts.summary.many" = "%d comptes · actif : %@";
 "settings.accounts.manage" = "Gérer les comptes";
 /* === end multi-profile: settings-ui === */
+/* === multi-profile: app === */
+"contextmenu.account" = "Compte";
+"dashboard.profiles.overview" = "Comptes";
+"dashboard.profiles.active" = "Actif";
+"dashboard.profiles.weekly" = "7j %d%%";
+"dashboard.profiles.select" = "Afficher %@ dans la barre de menus et le popover";
+"dashboard.profiles.state.rateLimited" = "Limite de débit atteinte";
+/* === end multi-profile: app === */
