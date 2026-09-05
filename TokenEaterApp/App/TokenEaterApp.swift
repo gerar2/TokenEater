@@ -3,7 +3,7 @@ import AppKit
 import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    var usageStore: UsageStore!
+    var profileStore: ProfileStore!
     var themeStore: ThemeStore!
     var settingsStore: SettingsStore!
     var updateStore: UpdateStore!
@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         statusBarController = StatusBarController(
-            usageStore: usageStore,
+            profileStore: profileStore,
             themeStore: themeStore,
             settingsStore: settingsStore,
             updateStore: updateStore,
@@ -91,7 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct TokenEaterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
-    private let usageStore: UsageStore
+    private let profileStore: ProfileStore
     private let themeStore: ThemeStore
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
@@ -116,7 +116,10 @@ struct TokenEaterApp: App {
         // missing this step would make every upgrading user land on onboarding.
         LegacyHelperCleanupService().migratePrefsIfNeeded()
 
-        self.usageStore = UsageStore()
+        // The profile store owns one UsageStore per account and self-migrates
+        // the single default profile on first launch, so the active store it
+        // exposes behaves exactly like the bare UsageStore it replaces.
+        self.profileStore = ProfileStore()
         self.themeStore = ThemeStore()
         self.settingsStore = SettingsStore()
         self.updateStore = UpdateStore()
@@ -124,7 +127,7 @@ struct TokenEaterApp: App {
         self.vendorStatusStore = VendorStatusStore()
 
         NotificationService().setupDelegate()
-        appDelegate.usageStore = usageStore
+        appDelegate.profileStore = profileStore
         appDelegate.themeStore = themeStore
         appDelegate.settingsStore = settingsStore
         appDelegate.updateStore = updateStore

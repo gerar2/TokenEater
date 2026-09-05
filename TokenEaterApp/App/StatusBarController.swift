@@ -18,7 +18,7 @@ final class StatusBarController: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var countdownCancellable: AnyCancellable?
 
-    private let usageStore: UsageStore
+    private let profileStore: ProfileStore
     private let themeStore: ThemeStore
     private let settingsStore: SettingsStore
     private let updateStore: UpdateStore
@@ -26,8 +26,13 @@ final class StatusBarController: NSObject {
     private let vendorStatusStore: VendorStatusStore
     private let tokenFileMonitor: TokenFileMonitorProtocol
 
+    /// The store the menu bar, popover and dashboard render. Resolved through
+    /// `ProfileStore` on every use (never cached) so an active-profile switch
+    /// is picked up by the next redraw without any re-wiring.
+    private var activeUsageStore: UsageStore { profileStore.activeUsageStore }
+
     init(
-        usageStore: UsageStore,
+        profileStore: ProfileStore,
         themeStore: ThemeStore,
         settingsStore: SettingsStore,
         updateStore: UpdateStore,
@@ -35,7 +40,7 @@ final class StatusBarController: NSObject {
         vendorStatusStore: VendorStatusStore,
         tokenFileMonitor: TokenFileMonitorProtocol = TokenFileMonitor()
     ) {
-        self.usageStore = usageStore
+        self.profileStore = profileStore
         self.themeStore = themeStore
         self.settingsStore = settingsStore
         self.updateStore = updateStore
@@ -108,8 +113,11 @@ final class StatusBarController: NSObject {
     }
 
     private func installPopoverContent() {
-        let popoverView = MenuBarPopoverView()
-            .environmentObject(usageStore)
+        // `ActiveProfileHost` injects the active profile's `UsageStore` (keyed
+        // by profile id) so every `@EnvironmentObject var usageStore` below
+        // keeps working unchanged and re-renders on a profile switch.
+        let popoverView = ActiveProfileHost { MenuBarPopoverView() }
+            .environmentObject(profileStore)
             .environmentObject(themeStore)
             .environmentObject(settingsStore)
             .environmentObject(updateStore)
@@ -118,8 +126,12 @@ final class StatusBarController: NSObject {
     }
 
     private func observeStoreChanges() {
+        // `ProfileStore.objectWillChange` relays every child `UsageStore`, so
+        // one subscription covers all profiles; `$activeProfileID` is merged
+        // explicitly so a switch redraws even when no usage value changed.
         Publishers.MergeMany(
-            usageStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
+            profileStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
+            profileStore.$activeProfileID.map { _ in () }.eraseToAnyPublisher(),
             themeStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             settingsStore.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
             vendorStatusStore.objectWillChange.map { _ in () }.eraseToAnyPublisher()
@@ -135,15 +147,18 @@ final class StatusBarController: NSObject {
             .sink { [weak self] _ in
                 guard let self,
                       self.settingsStore.menuBarComposition.visibleSegments.contains(where: { $0.kind == .sessionReset }) else { return }
-                self.usageStore.refreshResetCountdown()
+                self.activeUsageStore.refreshResetCountdown()
             }
             .store(in: &cancellables)
 
         settingsStore.pacing.$margin
             .removeDuplicates()
             .sink { [weak self] newMargin in
-                self?.usageStore.pacingMargin = newMargin
-                self?.usageStore.recalculatePacing()
+                guard let self else { return }
+                for store in self.profileStore.usageStores.values {
+                    store.pacingMargin = newMargin
+                    store.recalculatePacing()
+                }
             }
             .store(in: &cancellables)
 
@@ -162,8 +177,11 @@ final class StatusBarController: NSObject {
         .receive(on: RunLoop.main)
         .sink { [weak self] _ in
             guard let self else { return }
-            self.usageStore.pacingSchedule = self.settingsStore.pacingSchedule
-            self.usageStore.recalculatePacing()
+            let schedule = self.settingsStore.pacingSchedule
+            for store in self.profileStore.usageStores.values {
+                store.pacingSchedule = schedule
+                store.recalculatePacing()
+            }
             WidgetReloader.scheduleReload()
         }
         .store(in: &cancellables)
@@ -171,7 +189,10 @@ final class StatusBarController: NSObject {
         settingsStore.$refreshInterval
             .removeDuplicates()
             .sink { [weak self] newInterval in
-                self?.usageStore.refreshIntervalSeconds = TimeInterval(newInterval)
+                guard let self else { return }
+                for store in self.profileStore.usageStores.values {
+                    store.refreshIntervalSeconds = TimeInterval(newInterval)
+                }
             }
             .store(in: &cancellables)
 
@@ -201,25 +222,25 @@ final class StatusBarController: NSObject {
     }
 
     private func bootstrapRefresh() {
-        usageStore.proxyConfig = settingsStore.proxyConfig
-        usageStore.pacingMargin = settingsStore.pacingMargin
-        usageStore.pacingSchedule = settingsStore.pacingSchedule
-        usageStore.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
-        usageStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
         vendorStatusStore.healthyPollInterval = TimeInterval(settingsStore.statusPollInterval)
-        usageStore.reloadConfig(thresholds: themeStore.thresholds)
-        usageStore.startAutoRefresh(thresholds: themeStore.thresholds)
+        // Every enabled profile gets the same settings-derived configuration,
+        // then its own staggered auto-refresh loop. The profile store keeps
+        // the configurator so profiles added later are set up identically.
+        profileStore.bootstrap(
+            configure: { [weak self] store in self?.configureUsageStore(store) },
+            thresholds: themeStore.thresholds
+        )
         themeStore.syncToSharedFile()
 
-        // Monitor token files (credentials + config.json) for changes
+        // Monitor token files (credentials + config.json) for changes. Any
+        // watched store changing re-reads and force-refreshes every enabled
+        // profile (`ProfileStore.handleTokenChange`).
         tokenFileMonitor.startMonitoring()
         tokenFileMonitor.tokenChanged
             .receive(on: RunLoop.main)
             .sink { [weak self] in
-                guard let self else { return }
-                self.usageStore.handleTokenChange()
-                Task { await self.usageStore.refresh(force: true) }
+                self?.profileStore.handleTokenChange()
             }
             .store(in: &cancellables)
 
@@ -231,7 +252,7 @@ final class StatusBarController: NSObject {
         ) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.usageStore.refreshIfStale()
+                await self.profileStore.refreshIfStaleAll()
             }
         }
 
@@ -240,8 +261,23 @@ final class StatusBarController: NSObject {
         }
     }
 
+    // TODO(integration): replace with UsageStoreConfigurator.apply / TokenFileMonitor(watchedFiles:)
+    /// Temporary stand-in for lane L2's `UsageStoreConfigurator.apply(...)`:
+    /// reproduces the pre-multi-profile `bootstrapRefresh` assignments on one
+    /// store. The integrator swaps this for the shared configurator and builds
+    /// the token-file monitor from `profileStore.watchedCredentialFiles`
+    /// (rebuilt on `$profiles` change) instead of the legacy `TokenFileMonitor()`
+    /// default in `init`.
+    private func configureUsageStore(_ store: UsageStore) {
+        store.proxyConfig = settingsStore.proxyConfig
+        store.pacingMargin = settingsStore.pacingMargin
+        store.pacingSchedule = settingsStore.pacingSchedule
+        store.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
+        store.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
+    }
+
     /// Single source of truth for the notification-toggle bundle, shared by the
-    /// usage store and the vendor-status store so they always agree.
+    /// usage stores and the vendor-status store so they always agree.
     private func makeNotificationToggles() -> NotificationToggles {
         NotificationToggles(
             masterEnabled: settingsStore.notificationsEnabled,
@@ -274,7 +310,11 @@ final class StatusBarController: NSObject {
             .first()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.bootstrapRefresh()
+                guard let self else { return }
+                // Onboarding exercised the default profile's store; make sure
+                // the catalog holds that profile before the loops start.
+                self.profileStore.ensureDefaultProfileIfNeeded()
+                self.bootstrapRefresh()
             }
             .store(in: &cancellables)
     }
@@ -321,8 +361,19 @@ final class StatusBarController: NSObject {
     // MARK: - Menu Bar Icon
 
     private func updateMenuBarIcon() {
+        // The profile tag only means something with several profiles; the
+        // single (migrated) profile renders exactly as before.
+        let profile: (label: String, colorHex: String)? = profileStore.isMultiProfile
+            ? (label: profileStore.activeProfile.name, colorHex: profileStore.activeProfile.colorHex)
+            : nil
         let image = MenuBarRenderer.render(
-            .live(usage: usageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore)
+            .live(
+                usage: activeUsageStore,
+                theme: themeStore,
+                settings: settingsStore,
+                vendor: vendorStatusStore,
+                profile: profile
+            )
         )
         statusItem.button?.image = image
     }
@@ -382,7 +433,7 @@ final class StatusBarController: NSObject {
             keyEquivalent: "r"
         )
         refresh.target = self
-        refresh.isEnabled = !usageStore.isLoading
+        refresh.isEnabled = !activeUsageStore.isLoading
         menu.addItem(refresh)
 
         let openDashboard = NSMenuItem(
@@ -392,6 +443,31 @@ final class StatusBarController: NSObject {
         )
         openDashboard.target = self
         menu.addItem(openDashboard)
+
+        // Account submenu: radio list of the enabled profiles. Only offered
+        // once a second profile exists, so single-profile users keep the
+        // exact menu they had before.
+        if profileStore.isMultiProfile {
+            let accountItem = NSMenuItem(
+                title: String(localized: "contextmenu.account"),
+                action: nil,
+                keyEquivalent: ""
+            )
+            let accountSub = NSMenu()
+            for profile in profileStore.enabledProfiles {
+                let item = NSMenuItem(
+                    title: profile.name,
+                    action: #selector(contextSelectProfile(_:)),
+                    keyEquivalent: ""
+                )
+                item.target = self
+                item.representedObject = profile.id.uuidString
+                item.state = profile.id == profileStore.activeProfileID ? .on : .off
+                accountSub.addItem(item)
+            }
+            accountItem.submenu = accountSub
+            menu.addItem(accountItem)
+        }
 
         menu.addItem(.separator())
 
@@ -506,7 +582,13 @@ final class StatusBarController: NSObject {
     }
 
     @objc private func contextRefresh() {
-        Task { await usageStore.refresh(force: true) }
+        Task { await profileStore.refreshAll(force: true) }
+    }
+
+    @objc private func contextSelectProfile(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let id = UUID(uuidString: raw) else { return }
+        profileStore.setActive(id)
     }
 
     @objc private func contextOpenDashboard() {
@@ -619,8 +701,8 @@ final class StatusBarController: NSObject {
             return
         }
 
-        let appView = MainAppView()
-            .environmentObject(usageStore)
+        let appView = ActiveProfileHost { MainAppView() }
+            .environmentObject(profileStore)
             .environmentObject(themeStore)
             .environmentObject(settingsStore)
             .environmentObject(updateStore)

@@ -930,3 +930,11 @@
 "accounts.error.cannotRemoveLast" = "Conservez au moins un profil.";
 "accounts.error.vault" = "Impossible d’enregistrer les identifiants dans le trousseau : %@";
 /* === end multi-profile: foundation === */
+/* === multi-profile: app === */
+"contextmenu.account" = "Compte";
+"dashboard.profiles.overview" = "Comptes";
+"dashboard.profiles.active" = "Actif";
+"dashboard.profiles.weekly" = "7j %d%%";
+"dashboard.profiles.select" = "Afficher %@ dans la barre de menus et le popover";
+"dashboard.profiles.state.rateLimited" = "Limite de débit atteinte";
+/* === end multi-profile: app === */
