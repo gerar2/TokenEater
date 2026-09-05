@@ -39,16 +39,12 @@ struct StaticProvider: TimelineProvider {
 
         if let cached = sharedFile.cachedUsage {
             let lastSync = sharedFile.lastSyncDate
-            let isStale: Bool
-            if let lastSync {
-                isStale = Date().timeIntervalSince(lastSync) > 900 // 15min - only stale if truly old
-            } else {
-                isStale = true
-            }
+            // Profile fields stay nil here on purpose: the static kinds always
+            // follow the active profile and single-profile users see no change.
             return UsageEntry(
                 date: Date(),
                 usage: cached.usage,
-                isStale: isStale,
+                isStale: UsageEntry.isStale(lastSync: lastSync),
                 lastSync: lastSync,
                 lastWeekDailyTotals: sharedFile.lastWeekDailyTotals
             )

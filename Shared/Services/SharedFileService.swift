@@ -6,10 +6,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     private static let oldDirectoryName = "com.claudeusagewidget.shared"
     private static let fileName = "shared.json"
 
-    private var realHomeDirectory: String {
-        guard let pw = getpwuid(getuid()) else { return NSHomeDirectory() }
-        return String(cString: pw.pointee.pw_dir)
-    }
+    private var realHomeDirectory: String { Self.resolveRealHomeDirectory() }
 
     /// Root directory for shared data. Always uses the home-relative
     /// `~/Library/Application Support/com.tokeneater.shared/` path because :
@@ -29,8 +26,14 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     ///
     /// Will switch back to App Group lookup once we have provisioning profiles
     /// in CI and both entitlements files declare the group.
-    private var rootDirectoryURL: URL {
-        URL(fileURLWithPath: realHomeDirectory)
+    ///
+    /// Stored (not computed) so `init(rootDirectory:)` can point a test
+    /// instance at a temp directory without the migrations or the real home
+    /// ever being touched.
+    private let rootDirectoryURL: URL
+
+    private static func defaultRootDirectoryURL(realHome: String) -> URL {
+        URL(fileURLWithPath: realHome)
             .appendingPathComponent("Library/Application Support")
             .appendingPathComponent(Self.legacyDirectoryName)
     }
@@ -53,9 +56,27 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
             .appendingPathComponent(Self.fileName)
     }
 
+    /// Production initializer: home-relative root plus the two one-shot
+    /// migrations (old product name, stranded Group Container data).
     init() {
+        rootDirectoryURL = Self.defaultRootDirectoryURL(
+            realHome: Self.resolveRealHomeDirectory()
+        )
         migrateFromOldProductName()
         migrateFromGroupContainerToHomeRelative()
+    }
+
+    /// Explicit root (the directory that holds `shared.json`). Meant for tests
+    /// and tooling: the migrations are skipped because they only make sense for
+    /// the real home directory, and running them against a temp root would
+    /// silently move the user's live data.
+    init(rootDirectory: URL) {
+        rootDirectoryURL = rootDirectory
+    }
+
+    private static func resolveRealHomeDirectory() -> String {
+        guard let pw = getpwuid(getuid()) else { return NSHomeDirectory() }
+        return String(cString: pw.pointee.pw_dir)
     }
 
     // MARK: - Migrations

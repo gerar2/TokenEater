@@ -930,3 +930,10 @@
 "accounts.error.cannotRemoveLast" = "Conservez au moins un profil.";
 "accounts.error.vault" = "Impossible d’enregistrer les identifiants dans le trousseau : %@";
 /* === end multi-profile: foundation === */
+
+/* === multi-profile: widget === */
+"widget.profile.title" = "Compte";
+"widget.profile.description" = "Choisissez le compte affiché par ce widget.";
+"widget.profile.param" = "Compte";
+"widget.profile.follow" = "Suit le compte actif";
+/* === end multi-profile: widget === */
