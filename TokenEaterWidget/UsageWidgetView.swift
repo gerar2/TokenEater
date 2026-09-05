@@ -68,7 +68,7 @@ struct UsageWidgetView: View {
 
     private func mediumUsageContent(_ usage: UsageResponse) -> some View {
         VStack(spacing: 0) {
-            WidgetHeader("widget.title.usage")
+            WidgetHeader("widget.title.usage", profileName: entry.profileName, profileColorHex: entry.profileColorHex)
                 .padding(.bottom, 14)
 
             // Circular gauges
@@ -134,7 +134,7 @@ struct UsageWidgetView: View {
 
     private func largeUsageContent(_ usage: UsageResponse) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            WidgetHeader("widget.title.usage")
+            WidgetHeader("widget.title.usage", profileName: entry.profileName, profileColorHex: entry.profileColorHex)
 
             // Bars - just the essentials per row : icon | label | % | reset
             if let fiveHour = usage.fiveHour {

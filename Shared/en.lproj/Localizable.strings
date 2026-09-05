@@ -930,3 +930,10 @@
 "accounts.error.cannotRemoveLast" = "Keep at least one profile.";
 "accounts.error.vault" = "Could not store the credentials in the Keychain: %@";
 /* === end multi-profile: foundation === */
+
+/* === multi-profile: widget === */
+"widget.profile.title" = "Account";
+"widget.profile.description" = "Choose which account this widget shows.";
+"widget.profile.param" = "Account";
+"widget.profile.follow" = "Follows the active account";
+/* === end multi-profile: widget === */
