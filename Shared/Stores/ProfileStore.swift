@@ -61,6 +61,12 @@ final class ProfileStore: ObservableObject {
     /// when a `usageStoreFactory` is injected). Lets the app forward runtime
     /// profile edits (renewal policy) to the provider.
     private(set) var tokenProviders: [UUID: TokenProviderProtocol] = [:]
+    /// Notification services built by the production factory, so a removed
+    /// profile's pending reminders can be cancelled in its own scope.
+    private var notificationServices: [UUID: NotificationServiceProtocol] = [:]
+    /// Thread-safe view of profile names for the notification title prefix
+    /// (`NotificationScope.displayName` is `@Sendable`).
+    private let nameRegistry = ProfileNameRegistry()
     private var relays: [UUID: [AnyCancellable]] = [:]
 
     private let persistence: ProfilePersistenceProtocol
@@ -81,13 +87,16 @@ final class ProfileStore: ObservableObject {
     /// Stores are created lazily (at `bootstrap`, on insert, or on first
     /// access), so assign this right after `init` for it to apply everywhere.
     var tokenProviderFactory: TokenProviderFactory?
-    /// Builds the notification service for a profile. The default profile
-    /// keeps the legacy unsuffixed keys; the app swaps in a scoped service for
-    /// the others (see §3.7).
-    var notificationServiceFactory: NotificationServiceFactory = { _ in NotificationService() }
-    /// Proxy for the identity fetch (`/api/oauth/profile`). Wired by the app
-    /// from `SettingsStore.proxyConfig`.
-    var proxyProvider: () -> ProxyConfig? = { nil }
+    /// Builds the notification service for a profile. `nil` =
+    /// `makeDefaultNotificationService`: the default profile keeps the legacy
+    /// unsuffixed keys, every other profile gets a scoped service, and all of
+    /// them prefix titles with the profile name while several profiles exist
+    /// (see §3.7).
+    var notificationServiceFactory: NotificationServiceFactory?
+    /// Proxy for the identity fetch and the per-profile token providers. Read
+    /// from the persisted settings so it is always current and usable off the
+    /// main actor.
+    var proxyProvider: @Sendable () -> ProxyConfig? = { ProxyConfig.fromUserDefaults() }
     /// Called after a profile's fields change (rename / colour / enable /
     /// policy / identity) with the provider that serves it, so a
     /// `ProfileTokenProvider` can pick up a policy change at runtime.
@@ -108,9 +117,9 @@ final class ProfileStore: ObservableObject {
 
     init(
         persistence: ProfilePersistenceProtocol = UserDefaultsProfilePersistence(),
-        vault: ProfileCredentialVaultProtocol = UnavailableProfileCredentialVault(),
-        credentialStore: ClaudeCodeCredentialStoreProtocol = UnavailableClaudeCodeCredentialStore(),
-        refresher: OAuthTokenRefresherProtocol = UnavailableOAuthTokenRefresher(),
+        vault: ProfileCredentialVaultProtocol = ProfileCredentialVault(),
+        credentialStore: ClaudeCodeCredentialStoreProtocol = ClaudeCodeCredentialStore(),
+        refresher: OAuthTokenRefresherProtocol = OAuthTokenRefresher(),
         sharedFileService: SharedFileServiceProtocol = SharedFileService(),
         identityClient: APIClientProtocol = APIClient(),
         realHome: String = ClaudeKeychainServiceName.realHome,
@@ -136,6 +145,7 @@ final class ProfileStore: ObservableObject {
             activeProfileID = first.id
             persistence.saveActiveProfileID(first.id)
         }
+        nameRegistry.update(profiles: profiles)
     }
 
     // MARK: - Derived
@@ -330,6 +340,8 @@ final class ProfileStore: ObservableObject {
         relays[id] = nil
         usageStores[id] = nil
         tokenProviders[id] = nil
+        notificationServices[id]?.cancelPendingReminders()
+        notificationServices[id] = nil
         credentialStates[id] = nil
         vault.delete(profileID: id)
         sharedFileService.removeProfile(id: id)
@@ -446,6 +458,9 @@ final class ProfileStore: ObservableObject {
         guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
         transform(&profiles[index])
         persist()
+        // A `ProfileTokenProvider` reads the renewal policy at refresh time
+        // from the profile it was given; hand it the edited value.
+        (tokenProviders[id] as? ProfileTokenProvider)?.update(profile: profiles[index])
         onProfileUpdated?(profiles[index], tokenProviders[id])
     }
 
@@ -478,6 +493,7 @@ final class ProfileStore: ObservableObject {
     }
 
     private func persist() {
+        nameRegistry.update(profiles: profiles)
         persistence.saveProfiles(profiles)
         persistence.saveActiveProfileID(activeProfileID)
         syncCatalogToSharedFile()
@@ -562,61 +578,69 @@ final class ProfileStore: ObservableObject {
     private func makeDefaultUsageStore(for profile: AccountProfile) -> UsageStore {
         let provider = tokenProviderFactory?(profile) ?? makeDefaultTokenProvider(for: profile)
         tokenProviders[profile.id] = provider
+        let notifications = notificationServiceFactory?(profile) ?? makeDefaultNotificationService(for: profile)
+        notificationServices[profile.id] = notifications
         return UsageStore(
             repository: UsageRepository(sharedFileService: sharedFileService, profileID: profile.id),
             tokenProvider: provider,
             sharedFileService: sharedFileService,
-            notificationService: notificationServiceFactory(profile),
+            notificationService: notifications,
             profileID: profile.id,
             legacyKeys: profile.isDefaultClaudeCodeProfile
         )
     }
 
-    /// INTEGRATION SEAM. The default profile keeps the legacy `TokenProvider`
-    /// (identical behaviour to the single-account app). Other profiles get a
-    /// placeholder until `ProfileTokenProvider` (credentials lane) lands;
-    /// integration replaces the placeholder branch with
-    /// `ProfileTokenProvider(profile:vault:store:refresher:proxyProvider:realHome:)`
-    /// using `vault`, `credentialStore`, `refresher`, `proxyProvider` and
-    /// `realHome` held by this store.
+    /// The default `~/.claude` profile keeps the legacy `TokenProvider`
+    /// (identical behaviour to the single-account app, including the
+    /// interactive onboarding read). Every other profile gets a
+    /// `ProfileTokenProvider` over this store's vault / live store / refresher.
     private func makeDefaultTokenProvider(for profile: AccountProfile) -> TokenProviderProtocol {
-        profile.isDefaultClaudeCodeProfile ? TokenProvider() : PlaceholderTokenProvider()
+        if profile.isDefaultClaudeCodeProfile { return TokenProvider() }
+        return ProfileTokenProvider(
+            profile: profile,
+            vault: vault,
+            store: credentialStore,
+            refresher: refresher,
+            proxyProvider: proxyProvider,
+            realHome: realHome
+        )
+    }
+
+    /// Legacy (unsuffixed) scope for the default profile so existing users keep
+    /// their de-dupe state; a per-profile scope for the others. The `[Name]`
+    /// title prefix is resolved at fire time through the name registry and is
+    /// empty while only one profile exists.
+    private func makeDefaultNotificationService(for profile: AccountProfile) -> NotificationServiceProtocol {
+        let id = profile.id
+        let registry = nameRegistry
+        let scope = NotificationScope(
+            profileID: profile.isDefaultClaudeCodeProfile ? nil : id,
+            displayName: { registry.displayName(for: id) }
+        )
+        return NotificationService(scope: scope)
     }
 }
 
-// MARK: - Placeholders (replaced at integration)
+// MARK: - Name registry
 
-/// Token provider that never yields a token. Stands in for
-/// `ProfileTokenProvider` until the credentials lane lands.
-final class PlaceholderTokenProvider: TokenProviderProtocol, @unchecked Sendable {
-    var isBootstrapped: Bool { true }
-    func currentToken() -> String? { nil }
-    func hasTokenSource() -> Bool { false }
-    func invalidateToken() {}
-    func refreshTokenIfChanged() -> Bool { false }
-    func bootstrap() throws {}
-    func ensureFreshToken(force: Bool) async -> TokenReadiness { .missing }
-    var credentialState: ProfileCredentialState { .missing }
-}
+/// Lock-guarded snapshot of the catalog's names, for `@Sendable` readers such
+/// as the notification title prefix. Updated by `ProfileStore` whenever the
+/// catalog is persisted.
+final class ProfileNameRegistry: @unchecked Sendable {
+    private let lock = NSLock()
+    private var names: [UUID: String] = [:]
+    private var isMultiProfile = false
 
-final class UnavailableProfileCredentialVault: ProfileCredentialVaultProtocol, @unchecked Sendable {
-    func load(profileID: UUID) -> OAuthCredentials? { nil }
-    func save(_ credentials: OAuthCredentials, profileID: UUID) throws {
-        throw ProfileCredentialVaultError.keychain(status: -1)
+    func update(profiles: [AccountProfile]) {
+        lock.withLock {
+            names = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0.name) })
+            isMultiProfile = profiles.count > 1
+        }
     }
-    func delete(profileID: UUID) {}
-}
 
-final class UnavailableClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unchecked Sendable {
-    func read(configDir: String?) -> ClaudeCodeCredentialRead? { nil }
-    func exists(configDir: String?) -> Bool { false }
-    func write(_ credentials: OAuthCredentials, raw: [String: Any], backing: ClaudeCodeCredentialBacking) throws {
-        throw ClaudeCodeCredentialStoreError.readOnlyBacking
-    }
-}
-
-final class UnavailableOAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendable {
-    func refresh(_ credentials: OAuthCredentials, proxyConfig: ProxyConfig?) async throws -> OAuthCredentials {
-        throw OAuthRefreshError.noRefreshToken
+    /// The profile's name while several profiles exist; nil otherwise so a
+    /// single-profile user never sees a prefix.
+    func displayName(for id: UUID) -> String? {
+        lock.withLock { isMultiProfile ? names[id] : nil }
     }
 }

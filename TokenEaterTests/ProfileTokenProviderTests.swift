@@ -318,21 +318,26 @@ struct ProfileTokenProviderTests {
         #expect(env.provider.currentToken() == "at-valid-refreshed")
     }
 
-    @Test("invalidateToken keeps the cache and forces the next ensureFreshToken once")
-    func invalidateTokenForcesNextEnsure() async {
+    @Test("invalidateToken keeps the cache and never renews on its own; a 401 renews through force")
+    func invalidateTokenDoesNotForceRenewal() async {
         let profile = managed()
         let env = makeSUT(profile: profile, vaultSeed: credentials("at-valid", ttl: 3600))
 
+        // A credential-file change notification must not renew: a renewal
+        // whose write-back touches the watched file would loop forever.
         env.provider.invalidateToken()
         #expect(env.provider.currentToken() == "at-valid")
+        let afterInvalidate = await env.provider.ensureFreshToken(force: false)
+        #expect(afterInvalidate == .ready)
+        #expect(env.refresher.refreshCallCount == 0)
+        #expect(env.provider.currentToken() == "at-valid")
 
-        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        // The 401 path asks for the renewal explicitly.
+        env.provider.invalidateToken()
+        let forced = await env.provider.ensureFreshToken(force: true)
+        #expect(forced == .ready)
         #expect(env.refresher.refreshCallCount == 1)
         #expect(env.provider.currentToken() == "at-valid-refreshed")
-
-        // The flag is consumed.
-        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
-        #expect(env.refresher.refreshCallCount == 1)
     }
 
     // MARK: - refreshTokenIfChanged

@@ -24,7 +24,12 @@ final class StatusBarController: NSObject {
     private let updateStore: UpdateStore
     private let sessionStore: SessionStore
     private let vendorStatusStore: VendorStatusStore
-    private let tokenFileMonitor: TokenFileMonitorProtocol
+    /// Watches every linked profile's `.credentials.json` plus the legacy
+    /// Claude Desktop / `~/.claude` files. Rebuilt when the set of linked
+    /// profiles changes; an injected monitor (tests) is left as is.
+    private var tokenFileMonitor: TokenFileMonitorProtocol
+    private let usesInjectedTokenFileMonitor: Bool
+    private var tokenFileMonitorCancellable: AnyCancellable?
 
     /// The store the menu bar, popover and dashboard render. Resolved through
     /// `ProfileStore` on every use (never cached) so an active-profile switch
@@ -38,7 +43,7 @@ final class StatusBarController: NSObject {
         updateStore: UpdateStore,
         sessionStore: SessionStore,
         vendorStatusStore: VendorStatusStore,
-        tokenFileMonitor: TokenFileMonitorProtocol = TokenFileMonitor()
+        tokenFileMonitor: TokenFileMonitorProtocol? = nil
     ) {
         self.profileStore = profileStore
         self.themeStore = themeStore
@@ -46,7 +51,8 @@ final class StatusBarController: NSObject {
         self.updateStore = updateStore
         self.sessionStore = sessionStore
         self.vendorStatusStore = vendorStatusStore
-        self.tokenFileMonitor = tokenFileMonitor
+        self.usesInjectedTokenFileMonitor = tokenFileMonitor != nil
+        self.tokenFileMonitor = tokenFileMonitor ?? Self.makeTokenFileMonitor(for: profileStore)
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         // Track the item under a stable, app-specific identity rather than the
         // generic "Item-0" the system assigns by default. On macOS 26 the OS
@@ -228,20 +234,27 @@ final class StatusBarController: NSObject {
         // then its own staggered auto-refresh loop. The profile store keeps
         // the configurator so profiles added later are set up identically.
         profileStore.bootstrap(
-            configure: { [weak self] store in self?.configureUsageStore(store) },
+            configure: UsageStoreConfigurator.makeConfigurator(
+                settings: settingsStore,
+                theme: themeStore,
+                vendor: vendorStatusStore,
+                notifToggles: { [weak self] in self?.makeNotificationToggles() }
+            ),
             thresholds: themeStore.thresholds
         )
         themeStore.syncToSharedFile()
 
         // Monitor token files (credentials + config.json) for changes. Any
         // watched store changing re-reads and force-refreshes every enabled
-        // profile (`ProfileStore.handleTokenChange`).
-        tokenFileMonitor.startMonitoring()
-        tokenFileMonitor.tokenChanged
+        // linked profile (`ProfileStore.handleTokenChange`). Linking or
+        // removing a profile changes the directories to watch.
+        startTokenFileMonitor()
+        profileStore.$profiles
+            .map { profiles in profiles.filter(\.isLinked).map { $0.configDir ?? "" } }
+            .removeDuplicates()
+            .dropFirst()
             .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                self?.profileStore.handleTokenChange()
-            }
+            .sink { [weak self] _ in self?.rebuildTokenFileMonitor() }
             .store(in: &cancellables)
 
         // Refresh after wake from sleep
@@ -261,19 +274,29 @@ final class StatusBarController: NSObject {
         }
     }
 
-    // TODO(integration): replace with UsageStoreConfigurator.apply / TokenFileMonitor(watchedFiles:)
-    /// Temporary stand-in for lane L2's `UsageStoreConfigurator.apply(...)`:
-    /// reproduces the pre-multi-profile `bootstrapRefresh` assignments on one
-    /// store. The integrator swaps this for the shared configurator and builds
-    /// the token-file monitor from `profileStore.watchedCredentialFiles`
-    /// (rebuilt on `$profiles` change) instead of the legacy `TokenFileMonitor()`
-    /// default in `init`.
-    private func configureUsageStore(_ store: UsageStore) {
-        store.proxyConfig = settingsStore.proxyConfig
-        store.pacingMargin = settingsStore.pacingMargin
-        store.pacingSchedule = settingsStore.pacingSchedule
-        store.refreshIntervalSeconds = TimeInterval(settingsStore.refreshInterval)
-        store.notifTogglesProvider = { [weak self] in self?.makeNotificationToggles() }
+    private static func makeTokenFileMonitor(for profileStore: ProfileStore) -> TokenFileMonitorProtocol {
+        TokenFileMonitor(
+            watchedFiles: TokenFileMonitor.legacyWatchedFiles() + profileStore.watchedCredentialFiles
+        )
+    }
+
+    private func startTokenFileMonitor() {
+        tokenFileMonitor.startMonitoring()
+        tokenFileMonitorCancellable = tokenFileMonitor.tokenChanged
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                self?.profileStore.handleTokenChange()
+            }
+    }
+
+    /// Linked profiles come and go at runtime, so the watched directory list
+    /// must follow. Injected monitors (tests) are never replaced.
+    private func rebuildTokenFileMonitor() {
+        guard !usesInjectedTokenFileMonitor else { return }
+        tokenFileMonitor.stopMonitoring()
+        tokenFileMonitorCancellable = nil
+        tokenFileMonitor = Self.makeTokenFileMonitor(for: profileStore)
+        startTokenFileMonitor()
     }
 
     /// Single source of truth for the notification-toggle bundle, shared by the

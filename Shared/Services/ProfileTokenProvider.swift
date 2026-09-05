@@ -31,9 +31,6 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     private var cached: OAuthCredentials?
     private var _lastRead: ClaudeCodeCredentialRead?
     private var _credentialState: ProfileCredentialState = .unknown
-    /// Set by `invalidateToken()` (a 401): the next `ensureFreshToken` renews
-    /// even if the expiry says the token is still good.
-    private var forceNext = false
 
     private let vault: ProfileCredentialVaultProtocol
     private let store: ClaudeCodeCredentialStoreProtocol
@@ -107,12 +104,15 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         return vault.load(profileID: profile.id) != nil
     }
 
-    /// A 401 arrived. The cache is kept on purpose: for a managed profile it is
-    /// the only copy of the chain, and the next `ensureFreshToken` decides
-    /// whether to adopt live credentials or renew.
+    /// A 401 arrived, or a watched credential file changed. The cache is kept
+    /// on purpose: for a managed profile it is the only copy of the chain, and
+    /// the next `ensureFreshToken` re-reads the live store and adopts whatever
+    /// is newer. It deliberately does NOT force a renewal: `UsageStore` passes
+    /// `force: true` explicitly on a 401, and a file-change notification must
+    /// never renew, otherwise a renewal whose write-back touches the watched
+    /// credentials file would trigger the watcher and renew again, forever.
     func invalidateToken() {
-        lock.withLock { forceNext = true }
-        logger.info("Token invalidated for profile \(self.idPrefix, privacy: .public) - next ensureFreshToken renews")
+        logger.info("Token invalidated for profile \(self.idPrefix, privacy: .public) - next ensureFreshToken re-reads the live store")
     }
 
     /// Steps 2-3 of §3.5 only. Returns true when the access token changed
@@ -150,13 +150,8 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
 
     // MARK: - ensureFreshToken
 
-    private func performEnsureFreshToken(force requestedForce: Bool) async -> TokenReadiness {
+    private func performEnsureFreshToken(force: Bool) async -> TokenReadiness {
         let profile = currentProfile
-        let force = lock.withLock { () -> Bool in
-            let value = requestedForce || forceNext
-            forceNext = false
-            return value
-        }
 
         // 1. In-memory cache, else the vault.
         loadVaultIfNeeded(profile: profile)
