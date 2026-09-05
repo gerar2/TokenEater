@@ -280,8 +280,9 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
             return nil
         }
         let adopted: Bool = lock.withLock {
+            let previousRead = _lastRead?.credentials
             _lastRead = live
-            guard Self.shouldAdopt(live.credentials, over: cached, profile: profile) else { return false }
+            guard Self.shouldAdopt(live.credentials, over: cached, lastRead: previousRead, profile: profile) else { return false }
             cached = live.credentials
             _credentialState = ProfileCredentialState.from(live.credentials, now: now())
             return true
@@ -297,10 +298,30 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         return live
     }
 
-    static func shouldAdopt(_ live: OAuthCredentials, over cached: OAuthCredentials?, profile: AccountProfile) -> Bool {
-        guard let cached else { return true }
+    /// Adoption rule for a live read.
+    ///
+    /// - Linked profile: adopt when the live store CHANGED since our previous
+    ///   read (a rotation by Claude Code or an account swap). Comparing against
+    ///   the previous read rather than the cache matters after a renewal whose
+    ///   write-back failed: the store still holds the pre-renewal token, which
+    ///   must not be re-adopted (it would drag the chain back and the next
+    ///   refresh grant would be rejected). With no previous read the cache is
+    ///   the only baseline.
+    /// - Managed profile: adopt only a newer set of the SAME chain (owner
+    ///   precedence after a capture). Never adopt without a baseline: a lost
+    ///   vault item must surface as "no credentials", not silently attach
+    ///   whichever account is signed in to `~/.claude`.
+    static func shouldAdopt(
+        _ live: OAuthCredentials,
+        over cached: OAuthCredentials?,
+        lastRead: OAuthCredentials?,
+        profile: AccountProfile
+    ) -> Bool {
+        guard let cached else { return profile.isLinked }
         if profile.isLinked {
-            return live.accessToken != cached.accessToken
+            guard live.accessToken != cached.accessToken else { return false }
+            if let lastRead { return live.accessToken != lastRead.accessToken }
+            return true
         }
         return live.isSameChain(as: cached) && live.isNewer(than: cached)
     }

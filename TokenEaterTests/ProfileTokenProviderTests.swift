@@ -485,4 +485,52 @@ struct ProfileTokenProviderTests {
         #expect(env.provider.currentToken() == "renewed")
         #expect(env.vault.storage[profile.id]?.accessToken == "renewed")
     }
+
+    // MARK: - Adoption edge cases (integration hardening)
+
+    @Test("A managed profile with a lost vault item never adopts the default store's account")
+    func managedWithoutBaselineDoesNotAdopt() async {
+        let profile = managed()
+        let env = makeSUT(profile: profile) // no vault seed: the item was lost
+        env.store.stub(configDir: nil, credentials: credentials("other-account-at", refresh: "rt-other"))
+
+        #expect(env.provider.currentToken() == nil)
+        let readiness = await env.provider.ensureFreshToken(force: false)
+        #expect(readiness == .missing)
+        #expect(env.provider.credentialState == .missing)
+        #expect(env.vault.storage[profile.id] == nil)
+        #expect(env.refresher.refreshCallCount == 0)
+    }
+
+    @Test("After a failed write-back the stale live token is not re-adopted on the next tick")
+    func staleLiveTokenNotReadoptedAfterFailedWriteBack() async {
+        let dir = "/Users/tester/.claude-work"
+        let backing = ClaudeCodeCredentialBacking.file(path: dir + "/.credentials.json")
+        let profile = linked(dir, policy: .tokenEater)
+        let expired = credentials("old-at", refresh: "rt-old", ttl: -60)
+        let env = makeSUT(profile: profile, vaultSeed: expired)
+        env.store.stub(configDir: dir, credentials: expired, backing: backing)
+        env.store.writeError = ClaudeCodeCredentialStoreError.writeFailed("disk full")
+        env.refresher.stubbedResult = credentials("new-at", refresh: "rt-new")
+
+        let first = await env.provider.ensureFreshToken(force: false)
+        #expect(first == .ready)
+        #expect(env.provider.currentToken() == "new-at")
+        #expect(env.store.writeCallCount == 1)
+
+        // The store still holds the pre-renewal token (the write-back failed)
+        // and has not changed since our last read: it must not win over the
+        // renewed chain, or the next refresh grant would be rejected.
+        let second = await env.provider.ensureFreshToken(force: false)
+        #expect(second == .ready)
+        #expect(env.provider.currentToken() == "new-at")
+        #expect(env.refresher.refreshCallCount == 1)
+        #expect(env.provider.refreshTokenIfChanged() == false)
+
+        // A genuine change in the store (Claude Code rotated, or a re-login)
+        // is still adopted.
+        env.store.stub(configDir: dir, credentials: credentials("cc-rotated-at", refresh: "rt-cc"), backing: backing)
+        #expect(env.provider.refreshTokenIfChanged() == true)
+        #expect(env.provider.currentToken() == "cc-rotated-at")
+    }
 }
