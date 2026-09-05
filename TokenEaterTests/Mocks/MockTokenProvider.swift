@@ -14,9 +14,20 @@ final class MockTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     var tokenDidChange = false
     /// Multi-profile: what `ensureFreshToken` reports and the exposed state.
     var readiness: TokenReadiness = .ready
+    /// Consumed first, in order, before falling back to `readiness`. Lets a
+    /// test answer `.ready` to the pre-fetch check and something else to the
+    /// forced post-401 check.
+    var readinessQueue: [TokenReadiness] = []
     var ensureFreshTokenCallCount = 0
     var lastEnsureForce: Bool?
+    var ensureForceHistory: [Bool] = []
     var _credentialState: ProfileCredentialState = .unknown
+    /// When set, `invalidateToken()` swaps `token` to it: simulates a
+    /// provider that renews / re-reads a rotated token after a 401.
+    var rotatedToken: String?
+    /// When true, `invalidateToken()` clears `token`: simulates a source
+    /// that vanished between the fetch and the re-read.
+    var dropTokenOnInvalidate = false
 
     var isBootstrapped: Bool { _isBootstrapped }
     var credentialState: ProfileCredentialState { _credentialState }
@@ -24,6 +35,10 @@ final class MockTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     func ensureFreshToken(force: Bool) async -> TokenReadiness {
         ensureFreshTokenCallCount += 1
         lastEnsureForce = force
+        ensureForceHistory.append(force)
+        if !readinessQueue.isEmpty {
+            return readinessQueue.removeFirst()
+        }
         return readiness
     }
 
@@ -38,6 +53,11 @@ final class MockTokenProvider: TokenProviderProtocol, @unchecked Sendable {
 
     func invalidateToken() {
         invalidateCallCount += 1
+        if dropTokenOnInvalidate {
+            token = nil
+        } else if let rotatedToken {
+            token = rotatedToken
+        }
     }
 
     func refreshTokenIfChanged() -> Bool {
