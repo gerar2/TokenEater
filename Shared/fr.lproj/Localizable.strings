@@ -937,3 +937,8 @@
 "widget.profile.param" = "Compte";
 "widget.profile.follow" = "Suit le compte actif";
 /* === end multi-profile: widget === */
+/* === multi-profile: surfaces === */
+"popover.profileSwitcher.hint" = "Changez le compte affiché dans la barre de menus et le popover.";
+"popover.profileSwitcher.chip" = "%1$@, session à %2$d %%";
+"popover.profileSwitcher.chip.noData" = "%@, pas encore de données";
+/* === end multi-profile: surfaces === */

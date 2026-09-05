@@ -76,10 +76,18 @@ enum PopoverMetricResolver {
     /// Presence gating: elements whose data doesn't exist on this account (or
     /// right now) render nothing and their row recompacts, matching the old
     /// satellite behavior.
-    static func isAvailable(_ kind: PopoverElementKind, usage: UsageStore) -> Bool {
+    ///
+    /// `profiles` is the catalog the multi-profile switcher gates on. It is
+    /// optional so call sites that only know a `UsageStore` (single-profile
+    /// contexts) keep compiling; without it the switcher is simply absent.
+    static func isAvailable(_ kind: PopoverElementKind, usage: UsageStore, profiles: ProfileStore? = nil) -> Bool {
         switch kind {
         case .fable: return usage.hasFable
         case .extraCredits: return usage.hasExtraCredits
+        // The switcher only makes sense with something to switch to. Gated on
+        // the catalog (not the active store) so it appears the moment a second
+        // profile is added, before that profile has fetched anything.
+        case .profileSwitcher: return profiles?.isMultiProfile == true
         // Pacing follows the 3-state model (absent / idle / active): available
         // when the underlying bucket is PRESENT, so an idle bucket (present but
         // no active window yet) still renders its "-" placeholder cell instead
