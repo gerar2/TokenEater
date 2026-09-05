@@ -36,19 +36,32 @@ extension Notification.Name {
 /// profile refreshes on its own. See `docs/multi-profile-plan.md` §4.1.
 ///
 /// Child stores relay their `objectWillChange` here so a single observer
-/// (`StatusBarController`) sees every profile's updates.
+/// (`StatusBarController`) sees every profile's updates, and their
+/// `credentialState` is mirrored into `credentialStates` on every change
+/// (including changes made by a store's own auto-refresh loop).
 @MainActor
 final class ProfileStore: ObservableObject {
     typealias UsageStoreFactory = (AccountProfile) -> UsageStore
     typealias StoreConfigurator = (UsageStore) -> Void
+    typealias TokenProviderFactory = (AccountProfile) -> TokenProviderProtocol
+    typealias NotificationServiceFactory = (AccountProfile) -> NotificationServiceProtocol
+    typealias WatchedFile = (directory: String, filename: String)
 
     @Published private(set) var profiles: [AccountProfile] = []
     @Published private(set) var activeProfileID: UUID
+    /// Mirror of every store's `credentialState`. Seeded at `bootstrap` / on
+    /// insert and kept current by a relay; an entry is missing only for a
+    /// store created outside those paths that has not refreshed yet (use
+    /// `credentialState(for:)`, which falls back to the store).
     @Published private(set) var credentialStates: [UUID: ProfileCredentialState] = [:]
     @Published private(set) var lastError: ProfileStoreError?
 
     private(set) var usageStores: [UUID: UsageStore] = [:]
-    private var relays: [UUID: AnyCancellable] = [:]
+    /// Providers built by the production factory, keyed by profile (empty
+    /// when a `usageStoreFactory` is injected). Lets the app forward runtime
+    /// profile edits (renewal policy) to the provider.
+    private(set) var tokenProviders: [UUID: TokenProviderProtocol] = [:]
+    private var relays: [UUID: [AnyCancellable]] = [:]
 
     private let persistence: ProfilePersistenceProtocol
     private let vault: ProfileCredentialVaultProtocol
@@ -57,10 +70,36 @@ final class ProfileStore: ObservableObject {
     private let sharedFileService: SharedFileServiceProtocol
     private let identityClient: APIClientProtocol
     private let realHome: String
-    private var usageStoreFactory: UsageStoreFactory!
+    private let injectedUsageStoreFactory: UsageStoreFactory?
     private var configurator: StoreConfigurator?
     private var thresholds: UsageThresholds = .default
     private var didBootstrap = false
+
+    // MARK: Integration seams (set before the first store is created)
+
+    /// Builds the token provider for a profile. `nil` = `makeDefaultTokenProvider`.
+    /// Stores are created lazily (at `bootstrap`, on insert, or on first
+    /// access), so assign this right after `init` for it to apply everywhere.
+    var tokenProviderFactory: TokenProviderFactory?
+    /// Builds the notification service for a profile. The default profile
+    /// keeps the legacy unsuffixed keys; the app swaps in a scoped service for
+    /// the others (see §3.7).
+    var notificationServiceFactory: NotificationServiceFactory = { _ in NotificationService() }
+    /// Proxy for the identity fetch (`/api/oauth/profile`). Wired by the app
+    /// from `SettingsStore.proxyConfig`.
+    var proxyProvider: () -> ProxyConfig? = { nil }
+    /// Called after a profile's fields change (rename / colour / enable /
+    /// policy / identity) with the provider that serves it, so a
+    /// `ProfileTokenProvider` can pick up a policy change at runtime.
+    var onProfileUpdated: ((AccountProfile, TokenProviderProtocol?) -> Void)?
+    /// Where `.profilesBecameMultiple` is posted (tests use a private center
+    /// so a `SettingsStore` alive in another suite never sees the post).
+    var notificationCenter: NotificationCenter = .default
+    /// Directory check for `addLinkedProfile` (tests inject `{ _ in true }`).
+    var directoryExists: (String) -> Bool = { path in
+        var isDirectory: ObjCBool = false
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
+    }
 
     /// Default profile created on first launch / after migration (§1.4).
     static let defaultProfileName = "Claude Code"
@@ -84,17 +123,15 @@ final class ProfileStore: ObservableObject {
         self.sharedFileService = sharedFileService
         self.identityClient = identityClient
         self.realHome = realHome
+        self.injectedUsageStoreFactory = usageStoreFactory
 
         let stored = persistence.loadProfiles()
         self.profiles = stored
         self.activeProfileID = persistence.loadActiveProfileID() ?? stored.first?.id ?? UUID()
 
-        // Wired after every stored property so the closure can capture self.
-        self.usageStoreFactory = usageStoreFactory ?? { [weak self] profile in
-            Self.makeDefaultUsageStore(for: profile, owner: self)
-        }
-
         ensureDefaultProfileIfNeeded()
+        // A stale active id (profile removed by an older build, corrupted
+        // default) must never leave the app without an active profile.
         if !profiles.contains(where: { $0.id == activeProfileID }), let first = profiles.first {
             activeProfileID = first.id
             persistence.saveActiveProfileID(first.id)
@@ -120,29 +157,58 @@ final class ProfileStore: ObservableObject {
         profiles.first { $0.id == id }
     }
 
-    /// Creates the store lazily and relays its changes. Returns nil for an
-    /// unknown id.
+    /// The mirrored state, falling back to the store for an entry that has
+    /// not been seeded yet.
+    func credentialState(for id: UUID) -> ProfileCredentialState {
+        credentialStates[id] ?? usageStores[id]?.credentialState ?? .unknown
+    }
+
+    /// Creates the store lazily and wires its relays. Returns nil for an
+    /// unknown id. Creation publishes nothing on this store (the relays skip
+    /// the initial values), so a SwiftUI body reading `activeUsageStore` for
+    /// the first time never mutates state mid-render.
     func usageStore(for id: UUID) -> UsageStore? {
         if let existing = usageStores[id] { return existing }
         guard let profile = profile(for: id) else { return nil }
-        let store = usageStoreFactory(profile)
+        let store = injectedUsageStoreFactory?(profile) ?? makeDefaultUsageStore(for: profile)
         store.isActiveProfile = (id == activeProfileID)
         usageStores[id] = store
-        relays[id] = store.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
+        relays[id] = [
+            // The piège (same as SettingsStore): a child ObservableObject does
+            // not bubble its changes up. Relay so one observer sees all stores.
+            store.objectWillChange.sink { [weak self] _ in
+                self?.objectWillChange.send()
+            },
+            store.$credentialState
+                .dropFirst()
+                .removeDuplicates()
+                .sink { [weak self] state in
+                    self?.credentialStates[id] = state
+                },
+            store.$accountIdentity
+                .dropFirst()
+                .compactMap { $0 }
+                .removeDuplicates()
+                .sink { [weak self] identity in
+                    self?.applyIdentity(identity, to: id)
+                },
+        ]
         return store
     }
 
-    /// `<configDir>/.credentials.json` for every linked profile, for the
-    /// filesystem watcher. Managed profiles have no file to watch.
-    var watchedCredentialFiles: [(directory: String, filename: String)] {
-        var seen = Set<String>()
-        var result: [(directory: String, filename: String)] = []
+    /// `<configDir>/.credentials.json` for every linked profile on top of the
+    /// two legacy entries (Claude Desktop `config.json`, default
+    /// `~/.claude/.credentials.json`), for the filesystem watcher. Managed
+    /// profiles have no file to watch. De-duplicated: the default profile's
+    /// entry is the legacy one.
+    var watchedCredentialFiles: [WatchedFile] {
+        var result = TokenFileMonitor.legacyWatchedFiles(realHome: realHome)
+        var seen = Set(result.map { $0.directory + "/" + $0.filename })
         for profile in profiles where profile.isLinked {
             let dir = profile.resolvedConfigDir(realHome: realHome)
-            guard seen.insert(dir).inserted else { continue }
-            result.append((directory: dir, filename: ".credentials.json"))
+            let filename = ".credentials.json"
+            guard seen.insert(dir + "/" + filename).inserted else { continue }
+            result.append((directory: dir, filename: filename))
         }
         return result
     }
@@ -150,7 +216,8 @@ final class ProfileStore: ObservableObject {
     // MARK: - Migration
 
     /// Guarantees at least one profile: the default Claude Code profile bound
-    /// to `~/.claude`, behaving exactly like the pre-multi-profile app.
+    /// to `~/.claude`, behaving exactly like the pre-multi-profile app (legacy
+    /// pacing-sample and notification keys, legacy widget snapshot).
     func ensureDefaultProfileIfNeeded() {
         guard profiles.isEmpty else { return }
         let profile = AccountProfile(
@@ -177,6 +244,9 @@ final class ProfileStore: ObservableObject {
             throw record(.duplicateConfigDir)
         }
         let normalizedDir: String? = ClaudeKeychainServiceName.isDefaultDir(configDir, realHome: realHome) ? nil : resolved
+        if let dir = normalizedDir, !directoryExists(dir) {
+            throw record(.noCredentials)
+        }
         guard let live = await readLiveOffMain(configDir: normalizedDir) else {
             throw record(.noCredentials)
         }
@@ -203,6 +273,8 @@ final class ProfileStore: ObservableObject {
         guard let live = await readLiveOffMain(configDir: nil) else {
             throw record(.noCredentials)
         }
+        // Without a refresh token TokenEater could never renew the copy: the
+        // profile would die with the access token (Claude Desktop-only users).
         guard live.credentials.refreshToken != nil else {
             throw record(.noRefreshToken)
         }
@@ -232,8 +304,10 @@ final class ProfileStore: ObservableObject {
         update(id) { $0.colorHex = hex }
     }
 
+    /// Pausing the active profile hands the active role to the first enabled
+    /// one so the menu bar never shows a profile that stopped refreshing.
     func setEnabled(_ id: UUID, _ enabled: Bool) {
-        guard let profile = profile(for: id), profile.isEnabled != enabled else { return }
+        guard let current = profile(for: id), current.isEnabled != enabled else { return }
         update(id) { $0.isEnabled = enabled }
         if enabled {
             startIfBootstrapped(id)
@@ -253,17 +327,17 @@ final class ProfileStore: ObservableObject {
         guard profiles.contains(where: { $0.id == id }) else { throw record(.notFound) }
         guard profiles.count > 1 else { throw record(.cannotRemoveLast) }
         usageStores[id]?.stopAutoRefresh()
-        usageStores[id] = nil
         relays[id] = nil
+        usageStores[id] = nil
+        tokenProviders[id] = nil
         credentialStates[id] = nil
         vault.delete(profileID: id)
         sharedFileService.removeProfile(id: id)
         profiles.removeAll { $0.id == id }
         if activeProfileID == id, let fallback = enabledProfiles.first ?? profiles.first {
-            setActive(fallback.id)
-        } else {
-            persist()
+            activate(fallback.id)
         }
+        persist()
     }
 
     func move(fromOffsets: IndexSet, toOffset: Int) {
@@ -273,30 +347,34 @@ final class ProfileStore: ObservableObject {
 
     /// Switches the profile the menu bar / popover / dashboard render. Also
     /// republishes that profile's last usage as the legacy top-level snapshot
-    /// so unpinned widgets flip immediately.
+    /// so unpinned widgets flip immediately. The UI only offers enabled
+    /// profiles; any known id is accepted here.
     func setActive(_ id: UUID) {
         guard profiles.contains(where: { $0.id == id }) else { return }
-        activeProfileID = id
-        for (storeID, store) in usageStores {
-            store.isActiveProfile = (storeID == id)
-        }
+        activate(id)
         persistence.saveActiveProfileID(id)
-        if let cached = sharedFileService.profileSnapshots.first(where: { $0.id == id })?.cachedUsage {
-            sharedFileService.updateAfterSync(usage: cached, syncDate: cached.fetchDate)
-        }
         syncCatalogToSharedFile()
+    }
+
+    func clearError() {
+        lastError = nil
     }
 
     // MARK: - Lifecycle
 
     /// Starts every enabled profile: applies the configurator, reloads the
-    /// cached snapshot, and starts the staggered auto-refresh loops.
+    /// cached snapshot, and starts the staggered auto-refresh loops. Every
+    /// profile gets a store (the Accounts UI observes paused ones too); only
+    /// enabled ones refresh.
     func bootstrap(configure: @escaping StoreConfigurator, thresholds: UsageThresholds) {
         self.configurator = configure
         self.thresholds = thresholds
         didBootstrap = true
+        for profile in profiles {
+            _ = usageStore(for: profile.id)
+        }
         for (index, profile) in enabledProfiles.enumerated() {
-            guard let store = usageStore(for: profile.id) else { continue }
+            guard let store = usageStores[profile.id] else { continue }
             configure(store)
             store.reloadConfig(thresholds: thresholds)
             store.startAutoRefresh(
@@ -304,6 +382,7 @@ final class ProfileStore: ObservableObject {
                 initialDelay: TimeInterval(index) * Self.bootstrapStagger
             )
         }
+        syncCredentialStates()
         syncCatalogToSharedFile()
     }
 
@@ -311,21 +390,26 @@ final class ProfileStore: ObservableObject {
         for store in usageStores.values { store.stopAutoRefresh() }
     }
 
+    /// Sequential on purpose: "Refresh now" must not burst N requests at the
+    /// same instant any more than the staggered loops do.
     func refreshAll(force: Bool) async {
         for profile in enabledProfiles {
             guard let store = usageStores[profile.id] else { continue }
             await store.refresh(thresholds: thresholds, force: force)
-            recordCredentialState(for: profile.id)
         }
     }
 
+    /// A watched credential file changed. Only linked profiles read those
+    /// files; a managed profile's credentials live in the vault, so
+    /// invalidating them would only force a needless refresh-grant round
+    /// trip (its provider adopts newer same-chain credentials on its next
+    /// tick anyway).
     func handleTokenChange() {
-        for profile in enabledProfiles {
+        for profile in enabledProfiles where profile.isLinked {
             guard let store = usageStores[profile.id] else { continue }
             store.handleTokenChange()
             Task { [weak self] in
                 await store.refresh(thresholds: self?.thresholds ?? .default, force: true)
-                self?.recordCredentialState(for: profile.id)
             }
         }
     }
@@ -334,12 +418,11 @@ final class ProfileStore: ObservableObject {
         for profile in enabledProfiles {
             guard let store = usageStores[profile.id] else { continue }
             await store.refreshIfStale(thresholds: thresholds)
-            recordCredentialState(for: profile.id)
         }
     }
 
     /// Re-applies the settings-derived configuration to every store (called
-    /// when a new profile is added after bootstrap).
+    /// when a setting changes after bootstrap).
     func reconfigureAll() {
         guard let configurator else { return }
         for store in usageStores.values { configurator(store) }
@@ -351,9 +434,11 @@ final class ProfileStore: ObservableObject {
         let wasSingle = profiles.count == 1
         profiles.append(profile)
         persist()
+        _ = usageStore(for: profile.id)
+        syncCredentialState(for: profile.id)
         startIfBootstrapped(profile.id)
         if wasSingle && profiles.count == 2 {
-            NotificationCenter.default.post(name: .profilesBecameMultiple, object: nil)
+            notificationCenter.post(name: .profilesBecameMultiple, object: nil)
         }
     }
 
@@ -361,6 +446,27 @@ final class ProfileStore: ObservableObject {
         guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
         transform(&profiles[index])
         persist()
+        onProfileUpdated?(profiles[index], tokenProviders[id])
+    }
+
+    private func activate(_ id: UUID) {
+        activeProfileID = id
+        for (storeID, store) in usageStores {
+            store.isActiveProfile = (storeID == id)
+        }
+        republishLegacySnapshot(for: id)
+    }
+
+    /// Legacy widgets and `isConfigured` read the top-level `cachedUsage`,
+    /// which only the active profile's repository writes. Copy the new active
+    /// profile's last usage there now instead of waiting for its next fetch.
+    private func republishLegacySnapshot(for id: UUID) {
+        if let cached = sharedFileService.profileSnapshots.first(where: { $0.id == id })?.cachedUsage {
+            sharedFileService.updateAfterSync(usage: cached, syncDate: cached.fetchDate)
+        } else if let store = usageStores[id], let usage = store.lastUsage {
+            let date = store.lastUpdate ?? Date()
+            sharedFileService.updateAfterSync(usage: CachedUsage(usage: usage, fetchDate: date), syncDate: date)
+        }
     }
 
     private func startIfBootstrapped(_ id: UUID) {
@@ -385,9 +491,35 @@ final class ProfileStore: ObservableObject {
         WidgetReloader.scheduleReload()
     }
 
-    private func recordCredentialState(for id: UUID) {
-        guard let store = usageStores[id] else { return }
+    private func syncCredentialStates() {
+        var states = credentialStates
+        for (id, store) in usageStores {
+            states[id] = store.credentialState
+        }
+        if states != credentialStates {
+            credentialStates = states
+        }
+    }
+
+    private func syncCredentialState(for id: UUID) {
+        guard let store = usageStores[id], credentialStates[id] != store.credentialState else { return }
         credentialStates[id] = store.credentialState
+    }
+
+    /// Mirrors what `/api/oauth/profile` said into the catalog. Fills the
+    /// migrated default profile's identity (it never went through
+    /// `fillIdentity`) and keeps email / plan current after an account swap.
+    private func applyIdentity(_ identity: UsageStore.AccountIdentity, to id: UUID) {
+        guard let current = profile(for: id) else { return }
+        let email = identity.email ?? current.accountEmail
+        let uuid = identity.uuid ?? current.accountUUID
+        let plan = identity.planTypeRaw ?? current.planTypeRaw
+        guard email != current.accountEmail || uuid != current.accountUUID || plan != current.planTypeRaw else { return }
+        update(id) {
+            $0.accountEmail = email
+            $0.accountUUID = uuid
+            $0.planTypeRaw = plan
+        }
     }
 
     @discardableResult
@@ -408,9 +540,10 @@ final class ProfileStore: ObservableObject {
     }
 
     /// Best-effort identity fetch: fills email / uuid / plan and rejects a
-    /// duplicate account. A transport failure keeps the profile (no identity).
+    /// duplicate account (cleaning the vault entry seeded for it). A
+    /// transport failure keeps the profile (no identity).
     private func fillIdentity(_ profile: inout AccountProfile, accessToken: String) async throws {
-        guard let response = try? await identityClient.fetchProfile(token: accessToken, proxyConfig: nil) else {
+        guard let response = try? await identityClient.fetchProfile(token: accessToken, proxyConfig: proxyProvider()) else {
             return
         }
         if let existing = profiles.first(where: { $0.accountUUID == response.account.uuid }) {
@@ -422,18 +555,32 @@ final class ProfileStore: ObservableObject {
         profile.planTypeRaw = PlanType(from: response.account, organization: response.organization).rawValue
     }
 
-    /// Production factory. Phase 0: the default profile keeps the legacy
-    /// `TokenProvider` (identical behaviour); other profiles get a placeholder
-    /// until `ProfileTokenProvider` lands (integration swaps this).
-    private static func makeDefaultUsageStore(for profile: AccountProfile, owner: ProfileStore?) -> UsageStore {
-        let isDefault = profile.isDefaultClaudeCodeProfile
-        let provider: TokenProviderProtocol = isDefault ? TokenProvider() : PlaceholderTokenProvider()
+    /// Production factory: one repository + token provider + notification
+    /// service per profile, all sharing this store's `SharedFileService` so
+    /// the JSON cache is written through a single instance. The migrated
+    /// default profile keeps the legacy keys.
+    private func makeDefaultUsageStore(for profile: AccountProfile) -> UsageStore {
+        let provider = tokenProviderFactory?(profile) ?? makeDefaultTokenProvider(for: profile)
+        tokenProviders[profile.id] = provider
         return UsageStore(
-            repository: UsageRepository(profileID: profile.id),
+            repository: UsageRepository(sharedFileService: sharedFileService, profileID: profile.id),
             tokenProvider: provider,
+            sharedFileService: sharedFileService,
+            notificationService: notificationServiceFactory(profile),
             profileID: profile.id,
-            legacyKeys: isDefault
+            legacyKeys: profile.isDefaultClaudeCodeProfile
         )
+    }
+
+    /// INTEGRATION SEAM. The default profile keeps the legacy `TokenProvider`
+    /// (identical behaviour to the single-account app). Other profiles get a
+    /// placeholder until `ProfileTokenProvider` (credentials lane) lands;
+    /// integration replaces the placeholder branch with
+    /// `ProfileTokenProvider(profile:vault:store:refresher:proxyProvider:realHome:)`
+    /// using `vault`, `credentialStore`, `refresher`, `proxyProvider` and
+    /// `realHome` held by this store.
+    private func makeDefaultTokenProvider(for profile: AccountProfile) -> TokenProviderProtocol {
+        profile.isDefaultClaudeCodeProfile ? TokenProvider() : PlaceholderTokenProvider()
     }
 }
 

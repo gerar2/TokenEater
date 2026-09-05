@@ -112,4 +112,83 @@ struct UsageRepositoryTests {
             // Expected
         }
     }
+
+    // MARK: - Multi-profile writes (docs/multi-profile-plan.md §3.6)
+
+    private func makeProfileSUT(profileID: UUID) -> (
+        repo: UsageRepository,
+        api: MockAPIClient,
+        sharedFile: MockSharedFileService
+    ) {
+        let api = MockAPIClient()
+        let sharedFile = MockSharedFileService()
+        let repo = UsageRepository(apiClient: api, sharedFileService: sharedFile, profileID: profileID)
+        return (repo, api, sharedFile)
+    }
+
+    @Test("an active profile writes its own snapshot and the legacy one")
+    func activeProfileWritesBothSnapshots() async throws {
+        let id = UUID()
+        let (repo, api, sharedFile) = makeProfileSUT(profileID: id)
+        api.stubbedUsage = .fixture(fiveHourUtil: 42)
+
+        _ = try await repo.refreshUsage(token: "tok", proxyConfig: nil, isActiveProfile: true, credentialState: "ok")
+
+        #expect(sharedFile.updateProfileUsageCallCount == 1)
+        let snapshot = sharedFile.profileSnapshots.first { $0.id == id }
+        #expect(snapshot?.cachedUsage?.usage.fiveHour?.utilization == 42)
+        #expect(snapshot?.credentialState == "ok")
+        #expect(snapshot?.lastSyncDate != nil)
+        #expect(sharedFile.updateAfterSyncCallCount == 1)
+        #expect(sharedFile.cachedUsage?.usage.fiveHour?.utilization == 42)
+    }
+
+    @Test("an inactive profile writes its own snapshot only")
+    func inactiveProfileSkipsLegacySnapshot() async throws {
+        let id = UUID()
+        let (repo, api, sharedFile) = makeProfileSUT(profileID: id)
+        api.stubbedUsage = .fixture(fiveHourUtil: 42)
+
+        _ = try await repo.refreshUsage(token: "tok", proxyConfig: nil, isActiveProfile: false, credentialState: "awaiting")
+
+        #expect(sharedFile.updateProfileUsageCallCount == 1)
+        #expect(sharedFile.profileSnapshots.first { $0.id == id }?.credentialState == "awaiting")
+        #expect(sharedFile.updateAfterSyncCallCount == 0)
+        #expect(sharedFile.cachedUsage == nil)
+    }
+
+    @Test("the legacy two-argument call on a profile repository behaves as active")
+    func legacyCallOnProfileRepository() async throws {
+        let id = UUID()
+        let (repo, _, sharedFile) = makeProfileSUT(profileID: id)
+
+        _ = try await repo.refreshUsage(token: "tok", proxyConfig: nil)
+
+        #expect(sharedFile.updateProfileUsageCallCount == 1)
+        #expect(sharedFile.profileSnapshots.first?.id == id)
+        #expect(sharedFile.profileSnapshots.first?.credentialState == nil)
+        #expect(sharedFile.updateAfterSyncCallCount == 1)
+    }
+
+    @Test("a repository without a profile id never writes a per-profile snapshot")
+    func legacyRepositoryWritesLegacyOnly() async throws {
+        let (repo, _, sharedFile) = makeSUT()
+
+        _ = try await repo.refreshUsage(token: "tok", proxyConfig: nil, isActiveProfile: true, credentialState: "ok")
+
+        #expect(sharedFile.updateProfileUsageCallCount == 0)
+        #expect(sharedFile.profileSnapshots.isEmpty)
+        #expect(sharedFile.updateAfterSyncCallCount == 1)
+    }
+
+    @Test("a failed fetch writes neither snapshot")
+    func failedFetchWritesNothing() async {
+        let (repo, api, sharedFile) = makeProfileSUT(profileID: UUID())
+        api.stubbedError = APIError.tokenExpired(endpoint: "/api/oauth/usage", statusCode: 401)
+
+        _ = try? await repo.refreshUsage(token: "tok", proxyConfig: nil, isActiveProfile: true, credentialState: "ok")
+
+        #expect(sharedFile.updateProfileUsageCallCount == 0)
+        #expect(sharedFile.updateAfterSyncCallCount == 0)
+    }
 }

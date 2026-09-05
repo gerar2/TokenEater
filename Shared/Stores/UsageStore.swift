@@ -49,10 +49,24 @@ final class UsageStore: ObservableObject {
     /// Mirror of the token provider's credential state, refreshed after every
     /// fetch attempt so the Accounts UI and the overview strip can render it.
     @Published private(set) var credentialState: ProfileCredentialState = .unknown
+    /// Identity of the account behind the token, filled by `refreshProfile`.
+    /// `ProfileStore` mirrors it into the catalog so the migrated default
+    /// profile (created without an identity fetch) still gets an email / plan
+    /// and takes part in duplicate-account detection.
+    @Published private(set) var accountIdentity: AccountIdentity?
+
+    struct AccountIdentity: Equatable {
+        let email: String?
+        let uuid: String?
+        let planTypeRaw: String?
+    }
 
     /// The profile this store belongs to (nil for single-source construction
     /// in tests / legacy paths).
     let profileID: UUID?
+    /// True for the migrated default profile: it keeps the unsuffixed
+    /// UserDefaults key and may fall back to the legacy `shared.json` snapshot.
+    let usesLegacyKeys: Bool
     /// True when this profile drives the menu bar / popover / dashboard. The
     /// repository mirrors this store's usage into the legacy widget snapshot
     /// only while active. Set by `ProfileStore.setActive`.
@@ -125,8 +139,18 @@ final class UsageStore: ObservableObject {
     /// without owning a direct SettingsStore reference.
     var notifTogglesProvider: (() -> NotificationToggles?)?
 
+    /// The snapshot this store should show before its first live fetch. A
+    /// profile store reads its own entry in `shared.json`: the legacy
+    /// top-level snapshot belongs to whichever profile is active, so loading
+    /// it into another profile's store would show the wrong account. Only the
+    /// migrated default profile may fall back to it (it is the profile that
+    /// wrote that snapshot before the upgrade).
     var cachedUsage: CachedUsage? {
-        sharedFileService.cachedUsage
+        guard let profileID else { return sharedFileService.cachedUsage }
+        if let own = sharedFileService.profileSnapshots.first(where: { $0.id == profileID })?.cachedUsage {
+            return own
+        }
+        return usesLegacyKeys ? sharedFileService.cachedUsage : nil
     }
 
     init(
@@ -142,6 +166,7 @@ final class UsageStore: ObservableObject {
         self.sharedFileService = sharedFileService
         self.notificationService = notificationService
         self.profileID = profileID
+        self.usesLegacyKeys = legacyKeys
         // The migrated default profile keeps the unsuffixed key so existing
         // users keep their pacing history; additional profiles get their own.
         if let profileID, !legacyKeys {
@@ -157,6 +182,8 @@ final class UsageStore: ObservableObject {
 
     private static let legacySessionSamplesKey = "sessionPacingSamples"
     private let sessionSamplesKey: String
+    /// The UserDefaults key the pacing samples persist under (diagnostics / tests).
+    var sessionSamplesStorageKey: String { sessionSamplesKey }
 
     private static func loadSessionSamples(key sessionSamplesKey: String) -> [PacingSample] {
         guard let data = UserDefaults.standard.data(forKey: sessionSamplesKey),
@@ -184,8 +211,27 @@ final class UsageStore: ObservableObject {
     }
 
     func refresh(thresholds: UsageThresholds = .default, force: Bool = false) async {
-        // Prevent concurrent refreshes
+        // Prevent concurrent refreshes. `isLoading` flips before the first
+        // suspension point below: with the readiness check being async, two
+        // callers (auto-refresh tick + "Refresh now") could otherwise both pass
+        // this guard and double the API call.
         guard !isLoading else { return }
+        isLoading = true
+        defer {
+            isLoading = false
+            // Every exit path leaves the mirrored state current so the
+            // Accounts UI never shows a stale badge.
+            mirrorCredentialState()
+        }
+
+        // Multi-profile: let the provider adopt newer live credentials and,
+        // when its policy allows, renew an expired token before we read it.
+        // The legacy single-account provider reports `.ready` and does nothing.
+        let readiness = await tokenProvider.ensureFreshToken(force: false)
+        guard readiness == .ready else {
+            apply(readiness: readiness)
+            return
+        }
 
         // Resolve token
         guard let token = tokenProvider.currentToken() else {
@@ -213,9 +259,6 @@ final class UsageStore: ObservableObject {
             return
         }
 
-        isLoading = true
-        defer { isLoading = false }
-
         do {
             let usage = try await repository.refreshUsage(
                 token: token, proxyConfig: proxyConfig,
@@ -227,10 +270,20 @@ final class UsageStore: ObservableObject {
             lastAPIError = error.diagnosticSnapshot
             switch error {
             case .tokenExpired, .noToken:
-                // Invalidate cached token so next read re-checks Keychain for a fresh one
+                // Invalidate cached token so the provider re-reads its sources,
+                // then ask it to renew (managed / auto-renew profiles) or to
+                // re-adopt whatever Claude Code wrote since (linked profiles).
                 tokenProvider.invalidateToken()
-                // Retry once with a fresh token
-                if let freshToken = tokenProvider.currentToken(), freshToken != token {
+                let retryReadiness = await tokenProvider.ensureFreshToken(force: true)
+                guard retryReadiness == .ready else {
+                    apply(readiness: retryReadiness)
+                    return
+                }
+                // Retry once with whatever token the provider now holds. Not
+                // only a *different* token: a managed profile's provider may
+                // have just rotated it, and the legacy provider re-reads the
+                // Keychain, which is exactly what a `claude /login` changes.
+                if let freshToken = tokenProvider.currentToken() {
                     do {
                         let usage = try await repository.refreshUsage(
                             token: freshToken, proxyConfig: proxyConfig,
@@ -244,9 +297,7 @@ final class UsageStore: ObservableObject {
                     }
                 }
                 errorState = .tokenUnavailable
-                if let toggles = notifTogglesProvider?() {
-                    notificationService.notifyTokenExpired(toggle: toggles.tokenExpired)
-                }
+                notifyTokenExpired()
             case .rateLimited(let retryAfter, _, _):
                 currentSpeed = .slow
                 // /api/oauth/usage returns 429 with Retry-After: 0 (or no header)
@@ -330,6 +381,7 @@ final class UsageStore: ObservableObject {
         let token = tokenProvider.currentToken()
         hasConfig = token != nil
         errorState = token != nil ? .none : .tokenUnavailable
+        mirrorCredentialState()
         loadCached()
         notificationService.requestPermission()
         WidgetReloader.scheduleReload()
@@ -345,8 +397,18 @@ final class UsageStore: ObservableObject {
         }
     }
 
+    /// The stagger applied to the current auto-refresh loop (diagnostics / tests).
+    private(set) var autoRefreshInitialDelay: TimeInterval = 0
+
+    /// True while an auto-refresh loop is scheduled (not yet stopped).
+    var isAutoRefreshRunning: Bool {
+        guard let task = autoRefreshTask else { return false }
+        return !task.isCancelled
+    }
+
     func startAutoRefresh(interval: TimeInterval = 600, thresholds: UsageThresholds = .default, initialDelay: TimeInterval = 0) {
         autoRefreshTask?.cancel()
+        autoRefreshInitialDelay = initialDelay
         autoRefreshTask = Task { [weak self] in
             // Multi-profile: loops start staggered so N profiles never burst
             // the API at the same instant.
@@ -406,18 +468,69 @@ final class UsageStore: ObservableObject {
     private var lastProfileFetch: Date?
 
     func refreshProfile() async {
-        guard let token = tokenProvider.currentToken() else { return }
         // Throttle: profile rarely changes, skip if fetched less than 5min ago
         if let last = lastProfileFetch, Date().timeIntervalSince(last) < 300 { return }
+        // Same readiness gate as `refresh`: a profile whose token is expired
+        // or dead must not spend a request that can only 401.
+        guard await tokenProvider.ensureFreshToken(force: false) == .ready,
+              let token = tokenProvider.currentToken() else {
+            mirrorCredentialState()
+            return
+        }
+        mirrorCredentialState()
         do {
             let profile = try await repository.fetchProfile(token: token, proxyConfig: proxyConfig)
             planType = PlanType(from: profile.account, organization: profile.organization)
             rateLimitTier = profile.organization?.rateLimitTier
             organizationName = profile.organization?.name
+            accountIdentity = AccountIdentity(
+                email: profile.account.email,
+                uuid: profile.account.uuid,
+                planTypeRaw: planType.rawValue
+            )
             lastProfileFetch = Date()
         } catch {
             // Profile fetch failure is non-critical - don't update errorState
         }
+    }
+
+    // MARK: - Readiness (multi-profile)
+
+    /// Maps a non-`.ready` provider answer onto the published error state.
+    /// `.awaitingClaudeCode` is exactly today's "waiting for Claude Code"
+    /// state: `hasConfig` stays true and, with a snapshot on screen,
+    /// `isAwaitingRefresh` keeps the calm dimmed UI instead of the re-auth
+    /// banner. `.reauthRequired` is the one state the user must act on, so it
+    /// also fires the token-expired notification (deduped by the service).
+    private func apply(readiness: TokenReadiness) {
+        switch readiness {
+        case .ready:
+            return
+        case .missing:
+            hasConfig = false
+            errorState = .tokenUnavailable
+        case .awaitingClaudeCode:
+            hasConfig = true
+            errorState = .tokenUnavailable
+        case .reauthRequired:
+            hasConfig = true
+            errorState = .reauthRequired
+            notifyTokenExpired()
+        }
+    }
+
+    /// Copies the provider's credential state into the published mirror,
+    /// skipping the write (and the `objectWillChange`) when nothing changed.
+    private func mirrorCredentialState() {
+        let state = tokenProvider.credentialState
+        if state != credentialState {
+            credentialState = state
+        }
+    }
+
+    private func notifyTokenExpired() {
+        guard let toggles = notifTogglesProvider?() else { return }
+        notificationService.notifyTokenExpired(toggle: toggles.tokenExpired)
     }
 
     /// Applies a successful usage fetch: updates the published UI state, clears
@@ -425,7 +538,7 @@ final class UsageStore: ObservableObject {
     /// notification + widget side effects. Shared by the nominal path and the
     /// post-401 retry so the two can never drift.
     private func applySuccess(usage: UsageResponse) {
-        credentialState = tokenProvider.credentialState
+        mirrorCredentialState()
         updateUI(from: usage)
         appendSessionSample(from: usage)
         errorState = .none

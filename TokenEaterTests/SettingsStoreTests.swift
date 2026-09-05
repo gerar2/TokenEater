@@ -7,7 +7,8 @@ private let settingsKeys = [
     "hasCompletedOnboarding", "proxyEnabled", "proxyHost", "proxyPort",
     "overlayEnabled", "watcherStyle", "watcherScanInterval", "watcherVisibility",
     "outageMonitoringEnabled", "statusPollInterval", "statusShowMenuBarBadge",
-    "notifVendorDegraded", "notifVendorRestored"
+    "notifVendorDegraded", "notifVendorRestored",
+    "popoverComposition", "didAutoInsertProfileSwitcher"
 ]
 
 private func cleanDefaults() {
@@ -305,6 +306,60 @@ struct SettingsStoreTests {
         store.statusPollInterval = 900
         let reloaded = SettingsStore(notificationService: notif, tokenProvider: tp)
         #expect(reloaded.statusPollInterval == 900)
+    }
+
+    // MARK: - Multi-profile popover switcher (one-shot, docs/multi-profile-plan.md §4.4)
+
+    @Test("profilesBecameMultiple inserts the account switcher at the top of the popover once")
+    func profileSwitcherAutoInserted() {
+        let (store, _, _) = makeStore()
+        defer { cleanDefaults() }
+        #expect(!store.popoverComposition.elements.contains { $0.kind == .profileSwitcher })
+        #expect(UserDefaults.standard.bool(forKey: SettingsStore.didAutoInsertProfileSwitcherKey) == false)
+
+        NotificationCenter.default.post(name: .profilesBecameMultiple, object: nil)
+
+        let first = store.popoverComposition.elements.first
+        #expect(first?.kind == .profileSwitcher)
+        #expect(first?.style == .utilityRow)
+        #expect(first?.width == .full)
+        #expect(store.popoverComposition.elements.filter { $0.kind == .profileSwitcher }.count == 1)
+        #expect(UserDefaults.standard.bool(forKey: SettingsStore.didAutoInsertProfileSwitcherKey) == true)
+        // Persisted through the composition's didSet.
+        let saved = UserDefaults.standard.data(forKey: "popoverComposition")
+            .flatMap { try? JSONDecoder().decode(PopoverComposition.self, from: $0) }
+        #expect(saved?.elements.first?.kind == .profileSwitcher)
+
+        // A second post (profile removed then re-added) never inserts again.
+        NotificationCenter.default.post(name: .profilesBecameMultiple, object: nil)
+        #expect(store.popoverComposition.elements.filter { $0.kind == .profileSwitcher }.count == 1)
+    }
+
+    @Test("the switcher is not re-inserted once the one-shot flag is set (user removed it)")
+    func profileSwitcherRespectsFlag() {
+        let (store, _, _) = makeStore()
+        defer { cleanDefaults() }
+        UserDefaults.standard.set(true, forKey: SettingsStore.didAutoInsertProfileSwitcherKey)
+        let before = store.popoverComposition
+
+        store.insertProfileSwitcherIfNeeded()
+
+        #expect(store.popoverComposition == before)
+    }
+
+    @Test("an existing switcher is left alone and still consumes the one-shot")
+    func profileSwitcherNotDuplicated() {
+        let (store, _, _) = makeStore()
+        defer { cleanDefaults() }
+        store.popoverComposition.elements.append(
+            PopoverElement(kind: .profileSwitcher, style: .utilityRow, width: .full)
+        )
+
+        store.insertProfileSwitcherIfNeeded()
+
+        #expect(store.popoverComposition.elements.filter { $0.kind == .profileSwitcher }.count == 1)
+        #expect(store.popoverComposition.elements.last?.kind == .profileSwitcher)
+        #expect(UserDefaults.standard.bool(forKey: SettingsStore.didAutoInsertProfileSwitcherKey) == true)
     }
 
 }
