@@ -930,3 +930,9 @@
 "accounts.error.cannotRemoveLast" = "Conservez au moins un profil.";
 "accounts.error.vault" = "Impossible d’enregistrer les identifiants dans le trousseau : %@";
 /* === end multi-profile: foundation === */
+
+/* === multi-profile: surfaces === */
+"popover.profileSwitcher.hint" = "Changez le compte affiché dans la barre de menus et le popover.";
+"popover.profileSwitcher.chip" = "%1$@, session à %2$d %%";
+"popover.profileSwitcher.chip.noData" = "%@, pas encore de données";
+/* === end multi-profile: surfaces === */

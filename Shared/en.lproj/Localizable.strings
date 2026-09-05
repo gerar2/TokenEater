@@ -930,3 +930,9 @@
 "accounts.error.cannotRemoveLast" = "Keep at least one profile.";
 "accounts.error.vault" = "Could not store the credentials in the Keychain: %@";
 /* === end multi-profile: foundation === */
+
+/* === multi-profile: surfaces === */
+"popover.profileSwitcher.hint" = "Switch the account shown in the menu bar and popover.";
+"popover.profileSwitcher.chip" = "%1$@, session at %2$d%%";
+"popover.profileSwitcher.chip.noData" = "%@, no data yet";
+/* === end multi-profile: surfaces === */

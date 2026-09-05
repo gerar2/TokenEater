@@ -8,6 +8,7 @@ import SwiftUI
 struct PopoverSectionView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var profileStore: ProfileStore
 
     @State private var selectedElementID: UUID?
     @State private var showSaveDialog = false
@@ -284,6 +285,7 @@ struct PopoverSectionView: View {
                 addButton(for: .refreshButton)
                 addButton(for: .watchers)
                 addButton(for: .timestamp)
+                addButton(for: .profileSwitcher)
                 addButton(for: .openButton)
                 addButton(for: .quitButton)
             }
@@ -317,6 +319,9 @@ struct PopoverSectionView: View {
         case .fable, .fablePacing: return usageStore.hasFable
         case .extraCredits: return usageStore.hasExtraCredits
         case .planBadge: return usageStore.planType != .unknown
+        // Catalog-level, not account-level: the switcher needs a second
+        // profile to exist, mirroring `PopoverMetricResolver.isAvailable`.
+        case .profileSwitcher: return profileStore.isMultiProfile
         default: return true
         }
     }
@@ -539,6 +544,7 @@ private struct LivePopoverPreview: View {
 private struct ElementListEditor: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var profileStore: ProfileStore
 
     @Binding var selectedElementID: UUID?
     @State private var draggingID: UUID?
@@ -611,6 +617,7 @@ private struct ElementListEditor: View {
         case .fable, .fablePacing: return usageStore.hasFable
         case .extraCredits: return usageStore.hasExtraCredits
         case .planBadge: return usageStore.planType != .unknown
+        case .profileSwitcher: return profileStore.isMultiProfile
         default: return true
         }
     }
