@@ -543,3 +543,18 @@ Definition of done for every lane: `run-tests.sh` green (no test removed or weak
 | `StaticConfiguration` → `AppIntentConfiguration` migration for placed widgets | Nil parameter = active profile; verified in QA step 8. |
 | Shared `Localizable.strings` merge conflicts | Delimited per-lane blocks. |
 | SwiftUI hard rules (`@Observable`, computed bindings, `@StateObject` in `App`) | All new stores are `ObservableObject` + `@Published`; UI uses `@State` + `.onChange`; `ActiveProfileHost` swaps stores by `.id`, never by binding. |
+
+---
+
+## 9. Implementation status (2026-09-05)
+
+All seven lanes landed on `feat/multi-profile` (PR #1 on the fork). Deviations from the spec above, recorded so the doc stays truthful:
+
+- **`ProfileTokenProvider.invalidateToken()` never forces a renewal.** The spec's "force flag" would loop: a linked `.tokenEater` renewal writes back to `<dir>/.credentials.json`, the file watcher fires `handleTokenChange`, which invalidates and would renew again. `UsageStore` passes `force: true` explicitly on a 401 instead; a file change only re-reads the live store. `ProfileStore.handleTokenChange` also skips managed profiles (nothing of theirs lives in a watched file).
+- **Adoption rule tightened** (§3.5 step 3): a managed profile never adopts credentials without a same-chain baseline (a lost vault item shows "No credentials" instead of attaching whichever account is signed in to `~/.claude`), and a linked profile adopts only when the live store changed since its previous read, so the stale token left by a failed write-back is not re-adopted.
+- **Notification scope for the default profile** keeps the legacy unsuffixed keys but still gets the `[Name]` title prefix while several profiles exist (names come from a lock-guarded `ProfileNameRegistry`, resolved at fire time). `NotificationServiceProtocol.cancelPendingReminders()` was added (default no-op) so `ProfileStore.remove` drops a profile's pending reminders.
+- **`project.yml`** gained `TokenEaterWidget/UsageEntry.swift` in the `TokenEaterTests` sources (single-file entry, like `OnboardingViewModel.swift`) for `UsageEntryTests`.
+- **`ProfileStore.init` creates the default profile unconditionally** (the UI always needs one), so no `legacyHasCompletedOnboarding` parameter exists. `UsageStore.cachedUsage` reads the store's own per-profile snapshot (the default profile falls back to the legacy top-level one).
+- `UsageStore.isLoading` flips before the readiness check so two callers cannot double an API call; the popover switcher gates on `profiles.count > 1` per spec (a paused second profile still shows the element).
+
+Validation on the integration branch: `swiftc -typecheck` OK for the App and Widget targets; 844 Swift Testing cases in 81 suites (up from 647 / 67 on `main`), all green except three pre-existing `ElectronDecryptionServiceTests` cases that fail only while the Mac's screen is locked (`.completeFileProtection` writes return EPERM). Not yet done: the CI Release build (the fork's workflows must be enabled once in the Actions tab) and the manual QA checklist in §7.3, which needs a machine with Xcode.
