@@ -116,6 +116,15 @@ struct ProfileStoreTests {
 
     // MARK: - Migration / loading
 
+    /// Waits (bounded, 3 s) for `condition` to hold. Stores run their first
+    /// refresh on a Task; under a loaded parallel test run a fixed sleep is not
+    /// enough, so the tests poll for the observable effect instead.
+    private func eventually(_ condition: () -> Bool) async throws {
+        for _ in 0..<60 where !condition() {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
     @Test("first launch creates the default Claude Code profile, makes it active and persists it")
     func migrationCreatesDefaultProfile() {
         let h = ProfileHarness()
@@ -526,7 +535,9 @@ struct ProfileStoreTests {
         #expect(Set(h.bag.factoryCalls) == Set([a.id, b.id, c.id]))
 
         // reloadConfig kicks the forced first refresh + permission request.
-        try await Task.sleep(for: .milliseconds(150))
+        try await eventually {
+            h.bag.repos[a.id]?.refreshCallCount == 1 && h.bag.repos[b.id]?.refreshCallCount == 1
+        }
         #expect(h.bag.repos[a.id]?.refreshCallCount == 1)
         #expect(h.bag.repos[b.id]?.refreshCallCount == 1)
         #expect(h.bag.repos[c.id]?.refreshCallCount == 0)
@@ -552,7 +563,10 @@ struct ProfileStoreTests {
 
         #expect(configured.last == profile.id)
         #expect(h.store.usageStore(for: profile.id)?.isAutoRefreshRunning == true)
-        try await Task.sleep(for: .milliseconds(150))
+        // `reloadConfig` runs the first refresh on a Task; under a loaded
+        // parallel test run it can take longer than a fixed sleep, so poll
+        // (bounded) for the call instead of assuming a delay.
+        try await eventually { h.bag.repos[profile.id]?.refreshCallCount == 1 }
         #expect(h.bag.repos[profile.id]?.refreshCallCount == 1)
         h.store.stopAll()
     }
@@ -574,7 +588,7 @@ struct ProfileStoreTests {
         #expect(h.bag.providers[a.id]?.invalidateCallCount == 1)
         #expect(h.bag.providers[b.id]?.invalidateCallCount == 0)
         #expect(h.bag.providers[c.id]?.invalidateCallCount == 0)
-        try await Task.sleep(for: .milliseconds(100))
+        try await eventually { h.bag.repos[a.id]?.refreshCallCount == 2 }
         #expect(h.bag.repos[a.id]?.refreshCallCount == 2)
         #expect(h.bag.repos[b.id]?.refreshCallCount == 1)
     }
