@@ -18,6 +18,11 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
     var updateSmartColorProfileCallCount = 0
     var updatePacingScheduleCallCount = 0
     var updateLastWeekDailyTotalsCallCount = 0
+    var _profileSnapshots: [SharedProfileSnapshot] = []
+    var _activeProfileID: UUID?
+    var updateProfileCatalogCallCount = 0
+    var updateProfileUsageCallCount = 0
+    var removeProfileCallCount = 0
 
     var isConfigured: Bool { _cachedUsage != nil }
 
@@ -62,6 +67,44 @@ final class MockSharedFileService: SharedFileServiceProtocol, @unchecked Sendabl
         updateLastWeekDailyTotalsCallCount += 1
         _lastWeekDailyTotals = totals
         _lastWeekTotalsRefreshedAt = refreshedAt
+    }
+
+    var profileSnapshots: [SharedProfileSnapshot] { _profileSnapshots }
+    var activeProfileID: UUID? { _activeProfileID }
+
+    func updateProfileCatalog(_ profiles: [SharedProfileSnapshot], activeProfileID: UUID?) {
+        updateProfileCatalogCallCount += 1
+        let existing = _profileSnapshots
+        _profileSnapshots = profiles.map { incoming in
+            var entry = incoming
+            if let old = existing.first(where: { $0.id == incoming.id }) {
+                if entry.cachedUsage == nil { entry.cachedUsage = old.cachedUsage }
+                if entry.lastSyncDate == nil { entry.lastSyncDate = old.lastSyncDate }
+                if entry.credentialState == nil { entry.credentialState = old.credentialState }
+            }
+            return entry
+        }
+        _activeProfileID = activeProfileID
+    }
+
+    func updateProfileUsage(profileID: UUID, usage: CachedUsage, syncDate: Date, credentialState: String?) {
+        updateProfileUsageCallCount += 1
+        if let index = _profileSnapshots.firstIndex(where: { $0.id == profileID }) {
+            _profileSnapshots[index].cachedUsage = usage
+            _profileSnapshots[index].lastSyncDate = syncDate
+            _profileSnapshots[index].credentialState = credentialState
+        } else {
+            _profileSnapshots.append(SharedProfileSnapshot(
+                id: profileID, name: "", colorHex: "",
+                cachedUsage: usage, lastSyncDate: syncDate, credentialState: credentialState
+            ))
+        }
+    }
+
+    func removeProfile(id: UUID) {
+        removeProfileCallCount += 1
+        _profileSnapshots.removeAll { $0.id == id }
+        if _activeProfileID == id { _activeProfileID = nil }
     }
 
     func invalidateCache() {}

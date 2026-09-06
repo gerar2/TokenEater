@@ -35,9 +35,9 @@ XcodeGen strips the widget's `NSExtension` key from `Info.plist` on every genera
 `Shared/` is compiled into all three targets:
 
 - `Shared/Models/` - pure `Codable` structs and enums (UsageModels, ProfileModels, PacingModels, ThemeModels, SessionModels, MetricModels, ProxyConfig, and the various display-format enums).
-- `Shared/Services/` - protocol-backed I/O. 15 services, each with a protocol in `Shared/Services/Protocols/` and a mock in `TokenEaterTests/Mocks/`.
-- `Shared/Repositories/` - `UsageRepository` (orchestrates `APIClient` then `SharedFileService`).
-- `Shared/Stores/` - 7 `ObservableObject` state containers.
+- `Shared/Services/` - protocol-backed I/O. 19 services, each with a protocol in `Shared/Services/Protocols/` and a mock in `TokenEaterTests/Mocks/` (the four multi-profile ones: `ClaudeCodeCredentialStore`, `ProfileCredentialVault`, `OAuthTokenRefresher`, `ProfileTokenProvider`).
+- `Shared/Repositories/` - `UsageRepository` (orchestrates `APIClient` then `SharedFileService`, per profile).
+- `Shared/Stores/` - 8 `ObservableObject` state containers (`ProfileStore` owns one `UsageStore` per account).
 - `Shared/Helpers/` - 12 pure enums/structs, no I/O (PacingCalculator, MenuBarRenderer, SmartColor, JSONLParser, ProcessResolver, DiagnosticReporter, CurrencyFormatter, MetricsGridLayout, NotificationBodyFormatter, OverlayHitTest, ResetCountdownFormatter, WidgetReloader).
 - `Shared/Components/` - 12 reusable SwiftUI views shared by app and widget (RingGauge, PacingBar, AnimatedGradient, GlowText, etc.).
 - `Shared/Design/DesignTokens.swift` - the `DS` design-token namespace plus a `View` extension.
@@ -47,28 +47,33 @@ XcodeGen strips the widget's `NSExtension` key from `Info.plist` on every genera
 
 The pattern is MV + Repository + protocol-oriented design, with `ObservableObject` + `@Published` (see the `@Observable` ban below). Dependencies are constructor-injected with protocol defaults; there are no app-wide singletons.
 
-Data flow:
+Data flow (one column per account profile; the *active* profile drives the menu bar, the popover and the dashboard hero):
 
 ```
-TokenProvider                resolves the OAuth token from several sources
+ProfileStore                 catalog of AccountProfiles, one UsageStore each, active profile id
    |
-UsageStore                   drives refresh, owns usage state, schedules auto-refresh
+ProfileTokenProvider         per profile: vault copy + Claude Code's live store + OAuth refresh grant
+   |                         (the migrated default profile keeps the legacy TokenProvider)
+UsageStore                   drives refresh, owns usage state, schedules auto-refresh (staggered)
    |
-UsageRepository              APIClient calls the usage/profile API, then
-   |                         SharedFileService writes the shared JSON cache
+UsageRepository              APIClient calls the usage/profile API, then SharedFileService writes
+   |                         the per-profile snapshot (+ the legacy top-level cache when active)
    v
 ~/Library/Application Support/com.tokeneater.shared/shared.json
    ^
-TokenEaterWidgetExtension    sandboxed widget reads that JSON only (no network, no Keychain)
+TokenEaterWidgetExtension    sandboxed widget reads that JSON only (no network, no Keychain);
+                             Overview / Session Ring / Pacing can be pinned to a profile (AppIntents)
 ```
+
+Multi-profile design, rules and file map: [`docs/multi-profile-plan.md`](docs/multi-profile-plan.md). The short version: a profile is either *linked* to a Claude Code config dir (`CLAUDE_CONFIG_DIR`; Keychain item `Claude Code-credentials[-<sha256(dir) 8 hex>]`, then `<dir>/.credentials.json`) or *managed* (credentials captured into TokenEater's own Keychain item, service `com.tokeneater.profile-credentials`). Linked profiles wait for Claude Code to renew an expired token unless the user opts into "Renew automatically", in which case TokenEater calls the refresh grant and writes the rotated tokens back to the same store; managed profiles always renew themselves. On first launch after the upgrade `ProfileStore` creates a single default profile bound to `~/.claude` that behaves exactly like the pre-5.14 app.
 
 `TokenFileMonitor` watches the credential files with a `DispatchSource` filesystem watcher (kqueue/vnode) and triggers an immediate refresh on change. The Agent Watchers overlay scans running Claude Code processes and tail-reads their JSONL logs.
 
 The menu bar is **AppKit `NSStatusItem`** managed by `StatusBarController`, not SwiftUI `MenuBarExtra`. The `App` body is `Settings { EmptyView() }`; the real UI is wired in the `AppDelegate` (`@NSApplicationDelegateAdaptor`) and hosted through `NSHostingController` / `NSHostingView`. That hosting root is where stores get injected with `.environmentObject(...)`. To add a store: construct it as a `private let` in `TokenEaterApp.init`, hand it to the `AppDelegate`, and inject it at the hosting roots in `StatusBarController` and `OverlayWindowController`.
 
-### Token resolution (`TokenProvider`)
+### Token resolution (`TokenProvider` / `ProfileTokenProvider`)
 
-All credential reading goes through `Shared/Services/TokenProvider.swift`. `currentToken()` returns an in-memory cached token; the disk/Keychain is re-read only when the cache is empty or after `invalidateToken()` (called on a 401). Source priority:
+The default `~/.claude` profile still uses `Shared/Services/TokenProvider.swift`; every other profile uses `ProfileTokenProvider` (`ensureFreshToken(force:)` runs before each fetch and after a 401: adopt newer live credentials, then renew if the policy allows). The legacy provider is described below. `currentToken()` returns an in-memory cached token; the disk/Keychain is re-read only when the cache is empty or after `invalidateToken()` (called on a 401). Source priority:
 
 1. `SecurityCLIReader` - shells out to `/usr/bin/security find-generic-password -s "Claude Code-credentials" -w`. Primary path; the stable Apple signing identity means macOS stops prompting for ACL access after the first "Always Allow".
 2. `CredentialsFileReader` - reads `~/.claude/.credentials.json`.
@@ -85,13 +90,14 @@ All credential reading goes through `Shared/Services/TokenProvider.swift`. `curr
 - `Shared/Repositories/UsageRepository.swift` - API to shared-file pipeline.
 - `TokenEaterApp/StatusBarController.swift` - menu bar item and popover hosting.
 
-### The 7 stores
+### The 8 stores
 
 All are `@MainActor final class ...: ObservableObject`.
 
 | Store | Responsibility |
 |-------|----------------|
-| `UsageStore` | Core usage state (5h / 7-day / Sonnet / Opus / cowork / Design percentages, resets, pacing, error/loading). Owns the repository and token provider; auto-refreshes. |
+| `ProfileStore` | The account-profile catalog (persisted as JSON under `accountProfiles.v1`), the active profile id, and one `UsageStore` per profile (created lazily, changes relayed). Add / capture / rename / enable / renewal policy / remove; bootstraps every enabled profile with staggered loops; mirrors the catalog to `shared.json`. |
+| `UsageStore` | Core usage state for ONE profile (5h / 7-day / Sonnet / Opus / cowork / Design percentages, resets, pacing, error/loading, credential state). Owns the repository and token provider; auto-refreshes. |
 | `SettingsStore` | All user preferences (menu bar style, pinned metrics, smart color, refresh interval, watcher settings, workweek pacing). Persists to `UserDefaults`. |
 | `ThemeStore` | Theme preset selection, custom `ThemeColors`, warning/critical thresholds. |
 | `SessionStore` | Live Claude session list from `SessionMonitorService`; powers the Agent Watchers overlay. |
@@ -117,6 +123,7 @@ All are `@MainActor final class ...: ObservableObject`.
 | Onboarding | `OnboardingView.swift`, `OnboardingViewModel.swift`, `Onboarding/Cards/*` |
 | Settings / Themes | `SettingsRootView.swift`, `SettingsSectionView.swift`, `DisplaySectionView.swift`, `ThemesSectionView.swift` |
 | Token / auth | `Services/TokenProvider.swift`, `SecurityCLIReader.swift`, `CredentialsFileReader.swift`, `ClaudeConfigReader.swift`, `ElectronDecryptionService.swift`, `TokenFileMonitor.swift` |
+| Accounts (multi-profile) | `Stores/ProfileStore.swift`, `Models/AccountProfile.swift`, `Services/ProfileTokenProvider.swift`, `ClaudeCodeCredentialStore.swift`, `ProfileCredentialVault.swift`, `OAuthTokenRefresher.swift`, `Helpers/ClaudeKeychainServiceName.swift`, `TokenEaterApp/Settings/AccountsSectionView.swift`, `TokenEaterApp/App/ActiveProfileHost.swift`, `TokenEaterApp/Windows/Monitoring/ProfilesOverviewStrip.swift`, `TokenEaterWidget/ProfileSelectionIntent.swift` |
 | Widget | `TokenEaterWidget/TokenEaterWidget.swift` (`@main` `WidgetBundle`: usage widget + pacing widget), `Provider.swift`, `*WidgetView.swift` |
 
 ## Hard SwiftUI rules (do not break)
@@ -156,6 +163,10 @@ xcodebuild -project TokenEater.xcodeproj -scheme TokenEaterTests \
 ```
 
 Run the tests before any commit that touches `Shared/` (stores, services, repository, helpers, models). CI (`ci.yml`) runs build + tests on every PR and every push to `main`.
+
+#### Without Xcode (Command Line Tools only)
+
+The suite can also run with SwiftPM alone: build a throwaway package whose single test target is a directory of symlinks to `Shared/`, `TokenEaterTests/`, `TokenEaterApp/Onboarding/OnboardingViewModel.swift` and `TokenEaterWidget/UsageEntry.swift`, depend on `swiftlang/swift-testing` (the CLT toolchain has no `Testing` module), exclude the `*.lproj` folders, and link with a stub `lib_TestingInterop.a` that defines `_swift_testing_getFallbackEventHandler`. `swift test -Xlinker -L<stub dir>` then runs the whole Swift Testing suite; `swiftc -typecheck -sdk $(xcrun --show-sdk-path) -target arm64-apple-macos14.0 -swift-version 5 -parse-as-library` over `Shared + TokenEaterApp` (and `Shared + TokenEaterWidget`) catches UI compile errors. Release builds and widget rendering still need Xcode or CI. Keep the harness out of the repo (`.spm-harness/` is gitignored).
 
 For SwiftUI or widget changes, manual testing matters more than unit tests. Build a Release version and try it. Widget rendering in particular cannot be unit-tested; use the build + nuke + install flow below.
 

@@ -16,6 +16,7 @@ import SwiftUI
 struct MenuBarEditorView<PreviewHeader: View, PreviewFooter: View>: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var profileStore: ProfileStore
 
     @State private var selectedSegmentID: UUID?
     @State private var showSaveDialog = false
@@ -234,6 +235,7 @@ struct MenuBarEditorView<PreviewHeader: View, PreviewFooter: View>: View {
             Section(String(localized: "menuBar.editor.family.status")) {
                 addButton(for: .sessionReset)
                 addButton(for: .serviceStatus)
+                addButton(for: .profileLabel)
             }
         }
     }
@@ -260,6 +262,9 @@ struct MenuBarEditorView<PreviewHeader: View, PreviewFooter: View>: View {
         switch kind {
         case .fable, .fablePacing: return usageStore.hasFable
         case .extraCredits: return usageStore.hasExtraCredits
+        // Catalog-level: the tag only draws once there is a second profile
+        // to tell apart (the controller leaves the label nil otherwise).
+        case .profileLabel: return profileStore.isMultiProfile
         default: return true
         }
     }
@@ -428,15 +433,23 @@ private struct MenuBarLivePreview: View {
     @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
+    @EnvironmentObject private var profileStore: ProfileStore
 
     @Binding var selectedSegmentID: UUID?
 
     private let scale: CGFloat = 2
 
     var body: some View {
-        let data = MenuBarRenderer.RenderData.live(
+        var data = MenuBarRenderer.RenderData.live(
             usage: usageStore, theme: themeStore, settings: settingsStore, vendor: vendorStatusStore
         )
+        // The builder is profile-agnostic (StatusBarController fills the tag
+        // from the active profile); mirror that rule here so the Account tag
+        // segment is visible while editing, and absent on a single profile.
+        if profileStore.isMultiProfile {
+            data.profileLabel = profileStore.activeProfile.name
+            data.profileColorHex = profileStore.activeProfile.colorHex
+        }
         let rendered = MenuBarRenderer.renderWithHitRects(data)
         let w = rendered.image.size.width * scale
         let h = rendered.image.size.height * scale
@@ -505,6 +518,7 @@ private struct MenuBarLivePreview: View {
 private struct MenuBarSegmentListEditor: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var profileStore: ProfileStore
 
     @Binding var selectedSegmentID: UUID?
     @State private var draggingID: UUID?
@@ -563,6 +577,7 @@ private struct MenuBarSegmentListEditor: View {
         switch kind {
         case .fable, .fablePacing: return usageStore.hasFable
         case .extraCredits: return usageStore.hasExtraCredits
+        case .profileLabel: return profileStore.isMultiProfile
         default: return true
         }
     }

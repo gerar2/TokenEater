@@ -34,6 +34,8 @@ struct SettingsRootView: View {
         switch selection {
         case .general:
             scrolling { SettingsSectionView(initialStatusInterval: settingsStore.statusPollInterval) }
+        case .accounts:
+            scrolling { AccountsSectionView() }
         case .pacing:
             scrolling {
                 PacingSectionView(

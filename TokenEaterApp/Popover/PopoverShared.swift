@@ -62,6 +62,8 @@ struct PopoverErrorBanner: View {
                 } else {
                     expiredContent
                 }
+            case .reauthRequired:
+                reauthRequiredContent
             case .rateLimited:
                 rateLimitedContent
             case .networkError:
@@ -95,6 +97,40 @@ struct PopoverErrorBanner: View {
                 Task { await usageStore.reauthenticate() }
             } label: {
                 Text(String(localized: "error.banner.reauth.button"))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.08))
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// Multi-profile re-auth: the profile's refresh-token chain is dead (the
+    /// refresh grant was rejected, or a captured login has no refresh token),
+    /// so no amount of waiting or retrying recovers it. Same discreet
+    /// single-line shape as `expiredContent`, but the action opens the
+    /// Accounts settings where the user re-links / re-captures the account.
+    @ViewBuilder private var reauthRequiredContent: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color(red: 0.97, green: 0.44, blue: 0.44))
+            Text(String(localized: "error.banner.reauthRequired"))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.7))
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Button {
+                NotificationCenter.default.post(
+                    name: .openDashboard,
+                    object: nil,
+                    userInfo: ["section": "settings.accounts"]
+                )
+            } label: {
+                Text(String(localized: "error.banner.reauthRequired.action"))
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.85))
                     .padding(.horizontal, 10)
@@ -216,14 +252,17 @@ struct PopoverErrorBanner: View {
 /// Appears next to the primary action in `PopoverErrorBanner` for every error
 /// state, so users can paste raw debug context into GitHub issues.
 struct CopyDiagnosticButton: View {
-    @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var profileStore: ProfileStore
     @EnvironmentObject private var settingsStore: SettingsStore
     @State private var copied = false
 
     var body: some View {
         Button {
+            // The report covers every profile (redacted), not just the one
+            // whose banner was clicked: a stuck account is easier to spot
+            // next to a healthy one.
             let report = DiagnosticReporter.makeReport(
-                usageStore: usageStore,
+                profileStore: profileStore,
                 settingsStore: settingsStore
             )
             let pasteboard = NSPasteboard.general
