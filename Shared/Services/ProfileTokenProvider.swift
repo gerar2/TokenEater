@@ -54,7 +54,7 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         refresher: OAuthTokenRefresherProtocol,
         proxyProvider: @escaping @Sendable () -> ProxyConfig?,
         realHome: String = ClaudeKeychainServiceName.realHome,
-        now: @escaping @Sendable () -> Date = Date.init,
+        now: @escaping @Sendable () -> Date = { Date() },
         legacyBootstrap: @escaping LegacyBootstrap = { try TokenProvider().bootstrap() }
     ) {
         self.profile = profile

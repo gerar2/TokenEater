@@ -34,7 +34,7 @@ final class OAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendabl
     init(
         transport: HTTPTransport? = nil,
         claudeCodeVersion: String? = ProcessResolver.detectClaudeCodeVersion(),
-        now: @escaping @Sendable () -> Date = Date.init
+        now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.transport = transport ?? Self.urlSessionTransport
         self.userAgent = "claude-code/\(claudeCodeVersion ?? "0.0.0")"

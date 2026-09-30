@@ -64,7 +64,7 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
         fileReaderFactory: @escaping FileReaderFactory = { CredentialsFileReader(filePath: $0) },
         configReader: ClaudeConfigReaderProtocol = ClaudeConfigReader(),
         decryptionService: ElectronDecryptionServiceProtocol = ElectronDecryptionService(),
-        processRunner: @escaping ProcessRunner = ClaudeCodeCredentialStore.runProcess
+        processRunner: @escaping ProcessRunner = { try ClaudeCodeCredentialStore.runProcess($0, $1, $2) }
     ) {
         self.realHome = realHome
         self.account = account
