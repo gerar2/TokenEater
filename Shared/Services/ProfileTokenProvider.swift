@@ -158,7 +158,7 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
 
         // 2-3. Live store read + adoption. Off the cooperative pool: it may
         // block up to 3 s on `/usr/bin/security`.
-        await blocking { self.reconcileWithLiveStore(profile: profile) }
+        _ = await blocking { self.reconcileWithLiveStore(profile: profile) }
 
         // 4. Nothing anywhere.
         guard let current = lock.withLock({ cached }) else {
