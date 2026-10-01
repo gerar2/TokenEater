@@ -323,6 +323,12 @@ final class SettingsStore: ObservableObject {
     private let notificationService: NotificationServiceProtocol
     private let tokenProvider: TokenProviderProtocol
     private let sharedFileService: SharedFileServiceProtocol
+    private var profilesObserver: AnyCancellable?
+
+    /// One-shot flag: the account switcher is auto-inserted into the popover
+    /// at most once per install, so a user who removed it never gets it back
+    /// uninvited.
+    static let didAutoInsertProfileSwitcherKey = "didAutoInsertProfileSwitcher"
 
     init(
         notificationService: NotificationServiceProtocol = NotificationService(),
@@ -473,6 +479,31 @@ final class SettingsStore: ObservableObject {
         if !hadMenuBarBlob {
             saveMenuBarComposition()
         }
+
+        // Multi-profile: the first time a second profile appears, surface the
+        // account switcher at the top of the popover. `ProfileStore` posts
+        // from the main actor, so the sink runs synchronously on it.
+        self.profilesObserver = NotificationCenter.default
+            .publisher(for: .profilesBecameMultiple)
+            .sink { [weak self] _ in
+                self?.insertProfileSwitcherIfNeeded()
+            }
+    }
+
+    // MARK: - Multi-profile
+
+    /// Inserts the `profileSwitcher` element at the top of the popover once
+    /// (guarded by `didAutoInsertProfileSwitcherKey`), and only when the
+    /// composition does not already carry one.
+    func insertProfileSwitcherIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.didAutoInsertProfileSwitcherKey) else { return }
+        defaults.set(true, forKey: Self.didAutoInsertProfileSwitcherKey)
+        guard !popoverComposition.elements.contains(where: { $0.kind == .profileSwitcher }) else { return }
+        popoverComposition.elements.insert(
+            PopoverElement(kind: .profileSwitcher, style: .utilityRow, width: .full),
+            at: 0
+        )
     }
 
     // MARK: - Popover persistence

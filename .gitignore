@@ -31,3 +31,6 @@ docs/superpowers/
 *.provisionprofile
 secrets.*
 credentials.*
+
+# Local SwiftPM test harness (see docs/multi-profile-plan.md §7.1)
+.spm-harness/

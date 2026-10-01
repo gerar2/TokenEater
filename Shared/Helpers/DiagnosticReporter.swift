@@ -4,28 +4,44 @@ import Foundation
 /// Used by the "Copy diagnostic" button in `PopoverErrorBanner`. The output
 /// is meant to be pasted into a GitHub issue, so it is English-only and
 /// never contains the OAuth bearer token, proxy credentials, organization
-/// name, or any other PII.
+/// name, profile names, account emails, full paths, or any other PII.
 enum DiagnosticReporter {
 
-    /// Public entry point.
+    /// Public entry point. The active profile's store fills the legacy
+    /// `State` / `Last API error` sections; every profile in the catalog gets
+    /// its own redacted bullet group under `Profiles`.
+    @MainActor
+    static func makeReport(profileStore: ProfileStore, settingsStore: SettingsStore) -> String {
+        makeReport(
+            usageStore: profileStore.activeUsageStore,
+            settingsStore: settingsStore,
+            profilesSection: profilesSection(profileStore)
+        )
+    }
+
+    /// Single-store report without the `Profiles` section. Kept for callers
+    /// and tests that predate `ProfileStore`.
     @MainActor
     static func makeReport(usageStore: UsageStore, settingsStore: SettingsStore) -> String {
-        let app = appSection()
-        let system = systemSection()
-        let state = stateSection(usageStore: usageStore, settingsStore: settingsStore)
-        let apiError = apiErrorSection(usageStore.lastAPIError)
+        makeReport(usageStore: usageStore, settingsStore: settingsStore, profilesSection: nil)
+    }
 
-        return """
-        ## TokenEater diagnostic
-
-        \(app)
-
-        \(system)
-
-        \(state)
-
-        \(apiError)
-        """
+    @MainActor
+    private static func makeReport(
+        usageStore: UsageStore,
+        settingsStore: SettingsStore,
+        profilesSection: String?
+    ) -> String {
+        var sections = [
+            appSection(),
+            systemSection(),
+            stateSection(usageStore: usageStore, settingsStore: settingsStore),
+            apiErrorSection(usageStore.lastAPIError),
+        ]
+        if let profilesSection {
+            sections.append(profilesSection)
+        }
+        return "## TokenEater diagnostic\n\n" + sections.joined(separator: "\n\n")
     }
 
     // MARK: - Sections
@@ -91,6 +107,45 @@ enum DiagnosticReporter {
         """
     }
 
+    /// One bullet group per profile. Only shape-level facts are printed:
+    /// the name is reduced to its initial + length (names are user-chosen and
+    /// may be an email or an employer), the config dir to its last path
+    /// component, and the credential state to its `rawKind` (the re-auth
+    /// reason can echo a server response body). Stores that were never
+    /// started (disabled profiles) are reported as such instead of being
+    /// created as a side effect of writing a report.
+    @MainActor
+    private static func profilesSection(_ profileStore: ProfileStore) -> String {
+        var lines = [
+            "**Profiles**",
+            "- Count: \(profileStore.profiles.count) (enabled: \(profileStore.enabledProfiles.count))",
+        ]
+        for (index, profile) in profileStore.profiles.enumerated() {
+            let store = profileStore.usageStores[profile.id]
+            let credential = store?.credentialState
+                ?? profileStore.credentialStates[profile.id]
+                ?? .unknown
+            lines.append("- Profile \(index + 1): \(redactName(profile.name))")
+            lines.append("  - Active: \(profile.id == profileStore.activeProfileID ? "yes" : "no")")
+            lines.append("  - Enabled: \(profile.isEnabled ? "yes" : "no")")
+            lines.append("  - Source: \(sourceKindName(profile.source)) (dir: \(configDirLabel(profile.source)))")
+            lines.append("  - Renewal policy: \(profile.effectiveRenewalPolicy.rawValue)")
+            lines.append("  - Credential state: \(credentialStateLabel(credential))")
+            if let store {
+                let retryAfter = formatDate(store.retryAfterDate, relative: true) ?? "-"
+                let lastUpdate = formatDate(store.lastUpdate, relative: true) ?? "never"
+                lines.append("  - Error state: \(errorStateName(store.errorState))")
+                lines.append("  - Refresh speed: \(speedName(store.currentSpeed))")
+                lines.append("  - Effective interval: \(Int(store.effectiveInterval))s")
+                lines.append("  - Retry-after deadline: \(retryAfter)")
+                lines.append("  - Last successful update: \(lastUpdate)")
+            } else {
+                lines.append("  - Store: not started")
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
     private static func apiErrorSection(_ error: LastAPIError?) -> String {
         guard let error else {
             return """
@@ -114,12 +169,51 @@ enum DiagnosticReporter {
 
     // MARK: - Helpers
 
+    /// "Personal" -> "P… (8 chars)". Enough to tell profiles apart in an
+    /// issue thread without disclosing what the user called them.
+    static func redactName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let first = trimmed.first else { return "- (0 chars)" }
+        return "\(first)… (\(trimmed.count) chars)"
+    }
+
+    private static func sourceKindName(_ source: ProfileCredentialSource) -> String {
+        switch source {
+        case .claudeCode: return "claudeCode"
+        case .managed: return "managed"
+        }
+    }
+
+    /// Last path component only: `~/.claude-work` -> `.claude-work`. The
+    /// default dir is spelled out so "nil" never reads as "unknown".
+    private static func configDirLabel(_ source: ProfileCredentialSource) -> String {
+        switch source {
+        case .managed:
+            return "-"
+        case .claudeCode(let dir):
+            guard let dir else { return ".claude" }
+            let last = URL(fileURLWithPath: dir).lastPathComponent
+            return last.isEmpty ? "-" : last
+        }
+    }
+
+    private static func credentialStateLabel(_ state: ProfileCredentialState) -> String {
+        switch state {
+        case .ok(let expiresAt?), .expiringSoon(let expiresAt):
+            let relative = relativeFormatter.localizedString(for: expiresAt, relativeTo: Date())
+            return "\(state.rawKind) (expires \(relative))"
+        default:
+            return state.rawKind
+        }
+    }
+
     private static func errorStateName(_ state: AppErrorState) -> String {
         switch state {
         case .none: return "none"
         case .tokenUnavailable: return "tokenUnavailable"
         case .rateLimited: return "rateLimited"
         case .networkError: return "networkError"
+        case .reauthRequired: return "reauthRequired"
         }
     }
 

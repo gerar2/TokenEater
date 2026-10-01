@@ -1,16 +1,12 @@
 import SwiftUI
 
 struct SettingsSectionView: View {
+    /// The active profile's store (re-injected by `ActiveProfileHost`).
     @EnvironmentObject private var usageStore: UsageStore
+    @EnvironmentObject private var profileStore: ProfileStore
     @EnvironmentObject private var settingsStore: SettingsStore
-    @EnvironmentObject private var themeStore: ThemeStore
     @EnvironmentObject private var updateStore: UpdateStore
 
-    @State private var isTesting = false
-    @State private var testResult: ConnectionTestResult?
-    @State private var isImporting = false
-    @State private var importMessage: String?
-    @State private var importSuccess = false
     @State private var brewCopied = false
     /// Local mirror of the status poll interval for the slider (seconds).
     /// @State + .onChange instead of Binding(get:set:), per the SwiftUI rules.
@@ -27,34 +23,38 @@ struct SettingsSectionView: View {
                 subtitle: String(localized: "sidebar.settings.subtitle")
             )
 
-            // Connection
+            // Accounts summary. The old Connection card (status + Re-detect)
+            // moved into Settings > Accounts, which owns per-profile state;
+            // this card only orients the user and deep-links there.
             glassCard {
                 VStack(alignment: .leading, spacing: 10) {
-                    cardLabel(String(localized: "settings.tab.connection"))
+                    cardLabel(String(localized: "sidebar.accounts"))
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(usageStore.hasConfig && !usageStore.isDisconnected ? Color.green : Color.red)
+                            .fill(activeStatusColor)
                             .frame(width: 8, height: 8)
-                        Text(usageStore.hasConfig && !usageStore.isDisconnected
-                             ? String(localized: "settings.connected")
-                             : String(localized: "settings.disconnected"))
+                        Text(accountsSummary)
                             .font(.system(size: 13))
                             .foregroundStyle(.white.opacity(0.8))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
                         Spacer()
-                        if isImporting {
-                            ProgressView().scaleEffect(0.6)
-                        }
-                        Button(String(localized: "settings.redetect")) {
-                            connectAutoDetect()
+                        Button {
+                            NotificationCenter.default.post(
+                                name: .navigateToSection,
+                                object: nil,
+                                userInfo: ["section": "settings.accounts"]
+                            )
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(String(localized: "settings.accounts.manage"))
+                                    .font(.system(size: 12, weight: .medium))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 9, weight: .semibold))
+                            }
                         }
                         .buttonStyle(.plain)
-                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.blue)
-                    }
-                    if let message = importMessage {
-                        Text(message)
-                            .font(.system(size: 11))
-                            .foregroundStyle(importSuccess ? .green : .orange)
                     }
                     if usageStore.errorState == .rateLimited {
                         VStack(alignment: .leading, spacing: 3) {
@@ -73,11 +73,6 @@ struct SettingsSectionView: View {
                                     .foregroundStyle(.white.opacity(0.4))
                             }
                         }
-                    }
-                    if let result = testResult {
-                        Text(result.message)
-                            .font(.system(size: 11))
-                            .foregroundStyle(result.success ? .green : .red)
                     }
                 }
             }
@@ -356,28 +351,33 @@ struct SettingsSectionView: View {
         return "\(minutes) min"
     }
 
-    private func connectAutoDetect() {
-        isImporting = true
-        importMessage = nil
-        guard settingsStore.credentialsTokenExists() else {
-            isImporting = false
-            importMessage = String(localized: "connect.noclaudecode")
-            importSuccess = false
-            return
+    // MARK: - Accounts summary
+
+    /// "N accounts · active: <name>" (singular form for the migrated
+    /// single-profile setup so it does not read as a multi-account feature
+    /// the user never enabled).
+    private var accountsSummary: String {
+        let count = profileStore.profiles.count
+        let name = profileStore.activeProfile.name
+        if count == 1 {
+            return String(format: String(localized: "settings.accounts.summary.one"), name)
         }
-        Task {
-            let result = await usageStore.connectAutoDetect()
-            isImporting = false
-            if result.success {
-                importMessage = String(localized: "connect.oauth.success")
-                importSuccess = true
-                usageStore.proxyConfig = settingsStore.proxyConfig
-                usageStore.reloadConfig(thresholds: themeStore.thresholds)
-                themeStore.syncToSharedFile()
-            } else {
-                importMessage = result.message
-                importSuccess = false
-            }
+        return String(format: String(localized: "settings.accounts.summary.many"), count, name)
+    }
+
+    /// Same tone mapping as the Accounts cards, collapsed to a dot: green when
+    /// the active profile fetched fine, orange for transient conditions
+    /// (backoff, waiting for Claude Code), red when there is nothing to read.
+    private var activeStatusColor: Color {
+        switch usageStore.errorState {
+        case .none:
+            return usageStore.hasConfig ? DS.Palette.semanticSuccess : DS.Palette.semanticError
+        case .rateLimited, .networkError:
+            return DS.Palette.semanticWarning
+        case .tokenUnavailable:
+            return usageStore.isAwaitingRefresh ? DS.Palette.semanticWarning : DS.Palette.semanticError
+        case .reauthRequired:
+            return DS.Palette.semanticError
         }
     }
 }

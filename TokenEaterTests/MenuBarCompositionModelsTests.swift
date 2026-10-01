@@ -18,6 +18,15 @@ struct MenuBarCompositionModelsTests {
         #expect(MenuBarSegmentKind.fablePacing.allowedStyles == [.dot, .dotDelta, .delta, .pill])
     }
 
+    @Test("profileLabel is a presence-gated status segment with text + pill styles (multi-profile)")
+    func profileLabelSegmentShape() {
+        #expect(MenuBarSegmentKind.profileLabel.family == .status)
+        #expect(MenuBarSegmentKind.profileLabel.isPresenceGated)
+        #expect(MenuBarSegmentKind.profileLabel.allowedStyles == [.text, .pill])
+        // A blob that stored a metric style for the tag renders as text.
+        #expect(MenuBarSegment(kind: .profileLabel, style: .labelValue).effectiveStyle == .text)
+    }
+
     @Test("effectiveStyle clamps an illegal style to the kind's first legal one")
     func effectiveStyleClamps() {
         // A usage kind can't render as a pacing dot.

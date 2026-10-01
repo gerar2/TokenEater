@@ -6,10 +6,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     private static let oldDirectoryName = "com.claudeusagewidget.shared"
     private static let fileName = "shared.json"
 
-    private var realHomeDirectory: String {
-        guard let pw = getpwuid(getuid()) else { return NSHomeDirectory() }
-        return String(cString: pw.pointee.pw_dir)
-    }
+    private var realHomeDirectory: String { Self.resolveRealHomeDirectory() }
 
     /// Root directory for shared data. Always uses the home-relative
     /// `~/Library/Application Support/com.tokeneater.shared/` path because :
@@ -29,8 +26,14 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     ///
     /// Will switch back to App Group lookup once we have provisioning profiles
     /// in CI and both entitlements files declare the group.
-    private var rootDirectoryURL: URL {
-        URL(fileURLWithPath: realHomeDirectory)
+    ///
+    /// Stored (not computed) so `init(rootDirectory:)` can point a test
+    /// instance at a temp directory without the migrations or the real home
+    /// ever being touched.
+    private let rootDirectoryURL: URL
+
+    private static func defaultRootDirectoryURL(realHome: String) -> URL {
+        URL(fileURLWithPath: realHome)
             .appendingPathComponent("Library/Application Support")
             .appendingPathComponent(Self.legacyDirectoryName)
     }
@@ -53,9 +56,27 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
             .appendingPathComponent(Self.fileName)
     }
 
+    /// Production initializer: home-relative root plus the two one-shot
+    /// migrations (old product name, stranded Group Container data).
     init() {
+        rootDirectoryURL = Self.defaultRootDirectoryURL(
+            realHome: Self.resolveRealHomeDirectory()
+        )
         migrateFromOldProductName()
         migrateFromGroupContainerToHomeRelative()
+    }
+
+    /// Explicit root (the directory that holds `shared.json`). Meant for tests
+    /// and tooling: the migrations are skipped because they only make sense for
+    /// the real home directory, and running them against a temp root would
+    /// silently move the user's live data.
+    init(rootDirectory: URL) {
+        rootDirectoryURL = rootDirectory
+    }
+
+    private static func resolveRealHomeDirectory() -> String {
+        guard let pw = getpwuid(getuid()) else { return NSHomeDirectory() }
+        return String(cString: pw.pointee.pw_dir)
     }
 
     // MARK: - Migrations
@@ -146,6 +167,10 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var pacingHoursEnabled: Bool?
         var pacingStartHour: Int?
         var pacingEndHour: Int?
+        /// Multi-profile catalog (5.14+). Optional so older widget builds
+        /// ignore it and keep reading the top-level `cachedUsage`.
+        var profiles: [SharedProfileSnapshot]?
+        var activeProfileID: String?
     }
 
     /// In-memory cache - avoids redundant disk reads within the same process.
@@ -291,6 +316,56 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var data = loadFresh()
         data.lastWeekDailyTotals = totals
         data.lastWeekTotalsRefreshedAt = refreshedAt
+        save(data)
+    }
+
+    // MARK: - Profiles
+
+    var profileSnapshots: [SharedProfileSnapshot] {
+        load().profiles ?? []
+    }
+
+    var activeProfileID: UUID? {
+        load().activeProfileID.flatMap(UUID.init(uuidString:))
+    }
+
+    func updateProfileCatalog(_ profiles: [SharedProfileSnapshot], activeProfileID: UUID?) {
+        var data = loadFresh()
+        let existing = data.profiles ?? []
+        data.profiles = profiles.map { incoming in
+            var entry = incoming
+            if let old = existing.first(where: { $0.id == incoming.id }) {
+                if entry.cachedUsage == nil { entry.cachedUsage = old.cachedUsage }
+                if entry.lastSyncDate == nil { entry.lastSyncDate = old.lastSyncDate }
+                if entry.credentialState == nil { entry.credentialState = old.credentialState }
+            }
+            return entry
+        }
+        data.activeProfileID = activeProfileID?.uuidString
+        save(data)
+    }
+
+    func updateProfileUsage(profileID: UUID, usage: CachedUsage, syncDate: Date, credentialState: String?) {
+        var data = loadFresh()
+        var list = data.profiles ?? []
+        if let index = list.firstIndex(where: { $0.id == profileID }) {
+            list[index].cachedUsage = usage
+            list[index].lastSyncDate = syncDate
+            list[index].credentialState = credentialState
+        } else {
+            list.append(SharedProfileSnapshot(
+                id: profileID, name: "", colorHex: "",
+                cachedUsage: usage, lastSyncDate: syncDate, credentialState: credentialState
+            ))
+        }
+        data.profiles = list
+        save(data)
+    }
+
+    func removeProfile(id: UUID) {
+        var data = loadFresh()
+        data.profiles?.removeAll { $0.id == id }
+        if data.activeProfileID == id.uuidString { data.activeProfileID = nil }
         save(data)
     }
 

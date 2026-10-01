@@ -1,5 +1,12 @@
 import Foundation
 
+/// UserDefaults keys that predate profile scoping. `NotificationService`
+/// derives its per-profile keys from these bases (`NotificationScope.key`);
+/// the unsuffixed forms are what existing users already have on disk.
+enum NotificationStateKeys {
+    static let tokenExpiredFiredAt = "lastTokenExpiredFiredAt"
+}
+
 /// Transition state for the notification escalation/recovery state machine.
 /// Isolated behind a protocol so the level/pacing/token-expired logic is
 /// testable without touching real UserDefaults.
@@ -13,8 +20,22 @@ protocol NotificationStateStore: AnyObject {
     /// level dip (#244).
     func lastResetsAt(forKey key: String) -> Date?
     func setLastResetsAt(_ date: Date, forKey key: String)
-    func tokenExpiredFiredAt() -> Date?
-    func setTokenExpiredFiredAt(_ date: Date)
+    /// Timestamp of the last "token expired" alert, keyed per scope so the
+    /// one-per-hour de-dupe is independent for every profile.
+    func tokenExpiredFiredAt(forKey key: String) -> Date?
+    func setTokenExpiredFiredAt(_ date: Date, forKey key: String)
+}
+
+extension NotificationStateStore {
+    /// Legacy, unscoped accessors. Kept as forwarding defaults so callers that
+    /// predate profile scoping keep reading the slot the legacy scope writes.
+    func tokenExpiredFiredAt() -> Date? {
+        tokenExpiredFiredAt(forKey: NotificationStateKeys.tokenExpiredFiredAt)
+    }
+
+    func setTokenExpiredFiredAt(_ date: Date) {
+        setTokenExpiredFiredAt(date, forKey: NotificationStateKeys.tokenExpiredFiredAt)
+    }
 }
 
 final class UserDefaultsNotificationStateStore: NotificationStateStore {
@@ -27,6 +48,6 @@ final class UserDefaultsNotificationStateStore: NotificationStateStore {
     func setLastPacing(_ value: String, forKey key: String) { defaults.set(value, forKey: key) }
     func lastResetsAt(forKey key: String) -> Date? { defaults.object(forKey: key) as? Date }
     func setLastResetsAt(_ date: Date, forKey key: String) { defaults.set(date, forKey: key) }
-    func tokenExpiredFiredAt() -> Date? { defaults.object(forKey: "lastTokenExpiredFiredAt") as? Date }
-    func setTokenExpiredFiredAt(_ date: Date) { defaults.set(date, forKey: "lastTokenExpiredFiredAt") }
+    func tokenExpiredFiredAt(forKey key: String) -> Date? { defaults.object(forKey: key) as? Date }
+    func setTokenExpiredFiredAt(_ date: Date, forKey key: String) { defaults.set(date, forKey: key) }
 }

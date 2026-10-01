@@ -14,4 +14,19 @@ protocol TokenProviderProtocol: Sendable {
     func refreshTokenIfChanged() -> Bool
     var isBootstrapped: Bool { get }
     func bootstrap() throws
+
+    // MARK: Multi-profile (defaults keep single-source providers unchanged)
+
+    /// Adopts newer live credentials and renews the access token when it is
+    /// expired and the profile's renewal policy allows it. `UsageStore` calls
+    /// this before every fetch and, with `force: true`, after a 401. The
+    /// default (legacy `TokenProvider`) reports `.ready` and does nothing.
+    func ensureFreshToken(force: Bool) async -> TokenReadiness
+    /// What the provider knows about its credentials (expiry, waiting, re-auth).
+    var credentialState: ProfileCredentialState { get }
+}
+
+extension TokenProviderProtocol {
+    func ensureFreshToken(force: Bool) async -> TokenReadiness { .ready }
+    var credentialState: ProfileCredentialState { .unknown }
 }

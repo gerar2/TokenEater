@@ -28,6 +28,7 @@
 
 A native macOS menu bar app + desktop widgets + floating overlay that tracks your Claude AI usage in real-time.
 
+- **Multiple accounts** — Monitor several Claude Code accounts at once (personal and work, say). Link each `CLAUDE_CONFIG_DIR` or capture a login, and every profile keeps refreshing on its own; pick the active one from the popover switcher, the menu bar's right-click menu, or the dashboard strip that shows them side by side. Widgets can be pinned to a profile.
 - **Menu bar** — Live percentages, color-coded thresholds, and a fully composable popover dashboard: build it element by element (rings, chips, arcs, pacing bars... at full, half, or third width), start from built-in templates (Classic / Compact / Focus / Minimalist and more), and save your own.
 - **Dashboard** — Three-space layout (Monitoring / History / Settings) with flippable tiles surfacing 7d sparklines, peak day, and a pacing-vs-equilibrium graph.
 - **History** — Tokens-over-time browser sourced from Claude Code's local JSONL logs, with four stats tabs: Tokens (stacked chart by model family), Projects (ranked breakdown with share bars), Sessions (session counts over time), and Cache (hit-rate curve). Filter by model family, switch range (24h / 7d / 30d / 90d), hover for per-bucket details.
@@ -130,6 +131,8 @@ TokenEater reads an **OAuth access token** from the Claude Code keychain entry -
 - Calls `GET /api/oauth/profile` (your plan info)
 
 **What the app cannot do:** send messages, read conversations, modify your account, or access anything beyond read-only usage data.
+
+**Multiple accounts.** Each additional profile keeps a copy of its OAuth credentials (access + refresh token) in TokenEater's own Keychain item (`com.tokeneater.profile-credentials`). A *linked* profile reads Claude Code's store for that `CLAUDE_CONFIG_DIR` and, by default, waits for Claude Code to renew an expired token; if you turn on "Renew automatically", TokenEater calls Claude Code's OAuth refresh endpoint (`POST https://platform.claude.com/v1/oauth/token`, Claude Code's public client id) and writes the rotated tokens back to that store so Claude Code keeps working. A *captured* profile is TokenEater's own copy and is always renewed by TokenEater. No credential ever leaves your machine except for these calls to Anthropic.
 
 The token never leaves your machine except for these two API calls to `api.anthropic.com`. The widget reads a local JSON file and has no network or keychain access at all.
 
