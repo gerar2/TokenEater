@@ -18,14 +18,14 @@ struct OAuthTokenRefresherTests {
         var proxies: [ProxyConfig?] = []
     }
 
-    private func makeSUT(status: Int = 200, body: String = "", version: String? = "1.2.3") -> (sut: OAuthTokenRefresher, capture: Capture) {
+    private func makeSUT(status: Int = 200, body: String = "", version: String? = "1.2.3", headers: [String: String]? = nil) -> (sut: OAuthTokenRefresher, capture: Capture) {
         let capture = Capture()
         let now = self.now
         let sut = OAuthTokenRefresher(
             transport: { request, proxy in
                 capture.requests.append(request)
                 capture.proxies.append(proxy)
-                let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
+                let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: headers)!
                 return (Data(body.utf8), response)
             },
             claudeCodeVersion: version,
@@ -118,9 +118,9 @@ struct OAuthTokenRefresherTests {
         await #expect(throws: OAuthRefreshError.http(status: 500)) {
             try await sut.refresh(old, proxyConfig: nil)
         }
-        let (sut429, _) = makeSUT(status: 429)
-        await #expect(throws: OAuthRefreshError.http(status: 429)) {
-            try await sut429.refresh(old, proxyConfig: nil)
+        let (sut503, _) = makeSUT(status: 503)
+        await #expect(throws: OAuthRefreshError.http(status: 503)) {
+            try await sut503.refresh(old, proxyConfig: nil)
         }
     }
 
@@ -230,5 +230,47 @@ struct OAuthTokenRefresherTests {
         _ = try await (first, second)
 
         #expect(await counter.value == 2)
+    }
+
+    // MARK: - Rate limiting
+
+    @Test("429 is reported as rateLimited with the parsed Retry-After seconds and the body")
+    func rateLimitedWithSeconds() async {
+        let (sut, _) = makeSUT(status: 429, body: "{\"error\":\"rate_limited\"}", headers: ["Retry-After": "120"])
+        do {
+            _ = try await sut.refresh(OAuthCredentials(accessToken: "a", refreshToken: "r"), proxyConfig: nil)
+            Issue.record("expected rateLimited")
+        } catch let error as OAuthRefreshError {
+            #expect(error == .rateLimited(retryAfter: 120, body: "{\"error\":\"rate_limited\"}"))
+        } catch {
+            Issue.record("unexpected error \(error)")
+        }
+    }
+
+    @Test("429 without a usable Retry-After carries nil")
+    func rateLimitedWithoutHeader() async {
+        let (sut, _) = makeSUT(status: 429, body: "slow down")
+        do {
+            _ = try await sut.refresh(OAuthCredentials(accessToken: "a", refreshToken: "r"), proxyConfig: nil)
+            Issue.record("expected rateLimited")
+        } catch let error as OAuthRefreshError {
+            #expect(error == .rateLimited(retryAfter: nil, body: "slow down"))
+        } catch {
+            Issue.record("unexpected error \(error)")
+        }
+    }
+
+    @Test("Retry-After parsing: seconds, HTTP-date, garbage, past")
+    func retryAfterParsing() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000) // 2027-01-15T08:00:00Z
+        #expect(OAuthTokenRefresher.parseRetryAfter("30", now: now) == 30)
+        #expect(OAuthTokenRefresher.parseRetryAfter(" 7 ", now: now) == 7)
+        #expect(OAuthTokenRefresher.parseRetryAfter("0", now: now) == nil)
+        #expect(OAuthTokenRefresher.parseRetryAfter("-5", now: now) == nil)
+        #expect(OAuthTokenRefresher.parseRetryAfter(nil, now: now) == nil)
+        #expect(OAuthTokenRefresher.parseRetryAfter("soon", now: now) == nil)
+        let future = OAuthTokenRefresher.parseRetryAfter("Fri, 15 Jan 2027 08:10:00 GMT", now: now)
+        #expect(future == 600)
+        #expect(OAuthTokenRefresher.parseRetryAfter("Fri, 15 Jan 2027 07:00:00 GMT", now: now) == nil)
     }
 }

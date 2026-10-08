@@ -4,6 +4,9 @@ enum OAuthRefreshError: Error, Equatable {
     case noRefreshToken
     /// HTTP 400 / 401: the refresh token is revoked or already rotated away.
     case invalidGrant(status: Int, body: String)
+    /// HTTP 429 from the token endpoint. `retryAfter` is the parsed
+    /// `Retry-After` header (seconds), nil when absent or unparsable.
+    case rateLimited(retryAfter: TimeInterval?, body: String)
     case http(status: Int)
     case network(String)
     case invalidResponse

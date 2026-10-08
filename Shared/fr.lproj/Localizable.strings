@@ -1001,3 +1001,8 @@
 "dashboard.profiles.select" = "Afficher %@ dans la barre de menus et le popover";
 "dashboard.profiles.state.rateLimited" = "Limite de débit atteinte";
 /* === end multi-profile: app === */
+
+/* === multi-profile: renewal backoff === */
+"profile.state.deferred.rateLimited" = "Renouvellement du jeton limité, nouvel essai %@";
+"profile.state.deferred" = "Renouvellement du jeton échoué, nouvel essai %@";
+/* === end multi-profile: renewal backoff === */

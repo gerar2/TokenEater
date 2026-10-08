@@ -15,6 +15,10 @@ enum ProfileCredentialState: Equatable {
     /// The refresh grant was rejected, or a managed profile has no refresh
     /// token: the user must log in again with this account.
     case reauthRequired(reason: String)
+    /// The last renewal attempt failed transiently (`rateLimited` = the token
+    /// endpoint answered 429) and the provider will not try again before
+    /// `until`. The cached, possibly expired, token stays in place meanwhile.
+    case renewalDeferred(until: Date, rateLimited: Bool)
 
     /// Stable string for `shared.json` and diagnostics.
     var rawKind: String {
@@ -25,6 +29,7 @@ enum ProfileCredentialState: Equatable {
         case .expiringSoon: return "expiring"
         case .awaitingClaudeCode: return "awaiting"
         case .reauthRequired: return "reauth"
+        case .renewalDeferred: return "deferred"
         }
     }
 

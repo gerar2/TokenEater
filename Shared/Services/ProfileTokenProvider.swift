@@ -31,6 +31,19 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     private var cached: OAuthCredentials?
     private var _lastRead: ClaudeCodeCredentialRead?
     private var _credentialState: ProfileCredentialState = .unknown
+    /// Renewal backoff. A failed refresh grant (429 or a transport error) blocks
+    /// further grants until `renewalBlockedUntil`; the delay follows
+    /// `Retry-After` when the server sends one, else an exponential ladder.
+    /// Without this a profile whose token expired kept hitting the token
+    /// endpoint on every tick, which is exactly what keeps a 429 going.
+    private var renewalBlockedUntil: Date?
+    private var consecutiveRenewalFailures = 0
+    private var lastRenewalFailureWasRateLimit = false
+
+    /// Backoff ladder after a 429 without a usable `Retry-After`.
+    static let rateLimitBackoff: [TimeInterval] = [120, 300, 900, 1800, 3600]
+    /// Backoff ladder after a transport / server error.
+    static let transientBackoff: [TimeInterval] = [60, 120, 300, 600]
 
     private let vault: ProfileCredentialVaultProtocol
     private let store: ClaudeCodeCredentialStoreProtocol
@@ -82,6 +95,19 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     var lastRead: ClaudeCodeCredentialRead? { lock.withLock { _lastRead } }
 
     var credentialState: ProfileCredentialState { lock.withLock { _credentialState } }
+
+    /// When the next refresh grant may be attempted; nil when not backing off.
+    var nextRenewalAttempt: Date? { lock.withLock { renewalBlockedUntil } }
+
+    /// Drops the renewal backoff so the next `ensureFreshToken` may call the
+    /// token endpoint again. For an explicit user action ("Refresh now"), not
+    /// for the automatic loop.
+    func clearRenewalBackoff() {
+        lock.withLock {
+            renewalBlockedUntil = nil
+            consecutiveRenewalFailures = 0
+        }
+    }
 
     // MARK: - TokenProviderProtocol
 
@@ -186,7 +212,13 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
             return .reauthRequired
         }
 
-        // 8. Refresh grant.
+        // 8. Refresh grant, unless a previous failure put us in backoff: the
+        // token endpoint must not be hit on every tick.
+        if let blockedUntil = lock.withLock({ renewalBlockedUntil }), blockedUntil > now {
+            let rateLimited = lock.withLock { lastRenewalFailureWasRateLimit }
+            setState(Self.stateDuringBackoff(current, until: blockedUntil, rateLimited: rateLimited, now: now))
+            return current.isExpired(now: now) ? .awaitingClaudeCode : .ready
+        }
         setState(ProfileCredentialState.from(current, now: now))
         let renewed: OAuthCredentials
         do {
@@ -200,15 +232,24 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
             case .noRefreshToken:
                 setState(.reauthRequired(reason: "noRefreshToken"))
                 return .reauthRequired
+            case .rateLimited(let retryAfter, _):
+                let until = scheduleRenewalBackoff(for: current, now: now, serverRetryAfter: retryAfter, rateLimited: true)
+                logger.error("Refresh grant rate-limited for profile \(self.idPrefix, privacy: .public); next attempt at \(until, privacy: .public)")
+                return current.isExpired(now: now) ? .awaitingClaudeCode : .ready
             case .network, .http, .invalidResponse:
-                // Transient: keep the cached chain and let the caller's normal
-                // 401 path deal with it.
-                logger.info("Refresh grant failed transiently for profile \(self.idPrefix, privacy: .public): \(String(describing: error), privacy: .public)")
+                // Transient: keep the cached chain, back off briefly.
+                let until = scheduleRenewalBackoff(for: current, now: now, serverRetryAfter: nil, rateLimited: false)
+                logger.info("Refresh grant failed transiently for profile \(self.idPrefix, privacy: .public): \(String(describing: error), privacy: .public); next attempt at \(until, privacy: .public)")
                 return current.isExpired(now: now) ? .awaitingClaudeCode : .ready
             }
         } catch {
-            logger.info("Refresh grant failed for profile \(self.idPrefix, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            let until = scheduleRenewalBackoff(for: current, now: now, serverRetryAfter: nil, rateLimited: false)
+            logger.info("Refresh grant failed for profile \(self.idPrefix, privacy: .public): \(error.localizedDescription, privacy: .public); next attempt at \(until, privacy: .public)")
             return current.isExpired(now: now) ? .awaitingClaudeCode : .ready
+        }
+        lock.withLock {
+            renewalBlockedUntil = nil
+            consecutiveRenewalFailures = 0
         }
 
         // 9. Persist, then hand the rotated chain back to Claude Code when it
@@ -322,6 +363,38 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     }
 
     // MARK: - Helpers
+
+    /// Records a failed renewal and returns when the next attempt is allowed:
+    /// the server's `Retry-After` when positive, else the ladder step for the
+    /// number of consecutive failures (capped at the last step).
+    /// A backoff only changes the visible state once the token is actually
+    /// expired: a still-valid token keeps the profile "connected", the
+    /// deferred renewal is an internal matter until then.
+    private static func stateDuringBackoff(_ current: OAuthCredentials, until: Date, rateLimited: Bool, now: Date) -> ProfileCredentialState {
+        current.isExpired(now: now)
+            ? .renewalDeferred(until: until, rateLimited: rateLimited)
+            : ProfileCredentialState.from(current, now: now)
+    }
+
+    @discardableResult
+    private func scheduleRenewalBackoff(for current: OAuthCredentials, now: Date, serverRetryAfter: TimeInterval?, rateLimited: Bool) -> Date {
+        lock.withLock {
+            let ladder = rateLimited ? Self.rateLimitBackoff : Self.transientBackoff
+            let step = ladder[min(consecutiveRenewalFailures, ladder.count - 1)]
+            let delay: TimeInterval
+            if let serverRetryAfter, serverRetryAfter > 0 {
+                delay = serverRetryAfter
+            } else {
+                delay = step
+            }
+            consecutiveRenewalFailures += 1
+            lastRenewalFailureWasRateLimit = rateLimited
+            let until = now.addingTimeInterval(delay)
+            renewalBlockedUntil = until
+            _credentialState = Self.stateDuringBackoff(current, until: until, rateLimited: rateLimited, now: now)
+            return until
+        }
+    }
 
     private func setState(_ state: ProfileCredentialState) {
         lock.withLock { _credentialState = state }

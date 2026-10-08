@@ -202,6 +202,9 @@ enum DiagnosticReporter {
         case .ok(let expiresAt?), .expiringSoon(let expiresAt):
             let relative = relativeFormatter.localizedString(for: expiresAt, relativeTo: Date())
             return "\(state.rawKind) (expires \(relative))"
+        case .renewalDeferred(let until, let rateLimited):
+            let relative = relativeFormatter.localizedString(for: until, relativeTo: Date())
+            return "\(state.rawKind) (\(rateLimited ? "rate-limited" : "transient failure"), retry \(relative))"
         default:
             return state.rawKind
         }

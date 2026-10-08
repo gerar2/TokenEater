@@ -201,6 +201,15 @@ struct ProfileOverviewCard: View {
                 help: String(localized: "dashboard.profiles.state.rateLimited")
             )
         }
+        if case .renewalDeferred(let until, let rateLimited) = usage.credentialState {
+            let relative = until.formatted(.relative(presentation: .named))
+            let key = rateLimited ? "profile.state.deferred.rateLimited" : "profile.state.deferred"
+            return StateGlyph(
+                symbol: "clock.badge.exclamationmark",
+                tint: DS.Palette.semanticWarning,
+                help: String(format: String(localized: String.LocalizationValue(key)), relative)
+            )
+        }
         if usage.isAwaitingRefresh || usage.credentialState == .awaitingClaudeCode {
             return StateGlyph(
                 symbol: "clock.arrow.circlepath",

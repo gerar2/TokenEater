@@ -110,10 +110,36 @@ final class OAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendabl
             let body = String(decoding: data.prefix(Self.maxErrorBodyBytes), as: UTF8.self)
             logger.info("refresh grant rejected with \(response.statusCode, privacy: .public)")
             throw OAuthRefreshError.invalidGrant(status: response.statusCode, body: body)
+        case 429:
+            // The token endpoint rate-limits refreshes. The body and header are
+            // logged (they carry no secret, only the server's reason) so a
+            // persistent 429 can be told apart from a burst.
+            let body = String(decoding: data.prefix(Self.maxErrorBodyBytes), as: UTF8.self)
+            let retryAfterRaw = response.value(forHTTPHeaderField: "Retry-After")
+            let retryAfter = Self.parseRetryAfter(retryAfterRaw, now: now())
+            logger.error("refresh grant rate-limited (429), Retry-After: \(retryAfterRaw ?? "-", privacy: .public), body: \(body, privacy: .public)")
+            throw OAuthRefreshError.rateLimited(retryAfter: retryAfter, body: body)
         default:
-            logger.info("refresh grant failed with HTTP \(response.statusCode, privacy: .public)")
+            let body = String(decoding: data.prefix(Self.maxErrorBodyBytes), as: UTF8.self)
+            logger.info("refresh grant failed with HTTP \(response.statusCode, privacy: .public): \(body, privacy: .public)")
             throw OAuthRefreshError.http(status: response.statusCode)
         }
+    }
+
+    /// `Retry-After` as seconds: either a delay-seconds value or an HTTP-date
+    /// (RFC 7231). nil when the header is missing, unparsable, or in the past.
+    static func parseRetryAfter(_ raw: String?, now: Date) -> TimeInterval? {
+        guard let raw = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { return nil }
+        if let seconds = TimeInterval(raw) {
+            return seconds > 0 ? seconds : nil
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+        guard let date = formatter.date(from: raw) else { return nil }
+        let delay = date.timeIntervalSince(now)
+        return delay > 0 ? delay : nil
     }
 
     private func makeRequest(refreshToken: String, scopes: [String]) throws -> URLRequest {

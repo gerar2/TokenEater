@@ -1001,3 +1001,8 @@
 "dashboard.profiles.select" = "Show %@ in the menu bar and popover";
 "dashboard.profiles.state.rateLimited" = "Rate limited";
 /* === end multi-profile: app === */
+
+/* === multi-profile: renewal backoff === */
+"profile.state.deferred.rateLimited" = "Token renewal rate-limited, retrying %@";
+"profile.state.deferred" = "Token renewal failed, retrying %@";
+/* === end multi-profile: renewal backoff === */

@@ -36,17 +36,24 @@ struct ProfileTokenProviderTests {
         AccountProfile(name: "Captured", source: .managed, renewalPolicy: .tokenEater)
     }
 
+    /// Mutable clock so a test can advance past a renewal backoff window.
+    private final class Clock: @unchecked Sendable {
+        var now: Date
+        init(_ now: Date) { self.now = now }
+    }
+
     private func makeSUT(
         profile: AccountProfile,
         vaultSeed: OAuthCredentials? = nil,
         refresher: OAuthTokenRefresherProtocol? = nil,
-        legacyBootstrap: ProfileTokenProvider.LegacyBootstrap? = nil
+        legacyBootstrap: ProfileTokenProvider.LegacyBootstrap? = nil,
+        clock: Clock? = nil
     ) -> Env {
         let vault = InMemoryProfileCredentialVault()
         if let vaultSeed { vault.storage[profile.id] = vaultSeed }
         let store = MockClaudeCodeCredentialStore()
         let mockRefresher = MockOAuthTokenRefresher()
-        let now = self.now
+        let clock = clock ?? Clock(self.now)
         let provider = ProfileTokenProvider(
             profile: profile,
             vault: vault,
@@ -54,7 +61,7 @@ struct ProfileTokenProviderTests {
             refresher: refresher ?? mockRefresher,
             proxyProvider: { nil },
             realHome: "/Users/tester",
-            now: { now },
+            now: { clock.now },
             legacyBootstrap: legacyBootstrap ?? {}
         )
         return Env(provider: provider, vault: vault, store: store, refresher: mockRefresher)
@@ -272,23 +279,31 @@ struct ProfileTokenProviderTests {
         #expect(env.refresher.refreshCallCount == 1)
     }
 
-    @Test("A transient network error keeps the cached credentials")
+    @Test("A transient network error keeps the cached credentials and backs off briefly")
     func transientErrorKeepsCache() async {
         let profile = managed()
         let expired = credentials("at-old", ttl: -60)
-        let env = makeSUT(profile: profile, vaultSeed: expired)
+        let clock = Clock(now)
+        let env = makeSUT(profile: profile, vaultSeed: expired, clock: clock)
         env.refresher.stubbedError = OAuthRefreshError.network("offline")
 
         #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
         #expect(env.provider.currentToken() == "at-old")
         #expect(env.vault.storage[profile.id] == expired)
         #expect(env.vault.saveCallCount == 0)
-        #expect(env.provider.credentialState == .awaitingClaudeCode)
+        #expect(env.provider.credentialState == .renewalDeferred(until: now.addingTimeInterval(60), rateLimited: false))
+        #expect(env.provider.nextRenewalAttempt == now.addingTimeInterval(60))
 
-        // Back online: the next tick renews.
+        // Still inside the backoff window: no second request even if back online.
         env.refresher.stubbedError = nil
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+        #expect(env.refresher.refreshCallCount == 1)
+
+        // Past the window: the next tick renews and the backoff resets.
+        clock.now = now.addingTimeInterval(61)
         #expect(await env.provider.ensureFreshToken(force: false) == .ready)
         #expect(env.provider.currentToken() == "at-old-refreshed")
+        #expect(env.provider.nextRenewalAttempt == nil)
     }
 
     @Test("A transient error on a forced renewal of a still-valid token reports ready")
@@ -537,5 +552,82 @@ struct ProfileTokenProviderTests {
         env.store.stub(configDir: dir, credentials: credentials("cc-rotated-at", refresh: "rt-cc"), backing: backing)
         #expect(env.provider.refreshTokenIfChanged() == true)
         #expect(env.provider.currentToken() == "cc-rotated-at")
+    }
+
+    // MARK: - Renewal backoff (token endpoint rate limiting)
+
+    @Test("A 429 defers renewals along the ladder and never hits the endpoint inside the window")
+    func rateLimitedBackoffLadder() async {
+        let profile = managed()
+        let clock = Clock(now)
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-old", ttl: -60), clock: clock)
+        env.refresher.stubbedError = OAuthRefreshError.rateLimited(retryAfter: nil, body: "slow down")
+
+        // 1st failure: 2 min.
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+        #expect(env.provider.credentialState == .renewalDeferred(until: now.addingTimeInterval(120), rateLimited: true))
+        #expect(env.refresher.refreshCallCount == 1)
+
+        // Ticks inside the window do not touch the endpoint, forced or not.
+        clock.now = now.addingTimeInterval(60)
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+        #expect(await env.provider.ensureFreshToken(force: true) == .awaitingClaudeCode)
+        #expect(env.refresher.refreshCallCount == 1)
+
+        // 2nd failure after the window: 5 min.
+        clock.now = now.addingTimeInterval(121)
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+        #expect(env.refresher.refreshCallCount == 2)
+        #expect(env.provider.nextRenewalAttempt == clock.now.addingTimeInterval(300))
+
+        // Success resets everything.
+        clock.now = clock.now.addingTimeInterval(301)
+        env.refresher.stubbedError = nil
+        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        #expect(env.provider.currentToken() == "at-old-refreshed")
+        #expect(env.provider.nextRenewalAttempt == nil)
+        if case .ok = env.provider.credentialState {} else {
+            Issue.record("expected ok, got \(env.provider.credentialState)")
+        }
+    }
+
+    @Test("A server Retry-After wins over the ladder")
+    func rateLimitedHonoursRetryAfter() async {
+        let profile = managed()
+        let clock = Clock(now)
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-old", ttl: -60), clock: clock)
+        env.refresher.stubbedError = OAuthRefreshError.rateLimited(retryAfter: 45, body: "")
+
+        _ = await env.provider.ensureFreshToken(force: false)
+        #expect(env.provider.nextRenewalAttempt == now.addingTimeInterval(45))
+        #expect(env.provider.credentialState == .renewalDeferred(until: now.addingTimeInterval(45), rateLimited: true))
+    }
+
+    @Test("A still-valid token is served during a backoff from a forced renewal")
+    func backoffKeepsServingValidToken() async {
+        let profile = managed()
+        let clock = Clock(now)
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-valid", ttl: 3600), clock: clock)
+        env.refresher.stubbedError = OAuthRefreshError.rateLimited(retryAfter: nil, body: "")
+
+        #expect(await env.provider.ensureFreshToken(force: true) == .ready)
+        #expect(await env.provider.ensureFreshToken(force: true) == .ready)
+        #expect(env.refresher.refreshCallCount == 1)
+        #expect(env.provider.currentToken() == "at-valid")
+    }
+
+    @Test("clearRenewalBackoff lets a user-driven refresh retry immediately")
+    func clearBackoffRetries() async {
+        let profile = managed()
+        let clock = Clock(now)
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-old", ttl: -60), clock: clock)
+        env.refresher.stubbedError = OAuthRefreshError.rateLimited(retryAfter: nil, body: "")
+        _ = await env.provider.ensureFreshToken(force: false)
+        #expect(env.refresher.refreshCallCount == 1)
+
+        env.refresher.stubbedError = nil
+        env.provider.clearRenewalBackoff()
+        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        #expect(env.refresher.refreshCallCount == 2)
     }
 }

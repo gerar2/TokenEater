@@ -407,6 +407,11 @@ final class ProfileStore: ObservableObject {
     func refreshAll(force: Bool) async {
         for profile in enabledProfiles {
             guard let store = usageStores[profile.id] else { continue }
+            if force {
+                // A user-driven refresh may retry a renewal the automatic loop
+                // is backing off from.
+                (tokenProviders[profile.id] as? ProfileTokenProvider)?.clearRenewalBackoff()
+            }
             await store.refresh(thresholds: thresholds, force: force)
         }
     }

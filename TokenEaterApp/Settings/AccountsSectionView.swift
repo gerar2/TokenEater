@@ -349,6 +349,10 @@ private struct ProfileCard: View {
             return (String(format: String(localized: "accounts.state.expiringAt"), relative), .attention)
         case .awaitingClaudeCode:
             return (String(localized: "profile.state.awaiting"), .attention)
+        case .renewalDeferred(let until, let rateLimited):
+            let relative = until.formatted(.relative(presentation: .named))
+            let key = rateLimited ? "profile.state.deferred.rateLimited" : "profile.state.deferred"
+            return (String(format: String(localized: String.LocalizationValue(key)), relative), .attention)
         case .reauthRequired:
             return (String(localized: "profile.state.reauth"), .broken)
         case .missing:
