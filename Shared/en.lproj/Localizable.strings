@@ -1006,3 +1006,8 @@
 "profile.state.deferred.rateLimited" = "Token renewal rate-limited, retrying %@";
 "profile.state.deferred" = "Token renewal failed, retrying %@";
 /* === end multi-profile: renewal backoff === */
+
+/* === multi-profile: duplicate account warning === */
+"accounts.card.duplicate" = "Same account as “%@”: both cards show the same numbers.";
+"accounts.card.duplicate.linkedHint" = "This directory is currently signed in to that account (claude /login changes it).";
+/* === end multi-profile: duplicate account warning === */

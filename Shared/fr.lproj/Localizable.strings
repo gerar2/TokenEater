@@ -1006,3 +1006,8 @@
 "profile.state.deferred.rateLimited" = "Renouvellement du jeton limité, nouvel essai %@";
 "profile.state.deferred" = "Renouvellement du jeton échoué, nouvel essai %@";
 /* === end multi-profile: renewal backoff === */
+
+/* === multi-profile: duplicate account warning === */
+"accounts.card.duplicate" = "Même compte que « %@ » : les deux cartes affichent les mêmes chiffres.";
+"accounts.card.duplicate.linkedHint" = "Ce dossier est actuellement connecté à ce compte (claude /login le modifie).";
+/* === end multi-profile: duplicate account warning === */

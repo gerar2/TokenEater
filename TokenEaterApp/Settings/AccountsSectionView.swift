@@ -26,7 +26,8 @@ struct AccountsSectionView: View {
                         profile: profile,
                         usage: usage,
                         isActive: profile.id == profileStore.activeProfileID,
-                        isLast: profileStore.profiles.count == 1
+                        isLast: profileStore.profiles.count == 1,
+                        duplicateOf: duplicateName(for: profile)
                     )
                 }
             }
@@ -40,6 +41,18 @@ struct AccountsSectionView: View {
 }
 
 // MARK: - Shared helpers
+
+/// Name of another profile tracking the same account (same `accountUUID`),
+/// or nil. Happens when the directory a linked profile follows is signed in
+/// to an account that is also captured, e.g. after `claude /login` with it:
+/// both cards then show identical numbers and the account the linked profile
+/// was named after is no longer tracked anywhere.
+private extension AccountsSectionView {
+    func duplicateName(for profile: AccountProfile) -> String? {
+        guard let uuid = profile.accountUUID, !uuid.isEmpty else { return nil }
+        return profileStore.profiles.first { $0.id != profile.id && $0.accountUUID == uuid }?.name
+    }
+}
 
 /// Real home (`getpwuid`), abbreviated to `~` for display. Reads that go to
 /// disk / the Keychain use the full path; only labels use this.
@@ -69,6 +82,8 @@ private struct ProfileCard: View {
     @ObservedObject var usage: UsageStore
     let isActive: Bool
     let isLast: Bool
+    /// Another profile on the same account, if any (see `duplicateName`).
+    let duplicateOf: String?
 
     @EnvironmentObject private var profileStore: ProfileStore
     @EnvironmentObject private var themeStore: ThemeStore
@@ -91,11 +106,12 @@ private struct ProfileCard: View {
 
     private let home = ClaudeKeychainServiceName.realHome
 
-    init(profile: AccountProfile, usage: UsageStore, isActive: Bool, isLast: Bool) {
+    init(profile: AccountProfile, usage: UsageStore, isActive: Bool, isLast: Bool, duplicateOf: String? = nil) {
         self.profile = profile
         self.usage = usage
         self.isActive = isActive
         self.isLast = isLast
+        self.duplicateOf = duplicateOf
         _enabledDraft = State(initialValue: profile.isEnabled)
         _autoRenewDraft = State(initialValue: profile.effectiveRenewalPolicy == .tokenEater)
     }
@@ -267,7 +283,27 @@ private struct ProfileCard: View {
                     }
                 }
             }
+            if let duplicateOf {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(DS.Palette.semanticWarning)
+                    Text(duplicateHint(otherName: duplicateOf))
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Palette.semanticWarning)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 2)
+            }
         }
+    }
+
+    /// Linked profiles get the extra sentence: the duplicate comes from what is
+    /// signed in to their directory, which `claude /login` can change again.
+    private func duplicateHint(otherName: String) -> String {
+        let base = String(format: String(localized: "accounts.card.duplicate"), otherName)
+        guard profile.isLinked else { return base }
+        return base + " " + String(localized: "accounts.card.duplicate.linkedHint")
     }
 
     /// Live plan from the store wins over the cached one on the profile.
