@@ -37,7 +37,13 @@ final class OAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendabl
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.transport = transport ?? Self.urlSessionTransport
-        self.userAgent = "claude-code/\(claudeCodeVersion ?? "0.0.0")"
+        // The token endpoint filters by User-Agent: with the `claude-code/<v>`
+        // string `APIClient` uses for the usage API it answers every refresh
+        // grant with 429 `rate_limit_error` (even for an invalid refresh
+        // token), while Claude Code's own `claude-cli/<v> (external, cli)`
+        // gets the normal 200 / 400 responses. Observed 2026-10-08 against
+        // Claude Code 2.1.293; mirror the CLI exactly.
+        self.userAgent = Self.userAgent(claudeCodeVersion: claudeCodeVersion)
         self.now = now
     }
 
@@ -124,6 +130,11 @@ final class OAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendabl
             logger.info("refresh grant failed with HTTP \(response.statusCode, privacy: .public): \(body, privacy: .public)")
             throw OAuthRefreshError.http(status: response.statusCode)
         }
+    }
+
+    /// The User-Agent Claude Code sends to the token endpoint.
+    static func userAgent(claudeCodeVersion: String?) -> String {
+        "claude-cli/\(claudeCodeVersion ?? "0.0.0") (external, cli)"
     }
 
     /// `Retry-After` as seconds: either a delay-seconds value or an HTTP-date

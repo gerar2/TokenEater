@@ -65,10 +65,10 @@
 			<key>uniqueIdentifier</key>
 			<string>2F785E26-6499-42E0-9DA5-5F0B2016776D</string>
 		</dict>
-		<key>B5389B1E-5425-4AC1-802F-28386270F2CF</key>
+		<key>69E6010B-19EA-4207-B9E1-3DE5BDA5DF68</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>78D9A526-829B-4DA0-B224-54BB6AB4102A</string>
+			<string>E4E7B20D-F354-497B-A293-3FFBB98AA1C1</string>
 			<key>auxiliaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
@@ -80,7 +80,7 @@
 				<key>totalNumberOfTestFailures</key>
 				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>48</integer>
+				<integer>2</integer>
 			</dict>
 			<key>className</key>
 			<string>IDESchemeActionsInvocationRecord</string>
@@ -89,7 +89,7 @@
 			<key>domainType</key>
 			<string>com.apple.dt.unit.cocoaUnitTest</string>
 			<key>fileName</key>
-			<string>Test-TokenEaterTests-2026.10.08_12-32-20-+0100.xcresult</string>
+			<string>Test-TokenEaterTests-2026.10.08_13-01-13-+0100.xcresult</string>
 			<key>hasAuxiliaryLog</key>
 			<true/>
 			<key>hasPrimaryLog</key>
@@ -97,15 +97,15 @@
 			<key>primaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
-				<string>T</string>
+				<string>W</string>
 				<key>totalNumberOfAnalyzerIssues</key>
 				<integer>0</integer>
 				<key>totalNumberOfErrors</key>
 				<integer>0</integer>
 				<key>totalNumberOfTestFailures</key>
-				<integer>2</integer>
+				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>7</integer>
+				<integer>2</integer>
 			</dict>
 			<key>schemeIdentifier-containerName</key>
 			<string>TokenEater project</string>
@@ -116,13 +116,13 @@
 			<key>signature</key>
 			<string>Test TokenEaterTests</string>
 			<key>timeStartedRecording</key>
-			<real>813151940.71073198</real>
+			<real>813153673.13944197</real>
 			<key>timeStoppedRecording</key>
-			<real>813151976.44631505</real>
+			<real>813153687.31909502</real>
 			<key>title</key>
 			<string>Test TokenEaterTests</string>
 			<key>uniqueIdentifier</key>
-			<string>B5389B1E-5425-4AC1-802F-28386270F2CF</string>
+			<string>69E6010B-19EA-4207-B9E1-3DE5BDA5DF68</string>
 		</dict>
 	</dict>
 </dict>

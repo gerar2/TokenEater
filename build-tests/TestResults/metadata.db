@@ -13,32 +13,32 @@
 				<key>linkedRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00029301643371582031</real>
+					<real>0.00030279159545898438</real>
 				</dict>
 				<key>managedRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.5047531127929688e-05</real>
+					<real>3.7908554077148438e-05</real>
 				</dict>
 				<key>palette</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8848648071289062e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 				<key>resolvedConfigDir</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.5088272094726562e-05</real>
+					<real>8.9168548583984375e-05</real>
 				</dict>
 				<key>tolerantDecoding</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.57763671875e-05</real>
+					<real>2.8133392333984375e-05</real>
 				</dict>
 				<key>unknownSourceIsDropped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021886825561523438</real>
+					<real>0.00020384788513183594</real>
 				</dict>
 			</dict>
 			<key>AppcastXMLParserTests</key>
@@ -46,37 +46,37 @@
 				<key>doesNotLeakSignatureBetweenItems</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.5129013061523438e-05</real>
+					<real>8.7261199951171875e-05</real>
 				</dict>
 				<key>parsesEmptySignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011396408081054688</real>
+					<real>5.0067901611328125e-05</real>
 				</dict>
 				<key>parsesInvalidLengthAsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.6982040405273438e-05</real>
+					<real>7.1287155151367188e-05</real>
 				</dict>
 				<key>parsesMissingLengthAsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.337860107421875e-05</real>
+					<real>3.0040740966796875e-05</real>
 				</dict>
 				<key>parsesMissingSignatureAsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.0769577026367188e-05</real>
+					<real>3.5047531127929688e-05</real>
 				</dict>
 				<key>parsesSignedEnclosure</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020122528076171875</real>
+					<real>0.00017714500427246094</real>
 				</dict>
 				<key>selectsHighestVersion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.7962875366210938e-05</real>
+					<real>7.0095062255859375e-05</real>
 				</dict>
 			</dict>
 			<key>BrewMigrationServiceTests</key>
@@ -84,17 +84,17 @@
 				<key>detectsBrewInstall</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00054502487182617188</real>
+					<real>0.00025773048400878906</real>
 				</dict>
 				<key>noBrewInstall</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8848648071289062e-05</real>
+					<real>0.00017976760864257812</real>
 				</dict>
 				<key>uninstallCommand</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.7751617431640625e-06</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 			</dict>
 			<key>ChartDomainCalculatorTests</key>
@@ -102,17 +102,17 @@
 				<key>dailyRangeBoundaries</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.29425048828125e-05</real>
+					<real>5.3882598876953125e-05</real>
 				</dict>
 				<key>endAfterStart</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.1961669921875e-05</real>
+					<real>3.0994415283203125e-05</real>
 				</dict>
 				<key>hourlyRangeBoundaries</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.1219253540039062e-05</real>
+					<real>1.8835067749023438e-05</real>
 				</dict>
 			</dict>
 			<key>ClaudeCodeCredentialStoreTests</key>
@@ -120,77 +120,77 @@
 				<key>customDirService</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017309188842773438</real>
+					<real>0.00017619132995605469</real>
 				</dict>
 				<key>desktopFallbackDefaultOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015997886657714844</real>
+					<real>0.0001659393310546875</real>
 				</dict>
 				<key>desktopSilentRebootstrap</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013899803161621094</real>
+					<real>0.00013709068298339844</real>
 				</dict>
 				<key>exists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010371208190917969</real>
+					<real>0.00011205673217773438</real>
 				</dict>
 				<key>fileFallback</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6954879760742188e-05</real>
+					<real>5.7935714721679688e-05</real>
 				</dict>
 				<key>garbageKeychainFallsThrough</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.0810317993164062e-05</real>
+					<real>7.7724456787109375e-05</real>
 				</dict>
 				<key>hexEncoding</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.71661376953125e-05</real>
 				</dict>
 				<key>keychainFirst</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00024509429931640625</real>
+					<real>0.0002288818359375</real>
 				</dict>
 				<key>nothingAvailable</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.3167343139648438e-05</real>
+					<real>5.91278076171875e-05</real>
 				</dict>
 				<key>writeClaudeDesktopReadOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.7179718017578125e-05</real>
+					<real>2.4080276489257812e-05</real>
 				</dict>
 				<key>writeFileKeepsUnknownKeysAndPermissions</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0023589134216308594</real>
+					<real>0.0022211074829101562</real>
 				</dict>
 				<key>writeFileRequiresExistingFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0004482269287109375</real>
+					<real>0.00055384635925292969</real>
 				</dict>
 				<key>writeKeychainBuildsArgv</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021505355834960938</real>
+					<real>0.00022292137145996094</real>
 				</dict>
 				<key>writeKeychainLaunchFailure</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00029587745666503906</real>
+					<real>0.00031495094299316406</real>
 				</dict>
 				<key>writeKeychainNonZeroExit</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014328956604003906</real>
+					<real>0.00021386146545410156</real>
 				</dict>
 			</dict>
 			<key>ClaudeConfigDirDetectorTests</key>
@@ -198,27 +198,27 @@
 				<key>detectsCandidates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0031130313873291016</real>
+					<real>0.0028209686279296875</real>
 				</dict>
 				<key>emptyHome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00055694580078125</real>
+					<real>0.00048899650573730469</real>
 				</dict>
 				<key>markers</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0014510154724121094</real>
+					<real>0.0013899803161621094</real>
 				</dict>
 				<key>suggestedNames</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.4134597778320312e-05</real>
+					<real>7.2002410888671875e-05</real>
 				</dict>
 				<key>trailingSlash</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00084567070007324219</real>
+					<real>0.00083303451538085938</real>
 				</dict>
 			</dict>
 			<key>ClaudeKeychainServiceNameTests</key>
@@ -226,22 +226,22 @@
 				<key>customDir</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.3882598876953125e-05</real>
+					<real>5.4836273193359375e-05</real>
 				</dict>
 				<key>defaultDir</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.1750411987304688e-05</real>
+					<real>5.2928924560546875e-05</real>
 				</dict>
 				<key>knownVector</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.100799560546875e-05</real>
+					<real>4.482269287109375e-05</real>
 				</dict>
 				<key>normalisation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.3909759521484375e-05</real>
+					<real>6.9856643676757812e-05</real>
 				</dict>
 			</dict>
 			<key>CurrencyFormatterTests</key>
@@ -249,57 +249,57 @@
 				<key>emptyCurrencyFallsBackToUSD</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.29425048828125e-05</real>
+					<real>5.3167343139648438e-05</real>
 				</dict>
 				<key>extraCreditsBugReproduction</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.8943710327148438e-05</real>
+					<real>0.00013017654418945312</real>
 				</dict>
 				<key>jpyHasNoMinorUnits</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0014309883117675781</real>
+					<real>0.0042510032653808594</real>
 				</dict>
 				<key>kwdHasThreeMinorUnits</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013399124145507812</real>
+					<real>0.00012493133544921875</real>
 				</dict>
 				<key>nilCurrencyFallsBackToUSD</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.7976455688476562e-05</real>
+					<real>7.8916549682617188e-05</real>
 				</dict>
 				<key>unknownCurrencyDoesNotCrash</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.1750411987304688e-05</real>
+					<real>6.008148193359375e-05</real>
 				</dict>
 				<key>usdFractionalAmountKeepsTwoDecimals</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.29425048828125e-05</real>
+					<real>5.9843063354492188e-05</real>
 				</dict>
 				<key>usdLargeAmountHasGroupingSeparator</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.4134597778320312e-05</real>
+					<real>5.1259994506835938e-05</real>
 				</dict>
 				<key>usdRoundAmountOmitsDecimals</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00038409233093261719</real>
+					<real>0.00037121772766113281</real>
 				</dict>
 				<key>usdSingleCent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.0823898315429688e-05</real>
+					<real>5.1975250244140625e-05</real>
 				</dict>
 				<key>usdZero</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010395050048828125</real>
+					<real>5.2928924560546875e-05</real>
 				</dict>
 			</dict>
 			<key>DiagnosticReporterTests</key>
@@ -307,77 +307,77 @@
 				<key>includesAppMetadata</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.016672134399414062</real>
+					<real>0.02103114128112793</real>
 				</dict>
 				<key>includesSystemSection</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010714054107666016</real>
+					<real>0.014870166778564453</real>
 				</dict>
 				<key>networkErrorRendersUnderlying</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011892080307006836</real>
+					<real>0.010823965072631836</real>
 				</dict>
 				<key>neverLeaksProxyCreds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011554956436157227</real>
+					<real>0.010147809982299805</real>
 				</dict>
 				<key>neverLeaksToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011797904968261719</real>
+					<real>0.010998010635375977</real>
 				</dict>
 				<key>nilFieldsRenderAsDash</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011745691299438477</real>
+					<real>0.010776996612548828</real>
 				</dict>
 				<key>noLastAPIErrorRendersGracefully</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.015507221221923828</real>
+					<real>0.010328054428100586</real>
 				</dict>
 				<key>profileReportKeepsLegacySections</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.016462087631225586</real>
+					<real>0.013619899749755859</real>
 				</dict>
 				<key>profilesSectionListsEveryProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.012459039688110352</real>
+					<real>0.012310266494750977</real>
 				</dict>
 				<key>profilesSectionRedactsSecrets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011533260345458984</real>
+					<real>0.020597934722900391</real>
 				</dict>
 				<key>profilesSectionReportsUnstartedStores</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011792898178100586</real>
+					<real>0.011668920516967773</real>
 				</dict>
 				<key>profilesSectionShowsExpiryAndErrorState</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.012502908706665039</real>
+					<real>0.012193202972412109</real>
 				</dict>
 				<key>rateLimitedRendersAllFields</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011245012283325195</real>
+					<real>0.01207280158996582</real>
 				</dict>
 				<key>redactNameShape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001239776611328125</real>
+					<real>7.915496826171875e-05</real>
 				</dict>
 				<key>tokenExpiredRendersStatus</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.01117706298828125</real>
+					<real>0.010793209075927734</real>
 				</dict>
 			</dict>
 			<key>DisplaySettingsStoreTests</key>
@@ -385,57 +385,57 @@
 				<key>defaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00038194656372070312</real>
+					<real>0.00042796134948730469</real>
 				</dict>
 				<key>initMirrorsSmartColor</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018286705017089844</real>
+					<real>0.00015306472778320312</real>
 				</dict>
 				<key>legacyPacingDisplayModeMigrates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0003261566162109375</real>
+					<real>0.00030088424682617188</real>
 				</dict>
 				<key>legacyPacingPinMigrates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035119056701660156</real>
+					<real>0.000347137451171875</real>
 				</dict>
 				<key>legacyShowSessionResetMigrates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00033688545227050781</real>
+					<real>0.00039076805114746094</real>
 				</dict>
 				<key>legacySmartResetColorRespected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027823448181152344</real>
+					<real>0.00031805038452148438</real>
 				</dict>
 				<key>menuBarStylePersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0004177093505859375</real>
+					<real>0.00044012069702148438</real>
 				</dict>
 				<key>pinnedMetricsPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00045609474182128906</real>
+					<real>0.00062799453735351562</real>
 				</dict>
 				<key>relaysToParent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0035102367401123047</real>
+					<real>0.0033559799194335938</real>
 				</dict>
 				<key>smartColorEnabledMirrors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00039005279541015625</real>
+					<real>0.00039267539978027344</real>
 				</dict>
 				<key>smartColorProfileMirrors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035905838012695312</real>
+					<real>0.00036287307739257812</real>
 				</dict>
 			</dict>
 			<key>ElectronDecryptionServiceTests</key>
@@ -443,92 +443,92 @@
 				<key>clearCachedKeyRemovesKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00073003768920898438</real>
+					<real>0.00061297416687011719</real>
 				</dict>
 				<key>decryptFailsWithoutKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021100044250488281</real>
+					<real>0.00018095970153808594</real>
 				</dict>
 				<key>encryptThenDecryptRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00058984756469726562</real>
+					<real>0.00044512748718261719</real>
 				</dict>
 				<key>fileCacheRejectsTooShort</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031590461730957031</real>
+					<real>0.00035405158996582031</real>
 				</dict>
 				<key>fileCacheRejectsWrongVersion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035595893859863281</real>
+					<real>0.00039386749267578125</real>
 				</dict>
 				<key>fileCacheReturnsNilWhenMissing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00022411346435546875</real>
+					<real>8.4161758422851562e-05</real>
 				</dict>
 				<key>fileCacheRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0011687278747558594</real>
+					<real>0.0011880397796630859</real>
 				</dict>
 				<key>hasEncryptionKeyFalseAfterClear</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026106834411621094</real>
+					<real>0.00020194053649902344</real>
 				</dict>
 				<key>keyDerivationDiffersForDifferentPasswords</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00040030479431152344</real>
+					<real>0.00039386749267578125</real>
 				</dict>
 				<key>keyDerivationIsDeterministic</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0003948211669921875</real>
+					<real>0.00039505958557128906</real>
 				</dict>
 				<key>keyDerivationProduces16Bytes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020694732666015625</real>
+					<real>0.00020503997802734375</real>
 				</dict>
 				<key>migrateKeyFromKeychainToFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0011079311370849609</real>
+					<real>0.0012049674987792969</real>
 				</dict>
 				<key>rejectsEmptyBase64</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00060200691223144531</real>
+					<real>0.00061297416687011719</real>
 				</dict>
 				<key>rejectsInvalidBase64</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00060200691223144531</real>
+					<real>0.000408172607421875</real>
 				</dict>
 				<key>rejectsWithoutV10Prefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00082468986511230469</real>
+					<real>0.00063800811767578125</real>
 				</dict>
 				<key>roundTripEmptyPlaintext</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00046777725219726562</real>
+					<real>0.00039505958557128906</real>
 				</dict>
 				<key>trySilentRebootstrapFailsWithoutPassword</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0003643035888671875</real>
+					<real>0.0002498626708984375</real>
 				</dict>
 				<key>trySilentRebootstrapSucceedsWithPassword</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0011198520660400391</real>
+					<real>0.0013363361358642578</real>
 				</dict>
 			</dict>
 			<key>FableTests</key>
@@ -536,32 +536,32 @@
 				<key>absentFableIsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.1961669921875e-05</real>
+					<real>5.1021575927734375e-05</real>
 				</dict>
 				<key>decodesFableBucket</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0010619163513183594</real>
+					<real>0.0010831356048583984</real>
 				</dict>
 				<key>fableFromLimitsArray</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031113624572753906</real>
+					<real>0.00030922889709472656</real>
 				</dict>
 				<key>fableMetricLabels</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017905235290527344</real>
+					<real>0.00017476081848144531</real>
 				</dict>
 				<key>limitsWithoutFableIsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.0067901611328125e-05</real>
+					<real>3.719329833984375e-05</real>
 				</dict>
 				<key>topLevelFableWinsOverLimits</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.0067901611328125e-05</real>
+					<real>4.291534423828125e-05</real>
 				</dict>
 			</dict>
 			<key>GaugeColorResolverTests</key>
@@ -569,7 +569,7 @@
 				<key>smartColorMatchesThemeSmartGauge</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>1.7881393432617188e-05</real>
 				</dict>
 				<key>smartDisabledSelectsThreshold</key>
 				<dict>
@@ -579,7 +579,7 @@
 				<key>smartEnabledButNoWindowSelectsThreshold</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2874603271484375e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>smartEnabledWithWindowSelectsSmart</key>
 				<dict>
@@ -589,12 +589,12 @@
 				<key>thresholdColorIgnoresResetDate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>thresholdColorMatchesStaticRamp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.6069107055664062e-05</real>
+					<real>0.00010728836059570312</real>
 				</dict>
 			</dict>
 			<key>HistoryCacheTests</key>
@@ -602,12 +602,12 @@
 				<key>emptyCacheIsCurrent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.33514404296875e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 				<key>outdatedCacheIsRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.6069107055664062e-05</real>
+					<real>7.8678131103515625e-05</real>
 				</dict>
 			</dict>
 			<key>HistoryStoreTests</key>
@@ -615,57 +615,57 @@
 				<key>bucketCacheHitRate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.6226043701171875e-05</real>
+					<real>7.2002410888671875e-05</real>
 				</dict>
 				<key>bucketsForChartAll</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.6014785766601562e-05</real>
+					<real>4.1723251342773438e-05</real>
 				</dict>
 				<key>bucketsForChartFamily</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.193450927734375e-05</real>
+					<real>2.4080276489257812e-05</real>
 				</dict>
 				<key>bucketsForChartPreservesOtherFields</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.2186508178710938e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 				<key>projectTotalName</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9073486328125e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 				<key>rankedProjectsEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 				<key>rankedProjectsSumsAndSorts</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.817413330078125e-05</real>
+					<real>5.9843063354492188e-05</real>
 				</dict>
 				<key>rankedProjectsTieBreaksOnPath</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4557113647460938e-05</real>
+					<real>3.4093856811523438e-05</real>
 				</dict>
 				<key>statsTabsAreComplete</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.100799560546875e-05</real>
+					<real>4.1961669921875e-05</real>
 				</dict>
 				<key>totalsByKindEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>totalsByKindSums</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013208389282226562</real>
+					<real>0.00011110305786132812</real>
 				</dict>
 			</dict>
 			<key>JSONLParserTests</key>
@@ -673,7 +673,7 @@
 				<key>emptyStringReturnsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>freshSessionReturnsIdle</key>
 				<dict>
@@ -683,77 +683,77 @@
 				<key>fullSessionEndsIdle</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020170211791992188</real>
+					<real>0.00016903877258300781</real>
 				</dict>
 				<key>parsesAskUserQuestion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.7022781372070312e-05</real>
+					<real>0.00011992454528808594</real>
 				</dict>
 				<key>parsesCompactBoundary</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.8187713623046875e-05</real>
+					<real>0.00010418891906738281</real>
 				</dict>
 				<key>parsesEndTurn</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00054526329040527344</real>
+					<real>0.00092673301696777344</real>
 				</dict>
 				<key>parsesProgressHeartbeat</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.2717666625976562e-05</real>
+					<real>6.4134597778320312e-05</real>
 				</dict>
 				<key>parsesResolvedPermission</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010728836059570312</real>
+					<real>0.00011706352233886719</real>
 				</dict>
 				<key>parsesStreaming</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011372566223144531</real>
+					<real>8.106231689453125e-05</real>
 				</dict>
 				<key>parsesSubagent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013899803161621094</real>
+					<real>0.00012898445129394531</real>
 				</dict>
 				<key>parsesTimestamp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013399124145507812</real>
+					<real>9.2267990112304688e-05</real>
 				</dict>
 				<key>parsesToolUse</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017380714416503906</real>
+					<real>0.00010919570922851562</real>
 				</dict>
 				<key>parsesUserMessage</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010085105895996094</real>
+					<real>7.6055526733398438e-05</real>
 				</dict>
 				<key>parsesUserToolResult</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.6069107055664062e-05</real>
+					<real>7.6055526733398438e-05</real>
 				</dict>
 				<key>parsesWaiting</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.0837478637695312e-05</real>
+					<real>8.58306884765625e-05</real>
 				</dict>
 				<key>skipsSystemMessages</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.8930130004882812e-05</real>
+					<real>8.106231689453125e-05</real>
 				</dict>
 				<key>workingSessionEndsToolExec</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012993812561035156</real>
+					<real>0.000186920166015625</real>
 				</dict>
 			</dict>
 			<key>MenuBarCompositionModelsTests</key>
@@ -761,62 +761,62 @@
 				<key>builtinTemplatesValid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.5074691772460938e-05</real>
+					<real>5.7220458984375e-05</real>
 				</dict>
 				<key>effectiveStyleClamps</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2874603271484375e-05</real>
+					<real>1.7881393432617188e-05</real>
 				</dict>
 				<key>fablePacingSegmentShape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4781951904296875e-05</real>
+					<real>1.9788742065429688e-05</real>
 				</dict>
 				<key>kindStyleMatrix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.2200088500976562e-05</real>
+					<real>3.2901763916015625e-05</real>
 				</dict>
 				<key>missingFieldsDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.2901763916015625e-05</real>
+					<real>5.3882598876953125e-05</real>
 				</dict>
 				<key>profileLabelSegmentShape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0994415283203125e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>roundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014591217041015625</real>
+					<real>0.000141143798828125</real>
 				</dict>
 				<key>templatesMintFreshIDs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.7922134399414062e-05</real>
+					<real>5.6028366088867188e-05</real>
 				</dict>
 				<key>unknownKindDropped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.3153762817382812e-05</real>
+					<real>4.00543212890625e-05</real>
 				</dict>
 				<key>unknownStyleDropped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.9087066650390625e-05</real>
+					<real>5.7935714721679688e-05</real>
 				</dict>
 				<key>userTemplateRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010180473327636719</real>
+					<real>8.4161758422851562e-05</real>
 				</dict>
 				<key>visibility</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.7894973754882812e-05</real>
+					<real>3.0994415283203125e-05</real>
 				</dict>
 			</dict>
 			<key>MenuBarConfigMigratorTests</key>
@@ -824,52 +824,52 @@
 				<key>badgePacingHonorsMode</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.0265579223632812e-05</real>
+					<real>2.384185791015625e-05</real>
 				</dict>
 				<key>badgeStyle</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>classicDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.1948089599609375e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 				<key>emptyPins</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>2.09808349609375e-05</real>
 				</dict>
 				<key>migratedSegmentsValid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021624565124511719</real>
+					<real>0.00022602081298828125</real>
 				</dict>
 				<key>monoStyle</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.71661376953125e-05</real>
+					<real>2.288818359375e-05</real>
 				</dict>
 				<key>optionsCarried</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.8385391235351562e-05</real>
+					<real>2.09808349609375e-05</real>
 				</dict>
 				<key>orderPreserved</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>2.288818359375e-05</real>
 				</dict>
 				<key>pacingModes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.811981201171875e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 				<key>presenceGatedPinsKept</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.7908554077148438e-05</real>
+					<real>3.2186508178710938e-05</real>
 				</dict>
 			</dict>
 			<key>MenuBarExtraCreditsRenderTests</key>
@@ -877,17 +877,17 @@
 				<key>logoFallbackWhenDisabled</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>2.0265579223632812e-05</real>
 				</dict>
 				<key>renderedInPillStyle</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011539459228515625</real>
+					<real>0.00011801719665527344</real>
 				</dict>
 				<key>renderedWhenEnabled</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023388862609863281</real>
+					<real>0.00021910667419433594</real>
 				</dict>
 			</dict>
 			<key>MenuBarFablePacingRenderTests</key>
@@ -895,17 +895,17 @@
 				<key>absentDrawsNothing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.0742416381835938e-05</real>
+					<real>1.811981201171875e-05</real>
 				</dict>
 				<key>activeDrawsPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.0122222900390625e-05</real>
+					<real>0.00013113021850585938</real>
 				</dict>
 				<key>idleDrawsPlaceholder</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014591217041015625</real>
+					<real>0.00013399124145507812</real>
 				</dict>
 			</dict>
 			<key>MenuBarGaugeColorTests</key>
@@ -913,22 +913,22 @@
 				<key>monochromeWins</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.7881393432617188e-05</real>
+					<real>2.9325485229492188e-05</real>
 				</dict>
 				<key>smartDisabledUsesThresholds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>windowedUsesSmart</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8835067749023438e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>windowlessUsesThresholds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.1219253540039062e-05</real>
+					<real>2.9087066650390625e-05</real>
 				</dict>
 			</dict>
 			<key>MenuBarOutageBadgeTests</key>
@@ -936,12 +936,12 @@
 				<key>outageBadgeRenders</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.042849063873291016</real>
+					<real>0.032727718353271484</real>
 				</dict>
 				<key>pinnedServiceStatusDownWiderThanHealthy</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0020399093627929688</real>
+					<real>0.0046091079711914062</real>
 				</dict>
 			</dict>
 			<key>MenuBarPeriodLabelColorTests</key>
@@ -949,17 +949,17 @@
 				<key>customHexWins</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.6941299438476562e-05</real>
+					<real>2.193450927734375e-05</real>
 				</dict>
 				<key>defaultIsLegible</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.719329833984375e-05</real>
+					<real>3.6954879760742188e-05</real>
 				</dict>
 				<key>malformedHexFallsBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>2.4080276489257812e-05</real>
 				</dict>
 			</dict>
 			<key>MenuBarProfileLabelRenderTests</key>
@@ -967,22 +967,22 @@
 				<key>aloneFallsBackToLogo</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.6028366088867188e-05</real>
+					<real>6.103515625e-05</real>
 				</dict>
 				<key>blankLabelDrawsNothing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000186920166015625</real>
+					<real>0.00014328956604003906</real>
 				</dict>
 				<key>labelTruncation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00022006034851074219</real>
+					<real>0.00024008750915527344</real>
 				</dict>
 				<key>tintResolution</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8835067749023438e-05</real>
+					<real>3.6001205444335938e-05</real>
 				</dict>
 			</dict>
 			<key>MenuBarRendererTests</key>
@@ -990,27 +990,27 @@
 				<key>limitReachedLongRemainingCritical</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>1.3828277587890625e-05</real>
 				</dict>
 				<key>limitReachedShortRemainingCritical</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.106231689453125e-05</real>
+					<real>6.4134597778320312e-05</real>
 				</dict>
 				<key>lowUtilizationShortRemainingNormal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2874603271484375e-05</real>
+					<real>1.3113021850585938e-05</real>
 				</dict>
 				<key>projectedRiskEscalatesToCritical</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2874603271484375e-05</real>
+					<real>2.7894973754882812e-05</real>
 				</dict>
 				<key>projectedRiskWarning</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.3140182495117188e-05</real>
+					<real>3.2901763916015625e-05</real>
 				</dict>
 			</dict>
 			<key>MetricIDTests</key>
@@ -1018,12 +1018,12 @@
 				<key>extraCreditsLabels</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0755996704101562e-05</real>
+					<real>2.7179718017578125e-05</real>
 				</dict>
 				<key>extraCreditsRawValue</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>2.288818359375e-05</real>
 				</dict>
 			</dict>
 			<key>MetricsGridLayoutTests</key>
@@ -1031,7 +1031,7 @@
 				<key>fillsRowsWithoutTrailingGap</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.9168548583984375e-05</real>
+					<real>8.0108642578125e-05</real>
 				</dict>
 				<key>preservesOrder</key>
 				<dict>
@@ -1044,47 +1044,47 @@
 				<key>bareOpusAliasMapsToCurrentVersion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0251998901367188e-05</real>
+					<real>1.33514404296875e-05</real>
 				</dict>
 				<key>displayNameMatchesVersion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.059906005859375e-06</real>
+					<real>9.2983245849609375e-06</real>
 				</dict>
 				<key>everyOpusVersionFoldsIntoOpusFamily</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>1.0251998901367188e-05</real>
 				</dict>
 				<key>fableIsItsOwnFamily</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.910064697265625e-05</real>
+					<real>3.4093856811523438e-05</real>
 				</dict>
 				<key>fableIsRecognised</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8835067749023438e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>opus46IsRecognised</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6689300537109375e-05</real>
+					<real>2.4080276489257812e-05</real>
 				</dict>
 				<key>opus47IsRecognised</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 				<key>opus48IsRecognised</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.193450927734375e-05</real>
+					<real>1.71661376953125e-05</real>
 				</dict>
 				<key>opus5IsRecognised</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4080276489257812e-05</real>
+					<real>2.193450927734375e-05</real>
 				</dict>
 				<key>sonnet5IsRecognised</key>
 				<dict>
@@ -1094,22 +1094,22 @@
 				<key>sonnetAndHaiku</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.5047531127929688e-05</real>
+					<real>3.9815902709960938e-05</real>
 				</dict>
 				<key>stackOrderContainsEveryCase</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6001205444335938e-05</real>
+					<real>3.0994415283203125e-05</real>
 				</dict>
 				<key>unknownModelFallsToOther</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>unknownOpus4MinorStaysInGeneration4</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 			</dict>
 			<key>MonitoringInsightsStoreTests</key>
@@ -1117,37 +1117,37 @@
 				<key>dropsOutOfWindowBuckets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.9802322387695312e-05</real>
+					<real>3.4093856811523438e-05</real>
 				</dict>
 				<key>emptyWhenAllSlotsZero</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.288818359375e-05</real>
+					<real>3.2901763916015625e-05</real>
 				</dict>
 				<key>emptyWhenNoBuckets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0967254638671875e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>loneActiveDay</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.5047531127929688e-05</real>
+					<real>4.57763671875e-05</real>
 				</dict>
 				<key>unorderedInput</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.288818359375e-05</real>
+					<real>3.910064697265625e-05</real>
 				</dict>
 				<key>windowedSumMatchesWidgetSum</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.6014785766601562e-05</real>
+					<real>5.1021575927734375e-05</real>
 				</dict>
 				<key>zeroFillsEmptyDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010204315185546875</real>
+					<real>0.00010085105895996094</real>
 				</dict>
 			</dict>
 			<key>NavigationTargetTests</key>
@@ -1155,77 +1155,77 @@
 				<key>accountsSection</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.288818359375e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>accountsSidebarOrder</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4080276489257812e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>bareSettingsPrefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0967254638671875e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>bareStudioPrefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0013580322265625e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>enumMetadata</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.2676925659179688e-05</real>
+					<real>5.0067901611328125e-05</real>
 				</dict>
 				<key>legacyFlatCustomizationAliases</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.9073486328125e-05</real>
 				</dict>
 				<key>legacyFlatSettingsSections</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.52587890625e-05</real>
+					<real>1.8835067749023438e-05</real>
 				</dict>
 				<key>legacyMonitoringAliases</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0013580322265625e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>legacyPrefixedCustomizationAliases</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>settingsSections</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.4107437133789062e-05</real>
+					<real>3.3855438232421875e-05</real>
 				</dict>
 				<key>studioPayloadRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.193450927734375e-05</real>
+					<real>3.6001205444335938e-05</real>
 				</dict>
 				<key>studioSurfaces</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.71661376953125e-05</real>
+					<real>1.3828277587890625e-05</real>
 				</dict>
 				<key>topLevelSpaces</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8133392333984375e-05</real>
+					<real>3.0040740966796875e-05</real>
 				</dict>
 				<key>unknownPayloads</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>unknownStudioSurface</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6001205444335938e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 			</dict>
 			<key>NotificationBodyFormatterTests</key>
@@ -1233,17 +1233,17 @@
 				<key>countdownDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>5.1021575927734375e-05</real>
 				</dict>
 				<key>countdownExactHours</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.8678131103515625e-06</real>
+					<real>9.7751617431640625e-06</real>
 				</dict>
 				<key>countdownHoursAndMinutes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.8214874267578125e-06</real>
+					<real>9.059906005859375e-06</real>
 				</dict>
 				<key>countdownMinutesOnly</key>
 				<dict>
@@ -1253,32 +1253,32 @@
 				<key>countdownPastDate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>countdownVeryShort</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.8214874267578125e-06</real>
+					<real>9.059906005859375e-06</real>
 				</dict>
 				<key>formatDateTimeDifferentDates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8133392333984375e-05</real>
+					<real>4.6014785766601562e-05</real>
 				</dict>
 				<key>formatDateTimeNonEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00028204917907714844</real>
+					<real>0.0013329982757568359</real>
 				</dict>
 				<key>formatTimeConsistent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>formatTimeNonEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.296966552734375e-05</real>
+					<real>9.0122222900390625e-05</real>
 				</dict>
 			</dict>
 			<key>NotificationScopeTests</key>
@@ -1286,17 +1286,17 @@
 				<key>legacyIsIdentity</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9311904907226562e-05</real>
+					<real>2.1219253540039062e-05</real>
 				</dict>
 				<key>profileSuffix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.811981201171875e-05</real>
+					<real>4.6968460083007812e-05</real>
 				</dict>
 				<key>titlePrefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>2.3126602172851562e-05</real>
 				</dict>
 			</dict>
 			<key>NotificationServiceScopeTests</key>
@@ -1309,47 +1309,47 @@
 				<key>displayNameReadLazily</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.6968460083007812e-05</real>
+					<real>8.20159912109375e-05</real>
 				</dict>
 				<key>escalationStateIsPerProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.3909759521484375e-05</real>
+					<real>6.103515625e-05</real>
 				</dict>
 				<key>legacyScopeIsUnchanged</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027799606323242188</real>
+					<real>0.00029301643371582031</real>
 				</dict>
 				<key>legacyTokenAccessorsForward</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0014052391052246094</real>
+					<real>0.0016429424285888672</real>
 				</dict>
 				<key>remindersAreNotCancelledByAnotherProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.4148178100585938e-05</real>
+					<real>7.7962875366210938e-05</real>
 				</dict>
 				<key>scopedServiceSuffixesKeysAndIDs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015997886657714844</real>
+					<real>0.00015926361083984375</real>
 				</dict>
 				<key>titlesPrefixedOnlyWithName</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002269744873046875</real>
+					<real>0.0002460479736328125</real>
 				</dict>
 				<key>tokenExpiredDedupeIsPerProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>2.8848648071289062e-05</real>
 				</dict>
 				<key>vendorHealthIsGlobal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031876564025878906</real>
+					<real>0.00034308433532714844</real>
 				</dict>
 			</dict>
 			<key>NotificationServiceTests</key>
@@ -1362,27 +1362,27 @@
 				<key>recoveryDoesNotFireMidWindow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8835067749023438e-05</real>
+					<real>2.5033950805664062e-05</real>
 				</dict>
 				<key>recoveryFiresWhenEnabled</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.103515625e-05</real>
+					<real>3.1948089599609375e-05</real>
 				</dict>
 				<key>recoverySilentWhenDisabled</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.38690185546875e-05</real>
+					<real>2.288818359375e-05</real>
 				</dict>
 				<key>sameLevelDoesNotRefire</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8848648071289062e-05</real>
+					<real>1.5735626220703125e-05</real>
 				</dict>
 				<key>tokenExpiredDedupes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>2.3126602172851562e-05</real>
 				</dict>
 			</dict>
 			<key>NotificationSettingsStoreTests</key>
@@ -1390,27 +1390,27 @@
 				<key>defaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00030589103698730469</real>
+					<real>0.000286102294921875</real>
 				</dict>
 				<key>loadsStoredValues</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00063109397888183594</real>
+					<real>0.00064420700073242188</real>
 				</dict>
 				<key>parentForwards</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0039803981781005859</real>
+					<real>0.0037679672241210938</real>
 				</dict>
 				<key>relaysToParent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0035631656646728516</real>
+					<real>0.0038790702819824219</real>
 				</dict>
 				<key>togglePersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00070810317993164062</real>
+					<real>0.00052094459533691406</real>
 				</dict>
 			</dict>
 			<key>OAuthCredentialsTests</key>
@@ -1418,42 +1418,42 @@
 				<key>chainAndRecency</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.6941299438476562e-05</real>
+					<real>1.8835067749023438e-05</real>
 				</dict>
 				<key>credentialState</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9788742065429688e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 				<key>defaultScopes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.0251998901367188e-05</real>
 				</dict>
 				<key>expiry</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>mergeKeepsRefreshWhenAbsent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8848648071289062e-05</real>
+					<real>4.1961669921875e-05</real>
 				</dict>
 				<key>mergePreservesUnknownKeys</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011491775512695312</real>
+					<real>0.00010275840759277344</real>
 				</dict>
 				<key>parsePayload</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.7009201049804688e-05</real>
+					<real>6.8902969360351562e-05</real>
 				</dict>
 				<key>parseRejectsEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.910064697265625e-05</real>
+					<real>3.9815902709960938e-05</real>
 				</dict>
 			</dict>
 			<key>OAuthTokenRefresherTests</key>
@@ -1461,77 +1461,77 @@
 				<key>badJSON</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017809867858886719</real>
+					<real>0.00020003318786621094</real>
 				</dict>
 				<key>httpError</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0015420913696289062</real>
+					<real>0.0013699531555175781</real>
 				</dict>
 				<key>invalidGrant</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00065898895263671875</real>
+					<real>0.00065374374389648438</real>
 				</dict>
 				<key>keepsOldRefreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.392333984375e-05</real>
+					<real>9.9897384643554688e-05</real>
 				</dict>
 				<key>noRefreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.5061111450195312e-05</real>
+					<real>3.719329833984375e-05</real>
 				</dict>
 				<key>proxyPassthrough</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.91278076171875e-05</real>
+					<real>5.4836273193359375e-05</real>
 				</dict>
 				<key>rateLimitedWithSeconds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00022816658020019531</real>
+					<real>0.00017213821411132812</real>
 				</dict>
 				<key>rateLimitedWithoutHeader</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.2983245849609375e-05</real>
+					<real>7.0095062255859375e-05</real>
 				</dict>
 				<key>requestShape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.8943710327148438e-05</real>
+					<real>0.00010204315185546875</real>
 				</dict>
 				<key>retryAfterParsing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00082302093505859375</real>
+					<real>0.00041222572326660156</real>
 				</dict>
 				<key>rotatedRefreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00049281120300292969</real>
+					<real>0.00048899650573730469</real>
 				</dict>
 				<key>singleFlightCoalesces</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.15832996368408203</real>
+					<real>0.15256905555725098</real>
 				</dict>
 				<key>singleFlightIsKeyedByRefreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.15733790397644043</real>
+					<real>0.15523481369018555</real>
 				</dict>
 				<key>transportError</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00084614753723144531</real>
+					<real>0.00095105171203613281</real>
 				</dict>
 				<key>userAgentFallback</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010085105895996094</real>
+					<real>8.106231689453125e-05</real>
 				</dict>
 			</dict>
 			<key>OnboardingViewModelTests</key>
@@ -1539,37 +1539,37 @@
 				<key>gatingBothPending</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.018999099731445312</real>
+					<real>0.012697935104370117</real>
 				</dict>
 				<key>gatingBothSuccess</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011186122894287109</real>
+					<real>0.013574123382568359</real>
 				</dict>
 				<key>gatingFailedDoesNotCount</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010634660720825195</real>
+					<real>0.012917041778564453</real>
 				</dict>
 				<key>gatingOnlyClaudeCode</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.015738248825073242</real>
+					<real>0.011480093002319336</real>
 				</dict>
 				<key>gatingOnlyConnect</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.012289285659790039</real>
+					<real>0.013000965118408203</real>
 				</dict>
 				<key>gatingRateLimitedCountsAsConnected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010973930358886719</real>
+					<real>0.013261795043945312</real>
 				</dict>
 				<key>readyCountSemantics</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010121822357177734</real>
+					<real>0.010745763778686523</real>
 				</dict>
 			</dict>
 			<key>OverlayHitTestTests</key>
@@ -1577,52 +1577,52 @@
 				<key>cursorAboveWithinPadding</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>cursorBelowWithinPadding</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4781951904296875e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>cursorFarAbove</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1920928955078125e-05</real>
+					<real>1.1682510375976562e-05</real>
 				</dict>
 				<key>cursorFarBelow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>cursorInsideBounds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5987625122070312e-05</real>
+					<real>2.288818359375e-05</real>
 				</dict>
 				<key>customPadding</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.8835067749023438e-05</real>
 				</dict>
 				<key>noSessions</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.0292739868164062e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>offsetOldPositionNotNear</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>1.3828277587890625e-05</real>
 				</dict>
 				<key>offsetShiftsDown</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.71661376953125e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>offsetShiftsUp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1205673217773438e-05</real>
+					<real>3.4093856811523438e-05</real>
 				</dict>
 			</dict>
 			<key>OverlaySettingsStoreTests</key>
@@ -1630,22 +1630,22 @@
 				<key>defaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00030088424682617188</real>
+					<real>0.00029492378234863281</real>
 				</dict>
 				<key>overlayEnabledPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00049281120300292969</real>
+					<real>0.00049185752868652344</real>
 				</dict>
 				<key>relaysToParent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0033872127532958984</real>
+					<real>0.0034961700439453125</real>
 				</dict>
 				<key>watcherStyleRoundTripAndFallback</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00051522254943847656</real>
+					<real>0.00057482719421386719</real>
 				</dict>
 			</dict>
 			<key>PacingCalculatorTests</key>
@@ -1653,262 +1653,262 @@
 				<key>activeSecondsAllDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.103515625e-05</real>
+					<real>5.1259994506835938e-05</real>
 				</dict>
 				<key>activeSecondsPartialDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.1961669921875e-05</real>
+					<real>4.00543212890625e-05</real>
 				</dict>
 				<key>activeSecondsWithHours</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.2744827270507812e-05</real>
+					<real>9.3936920166015625e-05</real>
 				</dict>
 				<key>activeSecondsWorkweekIsAlwaysFiveDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.5129013061523438e-05</real>
+					<real>9.5844268798828125e-05</real>
 				</dict>
 				<key>calculateAllIncludesFable</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031304359436035156</real>
+					<real>0.00031876564025878906</real>
 				</dict>
 				<key>calculateAllReturnsAllBuckets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00044202804565429688</real>
+					<real>0.00042009353637695312</real>
 				</dict>
 				<key>calculateAllSkipsMissingBuckets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015997886657714844</real>
+					<real>0.00015711784362792969</real>
 				</dict>
 				<key>chillZoneWhenUnderPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021982192993164062</real>
+					<real>0.00026702880859375</real>
 				</dict>
 				<key>coolingDateCapped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019001960754394531</real>
+					<real>0.00025081634521484375</real>
 				</dict>
 				<key>coolingDateNilUnderPace</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002651214599609375</real>
+					<real>0.00024366378784179688</real>
 				</dict>
 				<key>coolingDateRolling</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031590461730957031</real>
+					<real>0.00031185150146484375</real>
 				</dict>
 				<key>coolingDateWorkweek</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00028681755065917969</real>
+					<real>0.00035595893859863281</real>
 				</dict>
 				<key>coolingDateWorkweekInvariant</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0004138946533203125</real>
+					<real>0.0003662109375</real>
 				</dict>
 				<key>customMargin20KeepsLargeDeltaOnTrack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002498626708984375</real>
+					<real>0.00022602081298828125</real>
 				</dict>
 				<key>customMargin20KeepsLargeNegativeDeltaOnTrack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025200843811035156</real>
+					<real>0.00035190582275390625</real>
 				</dict>
 				<key>customMargin5MakesSmallDeltaWarning</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025916099548339844</real>
+					<real>0.00023388862609863281</real>
 				</dict>
 				<key>customMargin5MakesSmallNegativeDeltaChill</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023698806762695312</real>
+					<real>0.00025701522827148438</real>
 				</dict>
 				<key>defaultMatchesRolling</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023484230041503906</real>
+					<real>0.00027775764465332031</real>
 				</dict>
 				<key>deltaEqualsUtilizationMinusExpected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019598007202148438</real>
+					<real>0.00015592575073242188</real>
 				</dict>
 				<key>deltaExactlyMinus10IsOnTrack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001850128173828125</real>
+					<real>0.00020313262939453125</real>
 				</dict>
 				<key>deltaExactlyPlus10IsOnTrack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016808509826660156</real>
+					<real>0.0001697540283203125</real>
 				</dict>
 				<key>deltaJustAbovePlus10IsWarning</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000164031982421875</real>
+					<real>0.0001678466796875</real>
 				</dict>
 				<key>deltaJustBelowMinus10IsChill</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025892257690429688</real>
+					<real>0.00016498565673828125</real>
 				</dict>
 				<key>deltaNegativeWhenUnderPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016474723815917969</real>
+					<real>0.0001659393310546875</real>
 				</dict>
 				<key>deltaPositiveWhenOverPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00024890899658203125</real>
+					<real>0.00016689300537109375</real>
 				</dict>
 				<key>effectiveHoursSemantics</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.384185791015625e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>emptyActiveDaysFallsBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.811981201171875e-05</real>
 				</dict>
 				<key>endOfPeriodHighUsageIsOnTrack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020503997802734375</real>
+					<real>0.0002040863037109375</real>
 				</dict>
 				<key>explicitDefaultMarginMatchesImplicit</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025796890258789062</real>
+					<real>0.00026488304138183594</real>
 				</dict>
 				<key>fableBucketComputesPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000370025634765625</real>
+					<real>0.00034499168395996094</real>
 				</dict>
 				<key>fableBucketNilWhenAbsent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4080276489257812e-05</real>
+					<real>4.5061111450195312e-05</real>
 				</dict>
 				<key>fableBucketNilWithoutReset</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.00543212890625e-05</real>
+					<real>2.8848648071289062e-05</real>
 				</dict>
 				<key>fiveHourBucketUses5hPeriod</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016307830810546875</real>
+					<real>0.00025391578674316406</real>
 				</dict>
 				<key>fiveHourIgnoresWorkweek</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025510787963867188</real>
+					<real>0.00031280517578125</real>
 				</dict>
 				<key>fullUtilizationIsHot</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027990341186523438</real>
+					<real>0.0001621246337890625</real>
 				</dict>
 				<key>hotZoneWhenOverPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000164031982421875</real>
+					<real>0.0001888275146484375</real>
 				</dict>
 				<key>isActiveSemantics</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4781951904296875e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>isActiveWithHoursAllDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.059906005859375e-06</real>
+					<real>9.7751617431640625e-06</real>
 				</dict>
 				<key>isOffDayHonorsHours</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.528594970703125e-05</real>
+					<real>3.6716461181640625e-05</real>
 				</dict>
 				<key>isOffDayWeekendVsWeekday</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.1232833862304688e-05</real>
+					<real>3.7908554077148438e-05</real>
 				</dict>
 				<key>margin1VeryTight</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016498565673828125</real>
+					<real>0.0001850128173828125</real>
 				</dict>
 				<key>nowFractionFixesMislandedMarker</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.91278076171875e-05</real>
+					<real>0.00012707710266113281</real>
 				</dict>
 				<key>nowFractionIsLinear</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.7908554077148438e-05</real>
+					<real>2.5033950805664062e-05</real>
 				</dict>
 				<key>nowMarkerAgreesWithOffDayHatch</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.2676925659179688e-05</real>
+					<real>4.1246414184570312e-05</real>
 				</dict>
 				<key>offDayRangesWeekendWidth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.7220458984375e-05</real>
+					<real>9.0122222900390625e-05</real>
 				</dict>
 				<key>onTrackWhenMatchingPace</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023984909057617188</real>
+					<real>0.00020289421081542969</real>
 				</dict>
 				<key>perBucketReturnsNilWhenMissing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1205673217773438e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>returnsNilWhenResetsAtIsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6001205444335938e-05</real>
+					<real>4.8875808715820312e-05</real>
 				</dict>
 				<key>returnsNilWhenSevenDayIsNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.7908554077148438e-05</real>
+					<real>4.0292739868164062e-05</real>
 				</dict>
 				<key>sonnetBucketUses7dPeriod</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015687942504882812</real>
+					<real>0.00017189979553222656</real>
 				</dict>
 				<key>startOfPeriodSmallUsageIsWarning</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002460479736328125</real>
+					<real>0.00015997886657714844</real>
 				</dict>
 				<key>zeroUtilizationIsChill</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025081634521484375</real>
+					<real>0.00017023086547851562</real>
 				</dict>
 			</dict>
 			<key>PacingSampleBufferTests</key>
@@ -1916,37 +1916,37 @@
 				<key>appendCaps</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001239776611328125</real>
+					<real>0.00013399124145507812</real>
 				</dict>
 				<key>appendNoWindowNoop</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>1.3828277587890625e-05</real>
 				</dict>
 				<key>appendRecordsReading</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>3.0279159545898438e-05</real>
 				</dict>
 				<key>newWindowDropsOldSamples</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.52587890625e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>trajectoryEmptyWithoutWindow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>1.71661376953125e-05</real>
 				</dict>
 				<key>trajectoryMapsCoordinates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.6028366088867188e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>trajectorySortsAndClamps</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 			</dict>
 			<key>PacingScheduleDefaultTests</key>
@@ -1954,12 +1954,12 @@
 				<key>defaultIsRolling</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.52587890625e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>defaultMatchesRolling</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8835067749023438e-05</real>
+					<real>1.71661376953125e-05</real>
 				</dict>
 			</dict>
 			<key>PacingSettingsStoreTests</key>
@@ -1967,22 +1967,22 @@
 				<key>defaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025200843811035156</real>
+					<real>0.00026202201843261719</real>
 				</dict>
 				<key>marginSnapsAndClampsOnLoad</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0010256767272949219</real>
+					<real>0.00097513198852539062</real>
 				</dict>
 				<key>relaysToParent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0037298202514648438</real>
+					<real>0.0034401416778564453</real>
 				</dict>
 				<key>workweekEnabledPersistsAndMirrors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00049138069152832031</real>
+					<real>0.00049281120300292969</real>
 				</dict>
 			</dict>
 			<key>PopoverChromeMigratorTests</key>
@@ -1990,57 +1990,57 @@
 				<key>encodeDerivesLegacyToggles</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012993812561035156</real>
+					<real>0.00013232231140136719</real>
 				</dict>
 				<key>idempotent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>4.4107437133789062e-05</real>
 				</dict>
 				<key>legacyConfigChain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.106231689453125e-05</real>
+					<real>9.6082687377929688e-05</real>
 				</dict>
 				<key>migratesHiddenChrome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.384185791015625e-05</real>
+					<real>1.621246337890625e-05</real>
 				</dict>
 				<key>migratesMixedToggles</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.71661376953125e-05</real>
+					<real>1.4781951904296875e-05</real>
 				</dict>
 				<key>migratesVisibleChrome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.198883056640625e-05</real>
+					<real>6.0319900512695312e-05</real>
 				</dict>
 				<key>missingVersionDecodesAsV1</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8133392333984375e-05</real>
+					<real>3.1948089599609375e-05</real>
 				</dict>
 				<key>noDuplicateChrome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>templatesCarryChrome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.2002410888671875e-05</real>
+					<real>7.7724456787109375e-05</real>
 				</dict>
 				<key>v2PassesThrough</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.71661376953125e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>v2RoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018906593322753906</real>
+					<real>0.00019788742065429688</real>
 				</dict>
 			</dict>
 			<key>PopoverCompositionModelsTests</key>
@@ -2048,72 +2048,72 @@
 				<key>allHiddenInvalid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.193450927734375e-05</real>
+					<real>2.3126602172851562e-05</real>
 				</dict>
 				<key>builtinTemplatesValid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023198127746582031</real>
+					<real>0.00023317337036132812</real>
 				</dict>
 				<key>defaultIsClassic</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.1975250244140625e-05</real>
+					<real>5.0067901611328125e-05</real>
 				</dict>
 				<key>effectiveWidthClamps</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.1219253540039062e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>fablePacingElementShape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.811981201171875e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>kindStyleMatrix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.1219253540039062e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 				<key>missingFieldsDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.910064697265625e-05</real>
+					<real>4.9114227294921875e-05</real>
 				</dict>
 				<key>profileSwitcherElementShape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.2172927856445312e-05</real>
+					<real>2.0742416381835938e-05</real>
 				</dict>
 				<key>roundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019407272338867188</real>
+					<real>0.00015187263488769531</real>
 				</dict>
 				<key>styleWidthMatrix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.5789947509765625e-05</real>
+					<real>5.5074691772460938e-05</real>
 				</dict>
 				<key>templatesMintFreshIDs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.3167343139648438e-05</real>
+					<real>4.5061111450195312e-05</real>
 				</dict>
 				<key>unknownKindDropped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.817413330078125e-05</real>
+					<real>6.4134597778320312e-05</real>
 				</dict>
 				<key>unknownStyleDropped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.100799560546875e-05</real>
+					<real>6.9856643676757812e-05</real>
 				</dict>
 				<key>userTemplateRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023198127746582031</real>
+					<real>0.00018572807312011719</real>
 				</dict>
 			</dict>
 			<key>PopoverConfigMigratorTests</key>
@@ -2121,7 +2121,7 @@
 				<key>classicDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.4093856811523438e-05</real>
+					<real>2.8133392333984375e-05</real>
 				</dict>
 				<key>classicHiddenPreserved</key>
 				<dict>
@@ -2131,47 +2131,47 @@
 				<key>classicOrderPreserved</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0755996704101562e-05</real>
+					<real>3.0994415283203125e-05</real>
 				</dict>
 				<key>classicStaleToggleKeepsEqualRings</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>3.719329833984375e-05</real>
 				</dict>
 				<key>classicWithSatellites</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0994415283203125e-05</real>
+					<real>2.9325485229492188e-05</real>
 				</dict>
 				<key>compactAllHiddenFallsBackToCompactDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.1948089599609375e-05</real>
+					<real>3.2901763916015625e-05</real>
 				</dict>
 				<key>compactDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012111663818359375</real>
+					<real>0.00012803077697753906</real>
 				</dict>
 				<key>compactExtras</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.1709671020507812e-05</real>
+					<real>2.5033950805664062e-05</real>
 				</dict>
 				<key>compactInterleavedFullWidth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0994415283203125e-05</real>
+					<real>2.8133392333984375e-05</real>
 				</dict>
 				<key>compactLoneChipFullWidth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.7908554077148438e-05</real>
+					<real>3.910064697265625e-05</real>
 				</dict>
 				<key>focusDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.6995620727539062e-05</real>
+					<real>3.6001205444335938e-05</real>
 				</dict>
 				<key>focusWeeklyValueHero</key>
 				<dict>
@@ -2181,12 +2181,12 @@
 				<key>headerToggles</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>migratedCompositionsAreValid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016498565673828125</real>
+					<real>0.00018191337585449219</real>
 				</dict>
 			</dict>
 			<key>PopoverRowPackerTests</key>
@@ -2194,42 +2194,42 @@
 				<key>emptyInput</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.9087066650390625e-05</real>
+					<real>8.58306884765625e-05</real>
 				</dict>
 				<key>fullWidthRows</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.3855438232421875e-05</real>
+					<real>3.910064697265625e-05</real>
 				</dict>
 				<key>halvesPair</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.002716064453125e-05</real>
+					<real>3.4809112548828125e-05</real>
 				</dict>
 				<key>illegalWidthClamped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9073486328125e-05</real>
+					<real>1.811981201171875e-05</real>
 				</dict>
 				<key>loneHalf</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.193450927734375e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 				<key>preservesOrder</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.1232833862304688e-05</real>
+					<real>3.4093856811523438e-05</real>
 				</dict>
 				<key>thirdsPack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.0265579223632812e-05</real>
+					<real>2.193450927734375e-05</real>
 				</dict>
 				<key>widthChangeBreaksRow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.3126602172851562e-05</real>
+					<real>2.0265579223632812e-05</real>
 				</dict>
 			</dict>
 			<key>ProcessResolverTests</key>
@@ -2237,122 +2237,122 @@
 				<key>detectsCaskLatestArm64</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.71661376953125e-05</real>
+					<real>1.3113021850585938e-05</real>
 				</dict>
 				<key>detectsCaskLatestX86</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>2.8848648071289062e-05</real>
 				</dict>
 				<key>detectsClaudeCodeVersion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00054502487182617188</real>
+					<real>0.00068879127502441406</real>
 				</dict>
 				<key>detectsClaudeDesktopCLI</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>detectsCursorExtensionBinary</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.621246337890625e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 				<key>detectsElectronHelper</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4318695068359375e-05</real>
+					<real>3.528594970703125e-05</real>
 				</dict>
 				<key>detectsHomebrewCaskArm64</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9073486328125e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>detectsHomebrewCaskX86</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>detectsInstallUnderDecomposedUnicodeHome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>2.4080276489257812e-05</real>
 				</dict>
 				<key>detectsInstallUnderMultibyteHome</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3589859008789062e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>detectsNativeInstall</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.4161758422851562e-05</real>
+					<real>6.580352783203125e-05</real>
 				</dict>
 				<key>detectsNpmGlobalUnderNVM</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8358230590820312e-05</real>
+					<real>2.4318695068359375e-05</real>
 				</dict>
 				<key>detectsPlainNpmGlobal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3589859008789062e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>detectsVSCodeExtensionBinary</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 				<key>doesNotFlagMainApp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>3.0040740966796875e-05</real>
 				</dict>
 				<key>handlesNilBundleURL</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>1.4781951904296875e-05</real>
 				</dict>
 				<key>includesCursor</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3828277587890625e-05</real>
+					<real>1.8835067749023438e-05</real>
 				</dict>
 				<key>includesITerm2</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0013580322265625e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>includesKitty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0967254638671875e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>rejectsEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.002716064453125e-05</real>
+					<real>3.5047531127929688e-05</real>
 				</dict>
 				<key>rejectsMultibytePath</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0279159545898438e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>rejectsNearMissPackageName</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.52587890625e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>rejectsOtherPublisherExtension</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5735626220703125e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>rejectsUnrelated</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1682510375976562e-05</real>
+					<real>1.6450881958007812e-05</real>
 				</dict>
 				<key>rejectsVendoredRipgrep</key>
 				<dict>
@@ -2362,12 +2362,12 @@
 				<key>ttyForCurrentProcess</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018191337585449219</real>
+					<real>0.00013899803161621094</real>
 				</dict>
 				<key>ttyForInvalidPid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.6941299438476562e-05</real>
+					<real>3.719329833984375e-05</real>
 				</dict>
 			</dict>
 			<key>ProfileModelTests</key>
@@ -2375,52 +2375,52 @@
 				<key>badgeColors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.4345855712890625e-05</real>
+					<real>5.9843063354492188e-05</real>
 				</dict>
 				<key>decodesFullProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020766258239746094</real>
+					<real>0.00018620491027832031</real>
 				</dict>
 				<key>decodesNullOrg</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.4093856811523438e-05</real>
+					<real>2.4318695068359375e-05</real>
 				</dict>
 				<key>displayLabels</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4781951904296875e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>enterprisePlanFromOrgType</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.7751617431640625e-06</real>
+					<real>3.0279159545898438e-05</real>
 				</dict>
 				<key>formattedRateLimitTier</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.1961669921875e-05</real>
+					<real>0.00010228157043457031</real>
 				</dict>
 				<key>maxPrecedesOrgType</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.8678131103515625e-06</real>
+					<real>9.7751617431640625e-06</real>
 				</dict>
 				<key>planTypeDerivation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>1.0251998901367188e-05</real>
 				</dict>
 				<key>proPrecedesOrgType</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.059906005859375e-06</real>
+					<real>8.8214874267578125e-06</real>
 				</dict>
 				<key>teamPlanFromOrgType</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.7751617431640625e-06</real>
+					<real>7.8678131103515625e-06</real>
 				</dict>
 			</dict>
 			<key>ProfileStoreTests</key>
@@ -2428,172 +2428,172 @@
 				<key>addAfterBootstrapStarts</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.055290937423706055</real>
+					<real>0.055698156356811523</real>
 				</dict>
 				<key>addLinkedProfileDuplicateAccount</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001659393310546875</real>
+					<real>0.0001678466796875</real>
 				</dict>
 				<key>addLinkedProfileDuplicateDir</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012707710266113281</real>
+					<real>0.00016498565673828125</real>
 				</dict>
 				<key>addLinkedProfileHappyPath</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00046014785766601562</real>
+					<real>0.00042009353637695312</real>
 				</dict>
 				<key>addLinkedProfileIdentityFailureIsSoft</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00028395652770996094</real>
+					<real>0.00027370452880859375</real>
 				</dict>
 				<key>addLinkedProfileNoCredentials</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000164031982421875</real>
+					<real>0.00015497207641601562</real>
 				</dict>
 				<key>bootstrapStaggers</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.054664850234985352</real>
+					<real>0.053975105285644531</real>
 				</dict>
 				<key>captureHappyPath</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031495094299316406</real>
+					<real>0.00034594535827636719</real>
 				</dict>
 				<key>captureNoCredentials</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010085105895996094</real>
+					<real>8.2254409790039062e-05</real>
 				</dict>
 				<key>captureNoRefreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010704994201660156</real>
+					<real>0.00012516975402832031</real>
 				</dict>
 				<key>childObjectWillChangeRelayed</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00034594535827636719</real>
+					<real>0.00032901763916015625</real>
 				</dict>
 				<key>clearError</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017881393432617188</real>
+					<real>0.00013089179992675781</real>
 				</dict>
 				<key>credentialStatesMirrored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00057697296142578125</real>
+					<real>0.00055694580078125</real>
 				</dict>
 				<key>disableActiveMovesActive</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027418136596679688</real>
+					<real>0.00026869773864746094</real>
 				</dict>
 				<key>disableOnlyEnabledKeepsActive</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014162063598632812</real>
+					<real>0.00010371208190917969</real>
 				</dict>
 				<key>ensureDefaultNoOp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001068115234375</real>
+					<real>8.20159912109375e-05</real>
 				</dict>
 				<key>identityRelayFillsProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00069594383239746094</real>
+					<real>0.00048708915710449219</real>
 				</dict>
 				<key>loadsStoredCatalog</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013113021850585938</real>
+					<real>0.00010228157043457031</real>
 				</dict>
 				<key>migratedProfileUsesLegacyKeys</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00042581558227539062</real>
+					<real>0.00056290626525878906</real>
 				</dict>
 				<key>migrationCreatesDefaultProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027990341186523438</real>
+					<real>0.00036025047302246094</real>
 				</dict>
 				<key>moveReorders</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014996528625488281</real>
+					<real>0.00016689300537109375</real>
 				</dict>
 				<key>profilesBecameMultipleOnce</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00076889991760253906</real>
+					<real>0.000637054443359375</real>
 				</dict>
 				<key>reenableStartsStore</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035381317138671875</real>
+					<real>0.00041103363037109375</real>
 				</dict>
 				<key>refreshAllAndTokenChange</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.054080963134765625</real>
+					<real>0.051898002624511719</real>
 				</dict>
 				<key>refreshIfStaleAll</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00077509880065917969</real>
+					<real>0.00074291229248046875</real>
 				</dict>
 				<key>removeActiveRetargets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00040411949157714844</real>
+					<real>0.00048398971557617188</real>
 				</dict>
 				<key>removeInactiveKeepsActive</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010275840759277344</real>
+					<real>8.7976455688476562e-05</real>
 				</dict>
 				<key>removeLastAndUnknown</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00034999847412109375</real>
+					<real>0.00036311149597167969</real>
 				</dict>
 				<key>renameAndHook</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026297569274902344</real>
+					<real>0.00021791458129882812</real>
 				</dict>
 				<key>setActiveFlipsStoresAndLegacySnapshot</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000370025634765625</real>
+					<real>0.00043797492980957031</real>
 				</dict>
 				<key>setActiveUnknown</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.5129013061523438e-05</real>
+					<real>0.00010991096496582031</real>
 				</dict>
 				<key>setActiveUsesStoreUsage</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00048375129699707031</real>
+					<real>0.00054335594177246094</real>
 				</dict>
 				<key>staleActiveIDFallsBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011491775512695312</real>
+					<real>0.0001430511474609375</real>
 				</dict>
 				<key>watchedCredentialFiles</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019121170043945312</real>
+					<real>0.00010991096496582031</real>
 				</dict>
 			</dict>
 			<key>ProfileTokenProviderTests</key>
@@ -2601,157 +2601,157 @@
 				<key>adoptsNewerLiveForLinked</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011181831359863281</real>
+					<real>8.1777572631835938e-05</real>
 				</dict>
 				<key>backoffKeepsServingValidToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014281272888183594</real>
+					<real>9.5129013061523438e-05</real>
 				</dict>
 				<key>bootstrapDelegatesOnlyForDefaultProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0755996704101562e-05</real>
+					<real>2.9087066650390625e-05</real>
 				</dict>
 				<key>clearBackoffRetries</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00083017349243164062</real>
+					<real>8.1777572631835938e-05</real>
 				</dict>
 				<key>credentialStateValues</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015211105346679688</real>
+					<real>0.00016379356384277344</real>
 				</dict>
 				<key>currentTokenUsesVaultFirst</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.4809112548828125e-05</real>
+					<real>3.7908554077148438e-05</real>
 				</dict>
 				<key>forceRefreshesWhenNotExpired</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.58306884765625e-05</real>
+					<real>8.6069107055664062e-05</real>
 				</dict>
 				<key>hasTokenSource</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.100799560546875e-05</real>
+					<real>2.7894973754882812e-05</real>
 				</dict>
 				<key>invalidGrantReauth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.4121017456054688e-05</real>
+					<real>6.389617919921875e-05</real>
 				</dict>
 				<key>invalidateTokenDoesNotForceRenewal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010204315185546875</real>
+					<real>0.00010395050048828125</real>
 				</dict>
 				<key>linkedClaudeCodePolicyAwaits</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.678436279296875e-05</real>
+					<real>6.580352783203125e-05</real>
 				</dict>
 				<key>linkedTokenEaterRefreshesAndWritesBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013303756713867188</real>
+					<real>0.00011515617370605469</real>
 				</dict>
 				<key>managedAdoptsNewerSameChain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.29425048828125e-05</real>
+					<real>6.4849853515625e-05</real>
 				</dict>
 				<key>managedExpiredRefreshesWithoutWrite</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.1975250244140625e-05</real>
+					<real>4.9114227294921875e-05</real>
 				</dict>
 				<key>managedIgnoresDifferentChain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.5088272094726562e-05</real>
+					<real>5.2213668823242188e-05</real>
 				</dict>
 				<key>managedIgnoresOlderSameChain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.9114227294921875e-05</real>
+					<real>3.2901763916015625e-05</real>
 				</dict>
 				<key>managedWithoutBaselineDoesNotAdopt</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.6082687377929688e-05</real>
+					<real>5.5074691772460938e-05</real>
 				</dict>
 				<key>managedWithoutRefreshTokenReauth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.7908554077148438e-05</real>
+					<real>4.100799560546875e-05</real>
 				</dict>
 				<key>missingEverywhere</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.296966552734375e-05</real>
+					<real>5.91278076171875e-05</real>
 				</dict>
 				<key>rateLimitedBackoffLadder</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00051188468933105469</real>
+					<real>0.0002422332763671875</real>
 				</dict>
 				<key>rateLimitedHonoursRetryAfter</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015592575073242188</real>
+					<real>6.8187713623046875e-05</real>
 				</dict>
 				<key>refreshTokenIfChangedManaged</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.2983245849609375e-05</real>
+					<real>4.2200088500976562e-05</real>
 				</dict>
 				<key>refreshTokenIfChangedSemantics</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0022821426391601562</real>
+					<real>0.00033092498779296875</real>
 				</dict>
 				<key>seedsVaultFromLiveRead</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020813941955566406</real>
+					<real>0.00011682510375976562</real>
 				</dict>
 				<key>serialisesConcurrentEnsureFreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.15702271461486816</real>
+					<real>0.15951180458068848</real>
 				</dict>
 				<key>staleLiveTokenNotReadoptedAfterFailedWriteBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035023689270019531</real>
+					<real>0.00019788742065429688</real>
 				</dict>
 				<key>transientErrorKeepsCache</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026917457580566406</real>
+					<real>0.00014400482177734375</real>
 				</dict>
 				<key>transientErrorWithValidTokenIsReady</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010704994201660156</real>
+					<real>8.106231689453125e-05</real>
 				</dict>
 				<key>updateProfileChangesPolicy</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.0360641479492188e-05</real>
+					<real>7.7962875366210938e-05</real>
 				</dict>
 				<key>writeBackFailureIsNonFatal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012993812561035156</real>
+					<real>0.00010132789611816406</real>
 				</dict>
 				<key>writeBackToKeychainBacking</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.106231689453125e-05</real>
+					<real>6.3180923461914062e-05</real>
 				</dict>
 			</dict>
 			<key>ProxyConfigTests</key>
@@ -2759,62 +2759,62 @@
 				<key>controlCharsRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.7922134399414062e-05</real>
+					<real>2.384185791015625e-05</real>
 				</dict>
 				<key>disabledRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>emptyHostRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.3113021850585938e-05</real>
 				</dict>
 				<key>hostWithSpaceRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>hostnameAccepted</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.57763671875e-05</real>
+					<real>2.1219253540039062e-05</real>
 				</dict>
 				<key>hostnameTooLongRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>3.5047531127929688e-05</real>
 				</dict>
 				<key>ipv6Accepted</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.3855438232421875e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>loopbackAccepted</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.91278076171875e-05</real>
+					<real>3.8862228393554688e-05</real>
 				</dict>
 				<key>portBoundariesAccepted</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.9829483032226562e-05</real>
+					<real>3.4093856811523438e-05</real>
 				</dict>
 				<key>portOutOfRangeRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9073486328125e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 				<key>slashHostRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.1948089599609375e-05</real>
+					<real>2.09808349609375e-05</real>
 				</dict>
 				<key>whitespaceHostRejected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>9.7751617431640625e-06</real>
 				</dict>
 			</dict>
 			<key>RateLimitBackoffTests</key>
@@ -2822,27 +2822,27 @@
 				<key>consecutiveRateLimitsClimbAndCap</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.4134597778320312e-05</real>
+					<real>3.6001205444335938e-05</real>
 				</dict>
 				<key>effectiveIntervalClamps</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.002716064453125e-05</real>
+					<real>2.8133392333984375e-05</real>
 				</dict>
 				<key>firstRateLimitUsesThirtyMinutes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>2.002716064453125e-05</real>
 				</dict>
 				<key>positiveRetryAfterHonoured</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5735626220703125e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>zeroRetryAfterFallsBackToExponential</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.811981201171875e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 			</dict>
 			<key>ResetCountdownFormatterTests</key>
@@ -2850,57 +2850,57 @@
 				<key>displayBoth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.1777572631835938e-05</real>
+					<real>7.9870223999023438e-05</real>
 				</dict>
 				<key>displayBothEmptyRelative</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.724761962890625e-05</real>
+					<real>9.7036361694335938e-05</real>
 				</dict>
 				<key>displayRelative</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.8214874267578125e-05</real>
+					<real>6.4134597778320312e-05</real>
 				</dict>
 				<key>sessionNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.5817108154296875e-05</real>
+					<real>0.000125885009765625</real>
 				</dict>
 				<key>sessionOtherDay</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00024676322937011719</real>
+					<real>0.000225067138671875</real>
 				</dict>
 				<key>sessionRelativeHours</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013184547424316406</real>
+					<real>0.00013494491577148438</real>
 				</dict>
 				<key>sessionRelativeMinutes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012183189392089844</real>
+					<real>0.00016522407531738281</real>
 				</dict>
 				<key>sessionSameDay</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025796890258789062</real>
+					<real>0.00021696090698242188</real>
 				</dict>
 				<key>weeklyRelativeDays</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014019012451171875</real>
+					<real>0.00024509429931640625</real>
 				</dict>
 				<key>weeklyRelativeHours</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015091896057128906</real>
+					<real>0.00013303756713867188</real>
 				</dict>
 				<key>weeklyRelativeMinutes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013518333435058594</real>
+					<real>9.5129013061523438e-05</real>
 				</dict>
 			</dict>
 			<key>SecurityCLIReaderTests</key>
@@ -2908,52 +2908,52 @@
 				<key>empty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.1021575927734375e-05</real>
+					<real>3.0755996704101562e-05</real>
 				</dict>
 				<key>emptyAccessToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.8133392333984375e-05</real>
+					<real>1.4781951904296875e-05</real>
 				</dict>
 				<key>extraFields</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.2901763916015625e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>malformedJSON</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.8875808715820312e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>missingWrapper</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6001205444335938e-05</real>
+					<real>1.621246337890625e-05</real>
 				</dict>
 				<key>plainString</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.719329833984375e-05</real>
+					<real>2.6226043701171875e-05</real>
 				</dict>
 				<key>trimsWhitespace</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.38690185546875e-05</real>
+					<real>2.5987625122070312e-05</real>
 				</dict>
 				<key>validBlob</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.3936920166015625e-05</real>
+					<real>5.4836273193359375e-05</real>
 				</dict>
 				<key>wrapperWithoutAccessToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6954879760742188e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>wrongAccessTokenType</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.6041946411132812e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 			</dict>
 			<key>SessionMonitorCacheTests</key>
@@ -2961,37 +2961,37 @@
 				<key>appendReparsedDespiteCachedDirListing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0086979866027832031</real>
+					<real>0.00366973876953125</real>
 				</dict>
 				<key>appendReparsedOnRegistryPass</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.017605066299438477</real>
+					<real>0.0036039352416992188</real>
 				</dict>
 				<key>deletedTranscriptDropsSession</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0026519298553466797</real>
+					<real>0.0018432140350341797</real>
 				</dict>
 				<key>lateRegistryEntryHonored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0042779445648193359</real>
+					<real>0.0034670829772949219</real>
 				</dict>
 				<key>newTranscriptInCachedDirInvalidatesListing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011577844619750977</real>
+					<real>0.0034401416778564453</real>
 				</dict>
 				<key>newTranscriptInNewDirIsPickedUp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0047881603240966797</real>
+					<real>0.0039019584655761719</real>
 				</dict>
 				<key>staleTranscriptNotBoundToSecondProcess</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0024960041046142578</real>
+					<real>0.0025482177734375</real>
 				</dict>
 			</dict>
 			<key>SessionMonitorNameTests</key>
@@ -2999,42 +2999,42 @@
 				<key>derivedNamesIgnored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0025308132171630859</real>
+					<real>0.0018999576568603516</real>
 				</dict>
 				<key>displayNamePrefersUserName</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>emptyNameIgnored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0022490024566650391</real>
+					<real>0.0018401145935058594</real>
 				</dict>
 				<key>missingNameSourceTreatedAsUserSet</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0025119781494140625</real>
+					<real>0.0019078254699707031</real>
 				</dict>
 				<key>missingRegistryFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0019001960754394531</real>
+					<real>0.0017931461334228516</real>
 				</dict>
 				<key>renamePickedUpOnNextScan</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0026659965515136719</real>
+					<real>0.0023608207702636719</real>
 				</dict>
 				<key>scanPicksUpUserName</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0021252632141113281</real>
+					<real>0.001728057861328125</real>
 				</dict>
 				<key>staleRegistryFileIgnored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0022530555725097656</real>
+					<real>0.0020830631256103516</real>
 				</dict>
 			</dict>
 			<key>SessionMonitorPerfTests</key>
@@ -3042,17 +3042,17 @@
 				<key>scanStaysFastWithManyDirs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.57827401161193848</real>
+					<real>0.66447877883911133</real>
 				</dict>
 				<key>skipsStaleProjectDirs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0056028366088867188</real>
+					<real>0.0057408809661865234</real>
 				</dict>
 				<key>warmScanBeatsColdScan</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.64939093589782715</real>
+					<real>0.74905204772949219</real>
 				</dict>
 			</dict>
 			<key>SessionMonitorResumeTests</key>
@@ -3060,17 +3060,17 @@
 				<key>noRegistryFallsBackToCwdMatch</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0023820400238037109</real>
+					<real>0.0022070407867431641</real>
 				</dict>
 				<key>resumedSessionResolvesToItsOwnTranscript</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0025548934936523438</real>
+					<real>0.0029530525207519531</real>
 				</dict>
 				<key>staleRegistrySessionIdFallsBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0024731159210205078</real>
+					<real>0.0032107830047607422</real>
 				</dict>
 			</dict>
 			<key>SessionStoreTests</key>
@@ -3078,62 +3078,62 @@
 				<key>activeSessionsExcludesDead</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10522294044494629</real>
+					<real>0.10475516319274902</real>
 				</dict>
 				<key>hasActiveSessionsReflectsState</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10214972496032715</real>
+					<real>0.10387682914733887</real>
 				</dict>
 				<key>hiddenIdsPurgedWhenSessionGone</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.3086402416229248</real>
+					<real>0.31416702270507812</real>
 				</dict>
 				<key>hidePersistsWhileSessionLives</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.2059791088104248</real>
+					<real>0.20658588409423828</real>
 				</dict>
 				<key>hideSessionFiltersOverlayOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10452699661254883</real>
+					<real>0.10502934455871582</real>
 				</dict>
 				<key>overlaySessionsExcludesDead</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.1022799015045166</real>
+					<real>0.10032892227172852</real>
 				</dict>
 				<key>sessionsStartsEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019407272338867188</real>
+					<real>0.00017786026000976562</real>
 				</dict>
 				<key>sessionsUpdatesOnEmit</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10288906097412109</real>
+					<real>0.10394787788391113</real>
 				</dict>
 				<key>topActiveModelExcludesDead</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.1033477783203125</real>
+					<real>0.10490989685058594</real>
 				</dict>
 				<key>topActiveModelIgnoresNilModel</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10128879547119141</real>
+					<real>0.10507702827453613</real>
 				</dict>
 				<key>topActiveModelMostFrequent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10493206977844238</real>
+					<real>0.10513997077941895</real>
 				</dict>
 				<key>topActiveModelNilWhenEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013303756713867188</real>
+					<real>0.00015187263488769531</real>
 				</dict>
 			</dict>
 			<key>SessionStoreWatcherSettingsTests</key>
@@ -3141,12 +3141,12 @@
 				<key>forwardsScanInterval</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00011086463928222656</real>
+					<real>8.106231689453125e-05</real>
 				</dict>
 				<key>forwardsVisibility</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00010895729064941406</real>
+					<real>7.915496826171875e-05</real>
 				</dict>
 			</dict>
 			<key>SettingsStoreTests</key>
@@ -3154,157 +3154,157 @@
 				<key>credentialsTokenExistsDelegates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010298013687133789</real>
+					<real>0.010010242462158203</real>
 				</dict>
 				<key>credentialsTokenExistsFalseWhenNoToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010260105133056641</real>
+					<real>0.010757923126220703</real>
 				</dict>
 				<key>hasCompletedOnboardingPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010880231857299805</real>
+					<real>0.010082721710205078</real>
 				</dict>
 				<key>launchInBackgroundDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010674953460693359</real>
+					<real>0.010685920715332031</real>
 				</dict>
 				<key>launchInBackgroundPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010673284530639648</real>
+					<real>0.010396242141723633</real>
 				</dict>
 				<key>launchInBackgroundReadsBack</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.021002769470214844</real>
+					<real>0.019629955291748047</real>
 				</dict>
 				<key>legacyPacingMigrates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.01063990592956543</real>
+					<real>0.01085972785949707</real>
 				</dict>
 				<key>overlayEnabledDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010925054550170898</real>
+					<real>0.011183023452758789</real>
 				</dict>
 				<key>overlayEnabledPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011083841323852539</real>
+					<real>0.01076197624206543</real>
 				</dict>
 				<key>pinnedMetricsPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011580944061279297</real>
+					<real>0.01169586181640625</real>
 				</dict>
 				<key>profileSwitcherAutoInserted</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0116729736328125</real>
+					<real>0.010998010635375977</real>
 				</dict>
 				<key>profileSwitcherNotDuplicated</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011332273483276367</real>
+					<real>0.010447025299072266</real>
 				</dict>
 				<key>profileSwitcherRespectsFlag</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011656999588012695</real>
+					<real>0.010132074356079102</real>
 				</dict>
 				<key>proxyConfigDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.016325712203979492</real>
+					<real>0.011055946350097656</real>
 				</dict>
 				<key>proxyConfigReflectsValues</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.013848781585693359</real>
+					<real>0.014061212539672852</real>
 				</dict>
 				<key>refreshNotificationStatusUpdates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011581897735595703</real>
+					<real>0.010632991790771484</real>
 				</dict>
 				<key>requestNotificationPermissionDelegates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010528802871704102</real>
+					<real>0.010463714599609375</real>
 				</dict>
 				<key>sendTestNotificationDelegates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010296821594238281</real>
+					<real>0.011476755142211914</real>
 				</dict>
 				<key>serviceStatusDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.012519121170043945</real>
+					<real>0.0099890232086181641</real>
 				</dict>
 				<key>statusPollIntervalPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.021200895309448242</real>
+					<real>0.020950078964233398</real>
 				</dict>
 				<key>toggleMetricAdds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010696172714233398</real>
+					<real>0.012506961822509766</real>
 				</dict>
 				<key>toggleMetricKeepsLast</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010544061660766602</real>
+					<real>0.010028839111328125</real>
 				</dict>
 				<key>toggleMetricRemoves</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010756969451904297</real>
+					<real>0.011094808578491211</real>
 				</dict>
 				<key>toggleMetricWeeklyPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011178970336914062</real>
+					<real>0.010511875152587891</real>
 				</dict>
 				<key>watcherScanDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011001825332641602</real>
+					<real>0.011694908142089844</real>
 				</dict>
 				<key>watcherScanIntervalPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.021692037582397461</real>
+					<real>0.020510196685791016</real>
 				</dict>
 				<key>watcherStyleDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010264873504638672</real>
+					<real>0.0108489990234375</real>
 				</dict>
 				<key>watcherStyleFallsBackOnInvalid</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010828971862792969</real>
+					<real>0.01064300537109375</real>
 				</dict>
 				<key>watcherStylePersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010571002960205078</real>
+					<real>0.011697053909301758</real>
 				</dict>
 				<key>watcherStyleReadsFromDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011421918869018555</real>
+					<real>0.010787010192871094</real>
 				</dict>
 				<key>watcherVisibilityPersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.021734714508056641</real>
+					<real>0.023910999298095703</real>
 				</dict>
 			</dict>
 			<key>SharedFileServiceTests</key>
@@ -3312,77 +3312,77 @@
 				<key>catalogClearsActive</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.007205963134765625</real>
+					<real>0.0058851242065429688</real>
 				</dict>
 				<key>catalogMerge</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.033526182174682617</real>
+					<real>0.010555744171142578</real>
 				</dict>
 				<key>clearWipesEverything</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0068781375885009766</real>
+					<real>0.0078001022338867188</real>
 				</dict>
 				<key>corruptFileReadsEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0047900676727294922</real>
+					<real>0.0043077468872070312</real>
 				</dict>
 				<key>crossInstanceVisibility</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0070769786834716797</real>
+					<real>0.0063462257385253906</real>
 				</dict>
 				<key>customRoot</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0032331943511962891</real>
+					<real>0.0037000179290771484</real>
 				</dict>
 				<key>legacyRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0034003257751464844</real>
+					<real>0.0039193630218505859</real>
 				</dict>
 				<key>legacyWriteLeavesProfilesAlone</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0096423625946044922</real>
+					<real>0.0082919597625732422</real>
 				</dict>
 				<key>olderSchemaDecodes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0046131610870361328</real>
+					<real>0.0042760372161865234</real>
 				</dict>
 				<key>profileWritesLeaveLegacyAlone</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010587930679321289</real>
+					<real>0.011384963989257812</real>
 				</dict>
 				<key>removeProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0091490745544433594</real>
+					<real>0.0090091228485107422</real>
 				</dict>
 				<key>removeUnknownProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.008441925048828125</real>
+					<real>0.0071511268615722656</real>
 				</dict>
 				<key>updatesMergeFresh</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010000944137573242</real>
+					<real>0.0099320411682128906</real>
 				</dict>
 				<key>usageKnownProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0083799362182617188</real>
+					<real>0.0084109306335449219</real>
 				</dict>
 				<key>usageUnknownProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00740814208984375</real>
+					<real>0.0071630477905273438</real>
 				</dict>
 			</dict>
 			<key>SignatureVerifierTests</key>
@@ -3390,47 +3390,47 @@
 				<key>acceptsValidSignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025105476379394531</real>
+					<real>0.00028204917907714844</real>
 				</dict>
 				<key>rejectsEmptyPublicKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014591217041015625</real>
+					<real>0.00015807151794433594</real>
 				</dict>
 				<key>rejectsEmptySignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.4148178100585938e-05</real>
+					<real>7.3909759521484375e-05</real>
 				</dict>
 				<key>rejectsMalformedBase64PublicKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014615058898925781</real>
+					<real>0.00014710426330566406</real>
 				</dict>
 				<key>rejectsMalformedBase64Signature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.2002410888671875e-05</real>
+					<real>7.7009201049804688e-05</real>
 				</dict>
 				<key>rejectsShortPublicKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016903877258300781</real>
+					<real>0.00017476081848144531</real>
 				</dict>
 				<key>rejectsSignatureFromDifferentKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002460479736328125</real>
+					<real>0.00025510787963867188</real>
 				</dict>
 				<key>rejectsSignatureOnDifferentData</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019526481628417969</real>
+					<real>0.00018286705017089844</real>
 				</dict>
 				<key>verifiesLargePayload</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.37701892852783203</real>
+					<real>0.38084888458251953</real>
 				</dict>
 			</dict>
 			<key>SmartColorTests</key>
@@ -3438,17 +3438,17 @@
 				<key>confidenceCurve</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 				<key>continuityAcrossWarningBoundary</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.7894973754882812e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>endToEndCriticalScenario</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.2159347534179688e-05</real>
+					<real>1.0251998901367188e-05</real>
 				</dict>
 				<key>fallbackWithoutResetDate</key>
 				<dict>
@@ -3458,97 +3458,97 @@
 				<key>hysteresisDoesNotBlockRising</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.52587890625e-05</real>
+					<real>1.1205673217773438e-05</real>
 				</dict>
 				<key>hysteresisPreventsFlicker</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0967254638671875e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>legacyLevelMapping</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9073486328125e-05</real>
+					<real>1.8835067749023438e-05</real>
 				</dict>
 				<key>monotonicityInU</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.8862228393554688e-05</real>
+					<real>4.5061111450195312e-05</real>
 				</dict>
 				<key>scenario80At50</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>2.09808349609375e-05</real>
 				</dict>
 				<key>scenarioCriticalLowTime</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>scenarioEarlyBurst</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.8214874267578125e-06</real>
+					<real>9.059906005859375e-06</real>
 				</dict>
 				<key>scenarioHardCap</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.621246337890625e-05</real>
+					<real>2.3126602172851562e-05</real>
 				</dict>
 				<key>scenarioHighAbsoluteCalmPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>2.6226043701171875e-05</real>
 				</dict>
 				<key>scenarioJustStarted</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1682510375976562e-05</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>scenarioLowAt90</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1682510375976562e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>scenarioLowUtilImminent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.7751617431640625e-06</real>
+					<real>1.1920928955078125e-05</real>
 				</dict>
 				<key>scenarioNoCliffAtHourBoundary</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1920928955078125e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>scenarioOnPace</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>scenarioVeryCriticalLowTime</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.0013580322265625e-05</real>
+					<real>1.7881393432617188e-05</real>
 				</dict>
 				<key>smoothstepAbove</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.1920928955078125e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>smoothstepBelow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.7908554077148438e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>smoothstepBounds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.7881393432617188e-05</real>
+					<real>1.7642974853515625e-05</real>
 				</dict>
 				<key>zoneNoHysteresisMatchesRising</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.4066696166992188e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 			</dict>
 			<key>SmokeTests</key>
@@ -3556,7 +3556,7 @@
 				<key>smokeTest</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>9.2983245849609375e-06</real>
 				</dict>
 			</dict>
 			<key>StatusServiceMappingTests</key>
@@ -3564,27 +3564,27 @@
 				<key>degraded</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.910064697265625e-05</real>
+					<real>3.4809112548828125e-05</real>
 				</dict>
 				<key>down</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.7022781372070312e-05</real>
+					<real>7.7962875366210938e-05</real>
 				</dict>
 				<key>healthy</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00029110908508300781</real>
+					<real>0.00026798248291015625</real>
 				</dict>
 				<key>maintenanceOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6954879760742188e-05</real>
+					<real>2.6941299438476562e-05</real>
 				</dict>
 				<key>unrelatedIgnored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.6028366088867188e-05</real>
+					<real>4.4107437133789062e-05</real>
 				</dict>
 			</dict>
 			<key>ThemeStoreTests</key>
@@ -3592,47 +3592,47 @@
 				<key>changingThresholdTriggersDebouncedSync</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.5116569995880127</real>
+					<real>0.5036017894744873</real>
 				</dict>
 				<key>currentReturnsCustomThemeWhenCustomPreset</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00064969062805175781</real>
+					<real>0.00074005126953125</real>
 				</dict>
 				<key>currentReturnsDefaultColorsForDefaultPreset</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00054001808166503906</real>
+					<real>0.0006389617919921875</real>
 				</dict>
 				<key>currentReturnsNeonPreset</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00033617019653320312</real>
+					<real>0.00040292739868164062</real>
 				</dict>
 				<key>menuBarMonochromePersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0046551227569580078</real>
+					<real>0.00096607208251953125</real>
 				</dict>
 				<key>rapidChangesDebounce</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.50931382179260254</real>
+					<real>0.51604199409484863</real>
 				</dict>
 				<key>resetToDefaultsRestoresAllValues</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0014970302581787109</real>
+					<real>0.0014529228210449219</real>
 				</dict>
 				<key>syncToSharedFileCallsUpdateTheme</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00032782554626464844</real>
+					<real>0.000293731689453125</real>
 				</dict>
 				<key>thresholdsReturnsCorrectStruct</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00080108642578125</real>
+					<real>0.00069856643676757812</real>
 				</dict>
 			</dict>
 			<key>TokenFileMonitorTests</key>
@@ -3640,22 +3640,22 @@
 				<key>deduplicatesEntries</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.6014785766601562e-05</real>
+					<real>5.0783157348632812e-05</real>
 				</dict>
 				<key>emitsOnceWithinDebounce</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.54613494873046875</real>
+					<real>0.54642891883850098</real>
 				</dict>
 				<key>legacyEntries</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002899169921875</real>
+					<real>0.00013208389282226562</real>
 				</dict>
 				<key>missingDirectoryIsSkipped</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00092315673828125</real>
+					<real>0.0009632110595703125</real>
 				</dict>
 			</dict>
 			<key>TokenFormatterTests</key>
@@ -3663,67 +3663,67 @@
 				<key>atTenMillionDropsDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.09808349609375e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>atTenThousandDropsDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.621246337890625e-05</real>
+					<real>2.09808349609375e-05</real>
 				</dict>
 				<key>exactlyOneMillionKeepsDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.0067901611328125e-05</real>
+					<real>1.3828277587890625e-05</real>
 				</dict>
 				<key>exactlyOneThousandKeepsDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.2901763916015625e-05</real>
+					<real>2.384185791015625e-05</real>
 				</dict>
 				<key>justUnderMillion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.002716064453125e-05</real>
+					<real>1.5020370483398438e-05</real>
 				</dict>
 				<key>justUnderThousand</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5987625122070312e-05</real>
+					<real>8.8214874267578125e-06</real>
 				</dict>
 				<key>largeThousandsNoDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.4093856811523438e-05</real>
+					<real>1.2874603271484375e-05</real>
 				</dict>
 				<key>lowMillionsKeepDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.3126602172851562e-05</real>
+					<real>1.1682510375976562e-05</real>
 				</dict>
 				<key>lowThousandsKeepDecimal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>1.71661376953125e-05</real>
 				</dict>
 				<key>negativeValuePassesThroughRaw</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>1.9073486328125e-05</real>
 				</dict>
 				<key>roundsToOneDecimalBelowTenK</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5974044799804688e-05</real>
+					<real>2.5033950805664062e-05</real>
 				</dict>
 				<key>smallValuePassesThrough</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3828277587890625e-05</real>
+					<real>1.0013580322265625e-05</real>
 				</dict>
 				<key>zero</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.002716064453125e-05</real>
+					<real>2.1219253540039062e-05</real>
 				</dict>
 			</dict>
 			<key>TokenProviderTests</key>
@@ -3731,87 +3731,87 @@
 				<key>configJsonBeforeKeychain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.2200088500976562e-05</real>
+					<real>4.4107437133789062e-05</real>
 				</dict>
 				<key>extractsUUIDFormat</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6001205444335938e-05</real>
+					<real>2.5033950805664062e-05</real>
 				</dict>
 				<key>fallbackToConfigDecryption</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.198883056640625e-05</real>
+					<real>4.38690185546875e-05</real>
 				</dict>
 				<key>fallbackToCredentialsFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.7881393432617188e-05</real>
+					<real>1.1205673217773438e-05</real>
 				</dict>
 				<key>fallbackToKeychain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>fallbackToKeychainWhenConfigUnavailable</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.0265579223632812e-05</real>
+					<real>1.621246337890625e-05</real>
 				</dict>
 				<key>hasTokenSourceReturnsFalse</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4080276489257812e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>hasTokenSourceViaKeychain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>1.9311904907226562e-05</real>
 				</dict>
 				<key>hasTokenSourceViaSecurityCLI</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.002716064453125e-05</real>
+					<real>9.7751617431640625e-06</real>
 				</dict>
 				<key>isBootstrappedAlwaysTrue</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>9.059906005859375e-06</real>
 				</dict>
 				<key>refreshTokenIfChangedDetectsRotation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.9325485229492188e-05</real>
+					<real>2.7179718017578125e-05</real>
 				</dict>
 				<key>refreshTokenIfChangedFirstReadIsNotRotation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>1.5974044799804688e-05</real>
 				</dict>
 				<key>refreshTokenIfChangedKeepsCacheOnTransientMiss</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>2.4080276489257812e-05</real>
 				</dict>
 				<key>refreshTokenIfChangedNoChange</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.2411346435546875e-05</real>
+					<real>1.9073486328125e-05</real>
 				</dict>
 				<key>returnsNilWhenNoSource</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.3126602172851562e-05</real>
+					<real>9.059906005859375e-06</real>
 				</dict>
 				<key>securityCLIFirst</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.6743621826171875e-05</real>
+					<real>4.5061111450195312e-05</real>
 				</dict>
 				<key>silentRebootstrapRecovery</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.3153762817382812e-05</real>
+					<real>3.4809112548828125e-05</real>
 				</dict>
 			</dict>
 			<key>UpdateStoreTests</key>
@@ -3819,112 +3819,112 @@
 				<key>brewMigrationDetected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035881996154785156</real>
+					<real>0.00025773048400878906</real>
 				</dict>
 				<key>checkForUpdatesAvailable</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.104400634765625</real>
+					<real>0.10295486450195312</real>
 				</dict>
 				<key>checkForUpdatesError</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10366511344909668</real>
+					<real>0.10090112686157227</real>
 				</dict>
 				<key>checkForUpdatesUpToDate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10396981239318848</real>
+					<real>0.1049659252166748</real>
 				</dict>
 				<key>dismissBrewMigration</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000659942626953125</real>
+					<real>0.00047016143798828125</real>
 				</dict>
 				<key>dismissModal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027823448181152344</real>
+					<real>0.00015878677368164062</real>
 				</dict>
 				<key>installUpdateRejectsInvalidSignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00066280364990234375</real>
+					<real>0.00094389915466308594</real>
 				</dict>
 				<key>installUpdateRejectsMissingSignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00071477890014648438</real>
+					<real>0.00057578086853027344</real>
 				</dict>
 				<key>installUpdateRejectsUnsupportedLocation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00048708915710449219</real>
+					<real>0.000492095947265625</real>
 				</dict>
 				<key>noBrewMigration</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012087821960449219</real>
+					<real>0.00013422966003417969</real>
 				</dict>
 				<key>verifyAcceptsValidSignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0009250640869140625</real>
+					<real>0.00093173980712890625</real>
 				</dict>
 				<key>verifyRejectsEmptySignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00056290626525878906</real>
+					<real>0.00054883956909179688</real>
 				</dict>
 				<key>verifyRejectsInvalidSignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00068807601928710938</real>
+					<real>0.00049519538879394531</real>
 				</dict>
 				<key>verifyRejectsMissingPublicKey</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00081586837768554688</real>
+					<real>0.00042200088500976562</real>
 				</dict>
 				<key>verifyRejectsNilSignature</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00062584877014160156</real>
+					<real>0.00066590309143066406</real>
 				</dict>
 				<key>verifyRejectsSizeMismatch</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00075078010559082031</real>
+					<real>0.00050306320190429688</real>
 				</dict>
 				<key>verifySkipsSizeCheckWhenNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00053286552429199219</real>
+					<real>0.00066208839416503906</real>
 				</dict>
 				<key>verifySkipsSizeCheckWhenZero</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00076198577880859375</real>
+					<real>0.0013678073883056641</real>
 				</dict>
 				<key>versionEqual</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018930435180664062</real>
+					<real>0.0001201629638671875</real>
 				</dict>
 				<key>versionNewerPatch</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023126602172851562</real>
+					<real>0.00015807151794433594</real>
 				</dict>
 				<key>versionPreRelease</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002613067626953125</real>
+					<real>0.00013685226440429688</real>
 				</dict>
 				<key>versionReleaseBeatsPre</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00027775764465332031</real>
+					<real>0.00013303756713867188</real>
 				</dict>
 			</dict>
 			<key>UsageEntryTests</key>
@@ -3932,32 +3932,32 @@
 				<key>fromSnapshot</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.6716461181640625e-05</real>
+					<real>4.1723251342773438e-05</real>
 				</dict>
 				<key>fromSnapshotStale</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0755996704101562e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>fromSnapshotWithoutUsage</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.0040740966796875e-05</real>
+					<real>2.5033950805664062e-05</real>
 				</dict>
 				<key>profileFieldsDefaultNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00040006637573242188</real>
+					<real>0.00047373771667480469</real>
 				</dict>
 				<key>profileFieldsStored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.09808349609375e-05</real>
+					<real>1.6927719116210938e-05</real>
 				</dict>
 				<key>staleComputation</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.6253204345703125e-05</real>
+					<real>3.6001205444335938e-05</real>
 				</dict>
 			</dict>
 			<key>UsageRepositoryTests</key>
@@ -3965,42 +3965,42 @@
 				<key>activeProfileWritesBothSnapshots</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.3882598876953125e-05</real>
+					<real>8.58306884765625e-05</real>
 				</dict>
 				<key>failedFetchWritesNothing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.2901763916015625e-05</real>
+					<real>3.1232833862304688e-05</real>
 				</dict>
 				<key>fetchProfileReturnsResult</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.7881393432617188e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>fetchProfileThrowsAPIErrors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4318695068359375e-05</real>
+					<real>1.2159347534179688e-05</real>
 				</dict>
 				<key>inactiveProfileSkipsLegacySnapshot</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.103515625e-05</real>
+					<real>3.5047531127929688e-05</real>
 				</dict>
 				<key>legacyCallOnProfileRepository</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.38690185546875e-05</real>
+					<real>2.4318695068359375e-05</real>
 				</dict>
 				<key>legacyRepositoryWritesLegacyOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.9073486328125e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>refreshUsageCallsAPIAndWritesToSharedFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.1777572631835938e-05</real>
+					<real>6.7234039306640625e-05</real>
 				</dict>
 				<key>refreshUsageDoesNotWriteOnFailure</key>
 				<dict>
@@ -4010,17 +4010,17 @@
 				<key>refreshUsageThrowsAPIErrors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.5033950805664062e-05</real>
+					<real>1.9788742065429688e-05</real>
 				</dict>
 				<key>testConnectionDoesNotWriteToSharedFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.291534423828125e-05</real>
+					<real>7.2002410888671875e-05</real>
 				</dict>
 				<key>testConnectionThrowsAPIErrors</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.6927719116210938e-05</real>
+					<real>5.6982040405273438e-05</real>
 				</dict>
 			</dict>
 			<key>UsageResponseDecodingTests</key>
@@ -4028,27 +4028,27 @@
 				<key>decodesExtraUsageDisabledReason</key>
 				<dict>
 					<key>mrnet</key>
-					<real>7.915496826171875e-05</real>
+					<real>4.8875808715820312e-05</real>
 				</dict>
 				<key>extraPercentFallsBackToRatio</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.3113021850585938e-05</real>
+					<real>3.4809112548828125e-05</real>
 				</dict>
 				<key>extraPercentPrefersUtilization</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.52587890625e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>extraPercentZeroWithoutLimit</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.5020370483398438e-05</real>
+					<real>8.8214874267578125e-06</real>
 				</dict>
 				<key>unknownKeysIgnored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>8.1777572631835938e-05</real>
+					<real>6.0796737670898438e-05</real>
 				</dict>
 			</dict>
 			<key>UsageStoreTests</key>
@@ -4056,357 +4056,357 @@
 				<key>autoRefreshStaggerBookkeeping</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00020384788513183594</real>
+					<real>0.00015377998352050781</real>
 				</dict>
 				<key>awaitingRefreshFalseWhenCold</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001678466796875</real>
+					<real>9.7751617431640625e-05</real>
 				</dict>
 				<key>awaitingRefreshTrueWithPriorData</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00040674209594726562</real>
+					<real>0.00028705596923828125</real>
 				</dict>
 				<key>cachedUsagePerProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00042414665222167969</real>
+					<real>0.00034499168395996094</real>
 				</dict>
 				<key>connectAutoDetectDoesNotSetHasConfigOnFailure</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00015497207641601562</real>
+					<real>0.00013422966003417969</real>
 				</dict>
 				<key>connectAutoDetectSetsHasConfig</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021910667419433594</real>
+					<real>0.0002040863037109375</real>
 				</dict>
 				<key>credentialStateMirrored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00037908554077148438</real>
+					<real>0.00024199485778808594</real>
 				</dict>
 				<key>disabledExtraCreditsNotSurfaced</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019717216491699219</real>
+					<real>0.00018191337585449219</real>
 				</dict>
 				<key>handleTokenChangeClearsRetryAfter</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00022196769714355469</real>
+					<real>0.00015377998352050781</real>
 				</dict>
 				<key>handleTokenChangeInvalidatesCache</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026488304138183594</real>
+					<real>0.00015306472778320312</real>
 				</dict>
 				<key>handleTokenChangeSetsSpeedToFast</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002689361572265625</real>
+					<real>0.00017595291137695312</real>
 				</dict>
 				<key>isActiveProfilePropagated</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00060200691223144531</real>
+					<real>0.00034260749816894531</real>
 				</dict>
 				<key>noExtraCreditsPool</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016570091247558594</real>
+					<real>0.00014829635620117188</real>
 				</dict>
 				<key>rateLimitedWithNilRetryAfterUsesExponentialBackoff</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017905235290527344</real>
+					<real>0.00011110305786132812</real>
 				</dict>
 				<key>rateLimitedWithZeroRetryAfterUsesExponentialBackoff</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00016617774963378906</real>
+					<real>0.00013303756713867188</real>
 				</dict>
 				<key>readinessAwaitingClaudeCode</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00037479400634765625</real>
+					<real>0.0002269744873046875</real>
 				</dict>
 				<key>readinessAwaitingWithoutSnapshot</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00013184547424316406</real>
+					<real>9.5129013061523438e-05</real>
 				</dict>
 				<key>readinessMissing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017404556274414062</real>
+					<real>8.9168548583984375e-05</real>
 				</dict>
 				<key>readinessReauthRequired</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018596649169921875</real>
+					<real>0.00012469291687011719</real>
 				</dict>
 				<key>readinessReauthWithoutToggles</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001850128173828125</real>
+					<real>0.00012159347534179688</real>
 				</dict>
 				<key>reconcileTokenIfChangedDetectsSwap</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026988983154296875</real>
+					<real>0.00016880035400390625</real>
 				</dict>
 				<key>reconcileTokenIfChangedNoChange</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017595291137695312</real>
+					<real>0.00012183189392089844</real>
 				</dict>
 				<key>refreshAfterTokenChangeUsesFreshToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00062704086303710938</real>
+					<real>0.00023984909057617188</real>
 				</dict>
 				<key>refreshBypassesIntervalWhenForced</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021862983703613281</real>
+					<real>0.00022482872009277344</real>
 				</dict>
 				<key>refreshChecksNotificationThresholds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00019478797912597656</real>
+					<real>0.00019311904907226562</real>
 				</dict>
 				<key>refreshChecksReadinessFirst</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00031495094299316406</real>
+					<real>0.0001850128173828125</real>
 				</dict>
 				<key>refreshClearsErrorOnSuccess</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00039696693420410156</real>
+					<real>0.00022578239440917969</real>
 				</dict>
 				<key>refreshExposesEnabledExtraCredits</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021982192993164062</real>
+					<real>0.00017595291137695312</real>
 				</dict>
 				<key>refreshExtractsNewBuckets</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00036120414733886719</real>
+					<real>0.000141143798828125</real>
 				</dict>
 				<key>refreshFormatsFiveHourReset</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0016691684722900391</real>
+					<real>0.0010268688201904297</real>
 				</dict>
 				<key>refreshFormatsMinutesOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0014460086822509766</real>
+					<real>0.00082826614379882812</real>
 				</dict>
 				<key>refreshIfStaleRefreshesWhenOld</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014710426330566406</real>
+					<real>0.00017714500427246094</real>
 				</dict>
 				<key>refreshIfStaleThrottles</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00014972686767578125</real>
+					<real>0.00012898445129394531</real>
 				</dict>
 				<key>refreshNilFablePacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023007392883300781</real>
+					<real>0.00015211105346679688</real>
 				</dict>
 				<key>refreshNilOpus</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00033402442932128906</real>
+					<real>0.00015616416931152344</real>
 				</dict>
 				<key>refreshNoToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00029921531677246094</real>
+					<real>0.00020074844360351562</real>
 				</dict>
 				<key>refreshPopulatesFablePacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00068688392639160156</real>
+					<real>0.00049591064453125</real>
 				</dict>
 				<key>refreshPopulatesPerBucketPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0014560222625732422</real>
+					<real>0.00099110603332519531</real>
 				</dict>
 				<key>refreshProfileFailureSilent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023484230041503906</real>
+					<real>0.00015997886657714844</real>
 				</dict>
 				<key>refreshProfileFillsIdentity</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023889541625976562</real>
+					<real>0.0002002716064453125</real>
 				</dict>
 				<key>refreshProfileSetsPlanType</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0004291534423828125</real>
+					<real>0.00023627281188964844</real>
 				</dict>
 				<key>refreshProfileSkipsWhenNotReady</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001430511474609375</real>
+					<real>0.00015187263488769531</real>
 				</dict>
 				<key>refreshResetCountdownClearsWhenNoCachedData</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026226043701171875</real>
+					<real>0.00020694732666015625</real>
 				</dict>
 				<key>refreshResetCountdownShowsNowWhenPast</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0011448860168457031</real>
+					<real>0.00085115432739257812</real>
 				</dict>
 				<key>refreshResetCountdownUpdates</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0013360977172851562</real>
+					<real>0.0009059906005859375</real>
 				</dict>
 				<key>refreshResetsSpeedAfterSlowSuccess</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025391578674316406</real>
+					<real>0.00021505355834960938</real>
 				</dict>
 				<key>refreshRespectsRetryAfterDate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00028824806213378906</real>
+					<real>0.00021004676818847656</real>
 				</dict>
 				<key>refreshRetriesOnTokenExpired</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023484230041503906</real>
+					<real>0.00016999244689941406</real>
 				</dict>
 				<key>refreshReturnsEarlyWhenIntervalNotElapsed</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023913383483886719</real>
+					<real>0.00016665458679199219</real>
 				</dict>
 				<key>refreshSetsHasConfigTrue</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018596649169921875</real>
+					<real>0.00013899803161621094</real>
 				</dict>
 				<key>refreshSetsIsLoadingFalseAfterCompletion</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00021433830261230469</real>
+					<real>0.00015997886657714844</real>
 				</dict>
 				<key>refreshSetsLastUpdate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000186920166015625</real>
+					<real>0.00017476081848144531</real>
 				</dict>
 				<key>refreshSetsNetworkError</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00018811225891113281</real>
+					<real>0.00012898445129394531</real>
 				</dict>
 				<key>refreshSetsRateLimitedAndSlow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00017404556274414062</real>
+					<real>0.00014996528625488281</real>
 				</dict>
 				<key>refreshUpdatesPacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00093698501586914062</real>
+					<real>0.00061106681823730469</real>
 				</dict>
 				<key>refreshUpdatesPercentages</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025320053100585938</real>
+					<real>0.00013303756713867188</real>
 				</dict>
 				<key>reloadConfigMirrorsCredentialState</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10389089584350586</real>
+					<real>0.10489916801452637</real>
 				</dict>
 				<key>reloadConfigResetsAndRefreshes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.10224604606628418</real>
+					<real>0.10507893562316895</real>
 				</dict>
 				<key>retry401Awaiting</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035595893859863281</real>
+					<real>0.00031709671020507812</real>
 				</dict>
 				<key>retry401FailsAgain</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00028085708618164062</real>
+					<real>0.00014829635620117188</real>
 				</dict>
 				<key>retry401Missing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00025796890258789062</real>
+					<real>0.00014829635620117188</real>
 				</dict>
 				<key>retry401ReadyWithoutToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0001888275146484375</real>
+					<real>0.00018596649169921875</real>
 				</dict>
 				<key>retry401Reauth</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00023794174194335938</real>
+					<real>0.00033020973205566406</real>
 				</dict>
 				<key>retry401SameToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00029110908508300781</real>
+					<real>0.00016379356384277344</real>
 				</dict>
 				<key>retry401WithRenewedToken</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00032186508178710938</real>
+					<real>0.00019478797912597656</real>
 				</dict>
 				<key>retryKeepsIsActiveProfile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00048422813415527344</real>
+					<real>0.00025320053100585938</real>
 				</dict>
 				<key>sessionSamplesKeyNamespacing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026798248291015625</real>
+					<real>0.00017094612121582031</real>
 				</dict>
 				<key>sessionSamplesPersistNamespaced</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0020427703857421875</real>
+					<real>0.0009860992431640625</real>
 				</dict>
 				<key>startAutoRefreshCreatesTask</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.035209178924560547</real>
+					<real>0.032806158065795898</real>
 				</dict>
 				<key>stopAutoRefreshCancelsLoop</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.13590788841247559</real>
+					<real>0.13683485984802246</real>
 				</dict>
 				<key>switchToFastModeSetsSpeed</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00026535987854003906</real>
+					<real>0.00015377998352050781</real>
 				</dict>
 			</dict>
 			<key>VendorOutageNotificationTests</key>
@@ -4414,22 +4414,22 @@
 				<key>edgePersists</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0004730224609375</real>
+					<real>0.00038385391235351562</real>
 				</dict>
 				<key>maintenanceSuppressed</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0002880096435546875</real>
+					<real>0.00021123886108398438</real>
 				</dict>
 				<key>masterOff</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.822845458984375e-05</real>
+					<real>7.8916549682617188e-05</real>
 				</dict>
 				<key>noChange</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00050187110900878906</real>
+					<real>0.00034928321838378906</real>
 				</dict>
 			</dict>
 			<key>VendorStatusModelsTests</key>
@@ -4437,17 +4437,17 @@
 				<key>claudeURLs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>4.00543212890625e-05</real>
+					<real>1.4066696166992188e-05</real>
 				</dict>
 				<key>healthMapping</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.9325485229492188e-05</real>
+					<real>1.5735626220703125e-05</real>
 				</dict>
 				<key>healthOrdering</key>
 				<dict>
 					<key>mrnet</key>
-					<real>3.8623809814453125e-05</real>
+					<real>3.1232833862304688e-05</real>
 				</dict>
 			</dict>
 			<key>VendorStatusStoreTests</key>
@@ -4455,17 +4455,17 @@
 				<key>cadence</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00012516975402832031</real>
+					<real>6.5326690673828125e-05</real>
 				</dict>
 				<key>pollPublishes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00030827522277832031</real>
+					<real>0.00021719932556152344</real>
 				</dict>
 				<key>staleOnFailure</key>
 				<dict>
 					<key>mrnet</key>
-					<real>9.6082687377929688e-05</real>
+					<real>9.7990036010742188e-05</real>
 				</dict>
 			</dict>
 			<key>WatcherScanSettingsTests</key>
@@ -4473,17 +4473,17 @@
 				<key>scanIntervalLabels</key>
 				<dict>
 					<key>mrnet</key>
-					<real>2.4080276489257812e-05</real>
+					<real>1.0967254638671875e-05</real>
 				</dict>
 				<key>scanIntervalSeconds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>5.4836273193359375e-05</real>
+					<real>3.6001205444335938e-05</real>
 				</dict>
 				<key>visibilitySeconds</key>
 				<dict>
 					<key>mrnet</key>
-					<real>6.29425048828125e-05</real>
+					<real>2.9802322387695312e-05</real>
 				</dict>
 			</dict>
 		</dict>

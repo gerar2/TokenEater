@@ -35,7 +35,7 @@ XcodeGen strips the widget's `NSExtension` key from `Info.plist` on every genera
 `Shared/` is compiled into all three targets:
 
 - `Shared/Models/` - pure `Codable` structs and enums (UsageModels, ProfileModels, PacingModels, ThemeModels, SessionModels, MetricModels, ProxyConfig, and the various display-format enums).
-- `Shared/Services/` - protocol-backed I/O. 19 services, each with a protocol in `Shared/Services/Protocols/` and a mock in `TokenEaterTests/Mocks/` (the four multi-profile ones: `ClaudeCodeCredentialStore`, `ProfileCredentialVault`, `OAuthTokenRefresher`, `ProfileTokenProvider`).
+- `Shared/Services/` - protocol-backed I/O. 19 services, each with a protocol in `Shared/Services/Protocols/` and a mock in `TokenEaterTests/Mocks/` (the four multi-profile ones: `ClaudeCodeCredentialStore`, `ProfileCredentialVault`, `OAuthTokenRefresher`, `ProfileTokenProvider`). The OAuth token endpoint only accepts Claude Code's own `claude-cli/<version> (external, cli)` User-Agent (anything else gets 429 `rate_limit_error`), and renewals back off exponentially on failure; keep both when touching the refresher.
 - `Shared/Repositories/` - `UsageRepository` (orchestrates `APIClient` then `SharedFileService`, per profile).
 - `Shared/Stores/` - 8 `ObservableObject` state containers (`ProfileStore` owns one `UsageStore` per account).
 - `Shared/Helpers/` - 12 pure enums/structs, no I/O (PacingCalculator, MenuBarRenderer, SmartColor, JSONLParser, ProcessResolver, DiagnosticReporter, CurrencyFormatter, MetricsGridLayout, NotificationBodyFormatter, OverlayHitTest, ResetCountdownFormatter, WidgetReloader).

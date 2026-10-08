@@ -72,7 +72,7 @@ struct OAuthTokenRefresherTests {
         #expect(request.timeoutInterval == 30)
         #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
         #expect(request.value(forHTTPHeaderField: "anthropic-beta") == "oauth-2025-04-20")
-        #expect(request.value(forHTTPHeaderField: "User-Agent") == "claude-code/1.2.3")
+        #expect(request.value(forHTTPHeaderField: "User-Agent") == "claude-cli/1.2.3 (external, cli)")
 
         let body = try #require(request.httpBody)
         let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
@@ -87,7 +87,7 @@ struct OAuthTokenRefresherTests {
     func userAgentFallback() async throws {
         let (sut, capture) = makeSUT(body: #"{"access_token":"new-at"}"#, version: nil)
         _ = try await sut.refresh(old, proxyConfig: nil)
-        #expect(capture.requests.first?.value(forHTTPHeaderField: "User-Agent") == "claude-code/0.0.0")
+        #expect(capture.requests.first?.value(forHTTPHeaderField: "User-Agent") == "claude-cli/0.0.0 (external, cli)")
     }
 
     @Test("The proxy configuration is handed to the transport")
