@@ -235,9 +235,9 @@ struct ProfileStoreTests {
         #expect(h.vault.saveCallCount == 0)
     }
 
-    @Test("addLinkedProfile rejects an account already monitored and cleans the vault")
+    @Test("addLinkedProfile rejects an account already captured and cleans the vault")
     func addLinkedProfileDuplicateAccount() async {
-        let existing = makeProfile(name: "Claude Code", uuid: "acc-1")
+        let existing = makeProfile(name: "Claude Code", source: .managed, uuid: "acc-1")
         let h = ProfileHarness(profiles: [existing], activeID: existing.id)
         h.credentialStore.stub(configDir: ProfileHarness.workDir, credentials: creds("at-work"))
         h.identity.stubbedProfile = identityResponse(uuid: "acc-1")
@@ -666,12 +666,21 @@ struct ProfileStoreTests {
         #expect(h.persistence.profiles.first?.accountUUID == "acc-default")
         #expect(h.sharedFile.profileSnapshots.first?.planType == PlanType.pro.rawValue)
 
-        // Capturing the same account is now recognised as a duplicate.
-        h.credentialStore.stub(configDir: nil, credentials: creds())
+        // Capturing the account the linked default profile currently shows is
+        // allowed: a linked card follows whatever is signed in to its
+        // directory, and capturing that login is the whole point ...
+        h.credentialStore.stub(configDir: nil, credentials: creds("at-cap", refresh: "rt-cap"))
         h.identity.stubbedProfile = identityResponse(uuid: "acc-default")
-        await expectError(.duplicateAccount(existingName: ProfileStore.defaultProfileName)) {
-            try await h.store.captureCurrentLogin(name: "Same")
+        let captured = try? await h.store.captureCurrentLogin(name: "Same")
+        #expect(captured?.source == .managed)
+        #expect(captured?.accountUUID == "acc-default")
+        #expect(h.store.profiles.count == 2)
+
+        // ... but a second captured copy of that account is a duplicate.
+        await expectError(.duplicateAccount(existingName: "Same")) {
+            try await h.store.captureCurrentLogin(name: "Again")
         }
+        #expect(h.store.profiles.count == 2)
     }
 
     @Test("profilesBecameMultiple is posted exactly once, when the second profile appears")

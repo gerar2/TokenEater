@@ -563,11 +563,16 @@ final class ProfileStore: ObservableObject {
     /// Best-effort identity fetch: fills email / uuid / plan and rejects a
     /// duplicate account (cleaning the vault entry seeded for it). A
     /// transport failure keeps the profile (no identity).
+    ///
+    /// Only a *captured* copy counts as a duplicate: a linked profile merely
+    /// mirrors whatever is signed in to its directory right now, so it always
+    /// matches the account the user is about to capture (that is the point of
+    /// capturing) and will show something else after the next `claude /login`.
     private func fillIdentity(_ profile: inout AccountProfile, accessToken: String) async throws {
         guard let response = try? await identityClient.fetchProfile(token: accessToken, proxyConfig: proxyProvider()) else {
             return
         }
-        if let existing = profiles.first(where: { $0.accountUUID == response.account.uuid }) {
+        if let existing = profiles.first(where: { $0.source == .managed && $0.accountUUID == response.account.uuid }) {
             vault.delete(profileID: profile.id)
             throw record(.duplicateAccount(existingName: existing.name))
         }

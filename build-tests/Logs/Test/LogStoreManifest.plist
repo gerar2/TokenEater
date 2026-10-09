@@ -6,65 +6,6 @@
 	<integer>13</integer>
 	<key>logs</key>
 	<dict>
-		<key>69E6010B-19EA-4207-B9E1-3DE5BDA5DF68</key>
-		<dict>
-			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>E4E7B20D-F354-497B-A293-3FFBB98AA1C1</string>
-			<key>auxiliaryObservable</key>
-			<dict>
-				<key>highLevelStatus</key>
-				<string>W</string>
-				<key>totalNumberOfAnalyzerIssues</key>
-				<integer>0</integer>
-				<key>totalNumberOfErrors</key>
-				<integer>0</integer>
-				<key>totalNumberOfTestFailures</key>
-				<integer>0</integer>
-				<key>totalNumberOfWarnings</key>
-				<integer>2</integer>
-			</dict>
-			<key>className</key>
-			<string>IDESchemeActionsInvocationRecord</string>
-			<key>documentTypeString</key>
-			<string>&lt;nil&gt;</string>
-			<key>domainType</key>
-			<string>com.apple.dt.unit.cocoaUnitTest</string>
-			<key>fileName</key>
-			<string>Test-TokenEaterTests-2026.10.08_13-01-13-+0100.xcresult</string>
-			<key>hasAuxiliaryLog</key>
-			<true/>
-			<key>hasPrimaryLog</key>
-			<true/>
-			<key>primaryObservable</key>
-			<dict>
-				<key>highLevelStatus</key>
-				<string>W</string>
-				<key>totalNumberOfAnalyzerIssues</key>
-				<integer>0</integer>
-				<key>totalNumberOfErrors</key>
-				<integer>0</integer>
-				<key>totalNumberOfTestFailures</key>
-				<integer>0</integer>
-				<key>totalNumberOfWarnings</key>
-				<integer>2</integer>
-			</dict>
-			<key>schemeIdentifier-containerName</key>
-			<string>TokenEater project</string>
-			<key>schemeIdentifier-schemeName</key>
-			<string>TokenEaterTests</string>
-			<key>schemeIdentifier-sharedScheme</key>
-			<integer>1</integer>
-			<key>signature</key>
-			<string>Test TokenEaterTests</string>
-			<key>timeStartedRecording</key>
-			<real>813153673.13944197</real>
-			<key>timeStoppedRecording</key>
-			<real>813153687.31909502</real>
-			<key>title</key>
-			<string>Test TokenEaterTests</string>
-			<key>uniqueIdentifier</key>
-			<string>69E6010B-19EA-4207-B9E1-3DE5BDA5DF68</string>
-		</dict>
 		<key>761A62B2-91A6-4B0A-B777-55D699F0B7E9</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
@@ -123,6 +64,65 @@
 			<string>Test TokenEaterTests</string>
 			<key>uniqueIdentifier</key>
 			<string>761A62B2-91A6-4B0A-B777-55D699F0B7E9</string>
+		</dict>
+		<key>F35A99EB-BEC6-4B46-B4E9-EFED39BD06DB</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>3196C536-DB94-4771-93FA-24007BACF841</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>2</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.unit.cocoaUnitTest</string>
+			<key>fileName</key>
+			<string>Test-TokenEaterTests-2026.10.09_11-34-48-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>2</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>TokenEater project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>TokenEaterTests</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Test TokenEaterTests</string>
+			<key>timeStartedRecording</key>
+			<real>813234888.14222801</real>
+			<key>timeStoppedRecording</key>
+			<real>813234903.78185105</real>
+			<key>title</key>
+			<string>Test TokenEaterTests</string>
+			<key>uniqueIdentifier</key>
+			<string>F35A99EB-BEC6-4B46-B4E9-EFED39BD06DB</string>
 		</dict>
 	</dict>
 </dict>
