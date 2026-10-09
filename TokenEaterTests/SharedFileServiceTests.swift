@@ -391,4 +391,47 @@ struct SharedFileServiceTests {
         #expect(reread.profileSnapshots.isEmpty)
         #expect(reread.activeProfileID == nil)
     }
+
+    // MARK: - Concurrency
+
+    @Test("concurrent per-profile writes from several threads keep every entry and never crash")
+    func concurrentProfileWritesAreSerialised() async throws {
+        let root = makeRoot()
+        // One shared instance (what ProfileStore hands every repository) plus
+        // a second instance on the same root (ThemeStore / SettingsStore
+        // pattern), all writing at once from the cooperative pool - the exact
+        // shape of the race that crashed the app in `destroy for SharedData`.
+        let shared = SharedFileService(rootDirectory: root)
+        let other = SharedFileService(rootDirectory: root)
+        let ids = (0..<8).map { _ in UUID() }
+
+        await withTaskGroup(of: Void.self) { group in
+            for (index, id) in ids.enumerated() {
+                group.addTask {
+                    for round in 0..<20 {
+                        shared.updateProfileUsage(
+                            profileID: id,
+                            usage: self.makeUsage(fiveHour: Double(index), sevenDay: Double(round)),
+                            syncDate: Date(),
+                            credentialState: "ok"
+                        )
+                        if round % 4 == 0 {
+                            _ = shared.profileSnapshots
+                            other.updateSmartColorEnabled(round % 8 == 0)
+                            shared.invalidateCache()
+                        }
+                    }
+                }
+            }
+        }
+
+        let final = SharedFileService(rootDirectory: root).profileSnapshots
+        #expect(Set(final.map(\.id)) == Set(ids))
+        for (index, id) in ids.enumerated() {
+            let entry = final.first { $0.id == id }
+            #expect(entry?.cachedUsage?.usage.fiveHour?.utilization == Double(index))
+            #expect(entry?.cachedUsage?.usage.sevenDay?.utilization == 19)
+            #expect(entry?.credentialState == "ok")
+        }
+    }
 }
