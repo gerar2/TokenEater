@@ -84,13 +84,20 @@ private enum Surface: String {
 final class NotificationService: NotificationServiceProtocol {
     private let center: NotificationCenterProtocol
     private let state: NotificationStateStore
+    /// Namespaces state keys, request identifiers and titles per account
+    /// profile. `.legacy` (the default, and what the migrated default profile
+    /// uses) keeps the exact pre-profile keys and ids, so existing users keep
+    /// their de-dupe state; vendor-health alerts ignore it (they are global).
+    private let scope: NotificationScope
 
     init(
         center: NotificationCenterProtocol = LiveNotificationCenter(),
-        stateStore: NotificationStateStore = UserDefaultsNotificationStateStore()
+        stateStore: NotificationStateStore = UserDefaultsNotificationStateStore(),
+        scope: NotificationScope = .legacy
     ) {
         self.center = center
         self.state = stateStore
+        self.scope = scope
     }
 
     func setupDelegate() {
@@ -130,7 +137,7 @@ final class NotificationService: NotificationServiceProtocol {
         // we skip every per-event check (and also drop any pending scheduled
         // reminders so a switch-back doesn't fire stale ones).
         guard toggles.masterEnabled else {
-            center.removePending(identifiers: ["reminder_session", "reminder_weekly"])
+            center.removePending(identifiers: scope.reminderRequestIDs)
             return
         }
 
@@ -170,7 +177,7 @@ final class NotificationService: NotificationServiceProtocol {
         pacing: PacingZone?,
         toggles: NotificationToggles
     ) {
-        let key = "lastLevel_\(surface.rawValue)"
+        let key = scope.key("lastLevel_\(surface.rawValue)")
         let previousRaw = state.lastLevel(forKey: key)
         let previous = UsageLevel(rawValue: previousRaw) ?? .green
         let absoluteLevel: UsageLevel = .from(pct: snapshot.pct, thresholds: toggles.thresholds)
@@ -190,7 +197,7 @@ final class NotificationService: NotificationServiceProtocol {
         // green mid-window (#244) - which produced a false "weekly reset"
         // notification on a random weekday. The baseline updates every call,
         // independent of the level-change guard below.
-        let resetKey = "lastResetsAt_\(surface.rawValue)"
+        let resetKey = scope.key("lastResetsAt_\(surface.rawValue)")
         let previousReset = state.lastResetsAt(forKey: resetKey)
         let windowDidReset: Bool = {
             guard let now = snapshot.resetsAt, let previousReset else { return false }
@@ -225,23 +232,23 @@ final class NotificationService: NotificationServiceProtocol {
     ) {
         let content = UNMutableNotificationContent()
         content.sound = .default
-        content.title = title(for: surface, level: level, pacing: pacing, paceDriven: paceDriven)
+        content.title = scope.prefixedTitle(title(for: surface, level: level, pacing: pacing, paceDriven: paceDriven))
         content.body = body(for: surface, level: level, snapshot: snapshot, pacing: pacing, paceDriven: paceDriven)
-        send(id: "escalation_\(surface.rawValue)", content: content)
+        send(id: scope.requestID("escalation_\(surface.rawValue)"), content: content)
     }
 
     private func notifyRecovery(surface: Surface, snapshot: MetricSnapshot) {
         let content = UNMutableNotificationContent()
         content.sound = .default
-        content.title = NSLocalizedString("notif.title.\(surface.bodyFamily).green", comment: "")
+        content.title = scope.prefixedTitle(NSLocalizedString("notif.title.\(surface.bodyFamily).green", comment: ""))
         content.body = recoveryBody(surface: surface, resetsAt: snapshot.resetsAt)
-        send(id: "recovery_\(surface.rawValue)", content: content)
+        send(id: scope.requestID("recovery_\(surface.rawValue)"), content: content)
     }
 
     // MARK: - Pacing transitions
 
     private func checkPacingTransition(_ zone: PacingZone, surface: Surface, toggles: NotificationToggles) {
-        let key = "lastPacing_\(surface.rawValue)"
+        let key = scope.key("lastPacing_\(surface.rawValue)")
         let previous = state.lastPacing(forKey: key) ?? PacingZone.onTrack.rawValue
 
         // Only fire on entry to a "loud" zone, and only if the toggle for that
@@ -265,9 +272,9 @@ final class NotificationService: NotificationServiceProtocol {
     private func firePacing(zone: PacingZone) {
         let content = UNMutableNotificationContent()
         content.sound = .default
-        content.title = NSLocalizedString("notif.title.pacing.\(zone.rawValue)", comment: "")
+        content.title = scope.prefixedTitle(NSLocalizedString("notif.title.pacing.\(zone.rawValue)", comment: ""))
         content.body = NSLocalizedString("notif.body.pacing.\(zone.rawValue)", comment: "")
-        send(id: "pacing_\(zone.rawValue)", content: content)
+        send(id: scope.requestID("pacing_\(zone.rawValue)"), content: content)
     }
 
     // MARK: - Extra credits
@@ -275,7 +282,7 @@ final class NotificationService: NotificationServiceProtocol {
     private func checkExtraCredits(_ extra: ExtraUsage, toggles: NotificationToggles) {
         let pct = Int(extra.utilization ?? 0)
         let level = UsageLevel.from(pct: pct, thresholds: toggles.thresholds)
-        let key = "lastLevel_extra"
+        let key = scope.key("lastLevel_extra")
         let previousRaw = state.lastLevel(forKey: key)
         let previous = UsageLevel(rawValue: previousRaw) ?? .green
         guard level != previous else { return }
@@ -286,15 +293,15 @@ final class NotificationService: NotificationServiceProtocol {
             let content = UNMutableNotificationContent()
             content.sound = .default
             let extraKey = level == .red ? "red" : "orange"
-            content.title = NSLocalizedString("notif.title.extra.\(extraKey)", comment: "")
+            content.title = scope.prefixedTitle(NSLocalizedString("notif.title.extra.\(extraKey)", comment: ""))
             content.body = String(format: NSLocalizedString("notif.body.extra.\(extraKey)", comment: ""), pct)
-            send(id: "escalation_extra", content: content)
+            send(id: scope.requestID("escalation_extra"), content: content)
         case .green where previous > .green && toggles.sendRecovery:
             let content = UNMutableNotificationContent()
             content.sound = .default
-            content.title = String(localized: "notif.title.extra.green")
+            content.title = scope.prefixedTitle(String(localized: "notif.title.extra.green"))
             content.body = String(localized: "notif.body.extra.green")
-            send(id: "recovery_extra", content: content)
+            send(id: scope.requestID("recovery_extra"), content: content)
         default:
             return
         }
@@ -347,18 +354,20 @@ final class NotificationService: NotificationServiceProtocol {
     func notifyTokenExpired(toggle: Bool) {
         guard toggle else { return }
         let now = Date()
-        // De-dupe: only one token-expired notif per hour.
-        if let last = state.tokenExpiredFiredAt(),
+        // De-dupe: only one token-expired notif per hour, per profile (each
+        // profile has its own token, so one expiring must not silence another).
+        let key = scope.key(NotificationStateKeys.tokenExpiredFiredAt)
+        if let last = state.tokenExpiredFiredAt(forKey: key),
            now.timeIntervalSince(last) < 3600 {
             return
         }
-        state.setTokenExpiredFiredAt(now)
+        state.setTokenExpiredFiredAt(now, forKey: key)
 
         let content = UNMutableNotificationContent()
         content.sound = .default
-        content.title = String(localized: "notif.title.token")
+        content.title = scope.prefixedTitle(String(localized: "notif.title.token"))
         content.body = String(localized: "notif.body.token")
-        send(id: "token_expired", content: content)
+        send(id: scope.requestID("token_expired"), content: content)
     }
 
     // MARK: - Reset reminders (scheduled)
@@ -368,8 +377,9 @@ final class NotificationService: NotificationServiceProtocol {
         weeklyResetsAt: Date?,
         toggles: NotificationToggles
     ) {
-        // Cancel previous schedules so a moving target doesn't pile up.
-        center.removePending(identifiers: ["reminder_session", "reminder_weekly"])
+        // Cancel previous schedules so a moving target doesn't pile up. Only
+        // this scope's ids: profile A rescheduling must not drop B's reminders.
+        center.removePending(identifiers: scope.reminderRequestIDs)
 
         if toggles.resetReminderSession,
            let target = sessionResetsAt?.addingTimeInterval(-Double(toggles.resetReminderSessionOffsetMinutes) * 60),
@@ -377,8 +387,8 @@ final class NotificationService: NotificationServiceProtocol {
             let duration = formatReminderDuration(minutes: toggles.resetReminderSessionOffsetMinutes)
             let titleTemplate = NSLocalizedString("notif.title.reminder.session", comment: "")
             schedule(
-                id: "reminder_session",
-                title: String(format: titleTemplate, duration),
+                id: scope.requestID("reminder_session"),
+                title: scope.prefixedTitle(String(format: titleTemplate, duration)),
                 body: NSLocalizedString("notif.body.reminder.session", comment: ""),
                 fireDate: target
             )
@@ -389,12 +399,19 @@ final class NotificationService: NotificationServiceProtocol {
             let duration = formatReminderDuration(minutes: toggles.resetReminderWeeklyOffsetMinutes)
             let titleTemplate = NSLocalizedString("notif.title.reminder.weekly", comment: "")
             schedule(
-                id: "reminder_weekly",
-                title: String(format: titleTemplate, duration),
+                id: scope.requestID("reminder_weekly"),
+                title: scope.prefixedTitle(String(format: titleTemplate, duration)),
                 body: NSLocalizedString("notif.body.reminder.weekly", comment: ""),
                 fireDate: target
             )
         }
+    }
+
+    /// Drops this scope's still-pending reset reminders without scheduling new
+    /// ones. `ProfileStore.remove` calls it so a deleted profile's reminders
+    /// do not fire later; other scopes' reminders are untouched.
+    func cancelPendingReminders() {
+        center.removePending(identifiers: scope.reminderRequestIDs)
     }
 
     /// Renders a human-readable duration matching the picker labels in the

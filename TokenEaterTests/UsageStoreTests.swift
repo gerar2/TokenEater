@@ -772,4 +772,405 @@ struct UsageStoreTests {
         #expect(store.currentSpeed == .normal)
         #expect(tokenProvider.refreshTokenIfChangedCallCount == 1)
     }
+
+    // MARK: - Multi-profile readiness (docs/multi-profile-plan.md §4.2)
+
+    private func expired401() -> APIError {
+        .tokenExpired(endpoint: "/api/oauth/usage", statusCode: 401)
+    }
+
+    @Test("refresh asks the provider for a fresh token (not forced) before reading it")
+    func refreshChecksReadinessFirst() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT()
+
+        await store.refresh()
+
+        #expect(tokenProvider.ensureFreshTokenCallCount == 1)
+        #expect(tokenProvider.lastEnsureForce == false)
+        #expect(repo.refreshCallCount == 1)
+        #expect(store.errorState == .none)
+    }
+
+    @Test(".missing readiness: unconfigured, tokenUnavailable, no API call")
+    func readinessMissing() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT()
+        tokenProvider.readiness = .missing
+        tokenProvider._credentialState = .missing
+
+        await store.refresh()
+
+        #expect(store.hasConfig == false)
+        #expect(store.errorState == .tokenUnavailable)
+        #expect(store.isDisconnected)
+        #expect(repo.refreshCallCount == 0)
+        #expect(tokenProvider.currentTokenCallCount == 0)
+        #expect(store.credentialState == .missing)
+        #expect(store.isLoading == false)
+    }
+
+    @Test(".awaitingClaudeCode readiness: configured, calm waiting state, no notification")
+    func readinessAwaitingClaudeCode() async {
+        let (store, repo, tokenProvider, notif, _) = makeSUT()
+        store.notifTogglesProvider = { fixtureToggles() }
+        await store.refresh() // a snapshot exists
+        #expect(repo.refreshCallCount == 1)
+
+        tokenProvider.readiness = .awaitingClaudeCode
+        tokenProvider._credentialState = .awaitingClaudeCode
+        await store.refresh(force: true)
+
+        #expect(store.hasConfig == true)
+        #expect(store.errorState == .tokenUnavailable)
+        #expect(store.isAwaitingRefresh == true)
+        #expect(store.lastUsage != nil)
+        #expect(store.credentialState == .awaitingClaudeCode)
+        #expect(repo.refreshCallCount == 1)
+        #expect(notif.lastTokenExpiredFire == nil)
+    }
+
+    @Test(".awaitingClaudeCode with no snapshot is the plain disconnected state")
+    func readinessAwaitingWithoutSnapshot() async {
+        let (store, _, tokenProvider, _, _) = makeSUT()
+        tokenProvider.readiness = .awaitingClaudeCode
+
+        await store.refresh()
+
+        #expect(store.hasConfig == true)
+        #expect(store.isAwaitingRefresh == false)
+        #expect(store.isDisconnected == true)
+    }
+
+    @Test(".reauthRequired readiness: reauth state and the token-expired notification")
+    func readinessReauthRequired() async {
+        let (store, repo, tokenProvider, notif, _) = makeSUT()
+        store.notifTogglesProvider = { fixtureToggles() }
+        tokenProvider.readiness = .reauthRequired
+        tokenProvider._credentialState = .reauthRequired(reason: "invalid_grant")
+
+        await store.refresh()
+
+        #expect(store.errorState == .reauthRequired)
+        #expect(store.hasError == true)
+        #expect(store.hasConfig == true)
+        #expect(store.isAwaitingRefresh == false)
+        #expect(repo.refreshCallCount == 0)
+        #expect(notif.lastTokenExpiredFire == true)
+        #expect(store.credentialState == .reauthRequired(reason: "invalid_grant"))
+    }
+
+    @Test(".reauthRequired without a toggles provider skips the notification")
+    func readinessReauthWithoutToggles() async {
+        let (store, _, tokenProvider, notif, _) = makeSUT()
+        tokenProvider.readiness = .reauthRequired
+
+        await store.refresh()
+
+        #expect(store.errorState == .reauthRequired)
+        #expect(notif.lastTokenExpiredFire == nil)
+    }
+
+    @Test("401: invalidate, forced readiness check, retry once with the renewed token")
+    func retry401WithRenewedToken() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT(token: "expired")
+        repo.failOnceError = expired401()
+        repo.stubbedUsage = .fixture(fiveHourUtil: 61)
+        tokenProvider.rotatedToken = "renewed"
+
+        await store.refresh()
+
+        #expect(tokenProvider.invalidateCallCount == 1)
+        #expect(tokenProvider.ensureForceHistory == [false, true])
+        #expect(repo.refreshCallCount == 2)
+        #expect(repo.lastToken == "renewed")
+        #expect(store.errorState == .none)
+        #expect(store.fiveHourPct == 61)
+        #expect(store.hasConfig == true)
+    }
+
+    @Test("401: the retry runs even when the provider hands back the same token")
+    func retry401SameToken() async {
+        let (store, repo, _, _, _) = makeSUT(token: "same")
+        repo.failOnceError = expired401()
+        repo.stubbedUsage = .fixture(fiveHourUtil: 33)
+
+        await store.refresh()
+
+        #expect(repo.refreshCallCount == 2)
+        #expect(repo.lastToken == "same")
+        #expect(store.errorState == .none)
+        #expect(store.fiveHourPct == 33)
+    }
+
+    @Test("401: a retry that fails again lands on tokenUnavailable and notifies")
+    func retry401FailsAgain() async {
+        let (store, repo, tokenProvider, notif, _) = makeSUT(token: "dead")
+        store.notifTogglesProvider = { fixtureToggles() }
+        repo.stubbedError = expired401()
+
+        await store.refresh()
+
+        #expect(repo.refreshCallCount == 2)
+        #expect(tokenProvider.ensureForceHistory == [false, true])
+        #expect(store.errorState == .tokenUnavailable)
+        #expect(notif.lastTokenExpiredFire == true)
+    }
+
+    @Test("401: forced check says awaiting Claude Code, so no retry and the waiting state")
+    func retry401Awaiting() async {
+        let (store, repo, tokenProvider, notif, _) = makeSUT()
+        store.notifTogglesProvider = { fixtureToggles() }
+        await store.refresh() // a snapshot exists
+        repo.stubbedError = expired401()
+        tokenProvider.readinessQueue = [.ready, .awaitingClaudeCode]
+        tokenProvider._credentialState = .awaitingClaudeCode
+
+        await store.refresh(force: true)
+
+        #expect(repo.refreshCallCount == 2)
+        #expect(tokenProvider.ensureForceHistory == [false, false, true])
+        #expect(store.errorState == .tokenUnavailable)
+        #expect(store.hasConfig == true)
+        #expect(store.isAwaitingRefresh == true)
+        #expect(store.credentialState == .awaitingClaudeCode)
+        #expect(notif.lastTokenExpiredFire == nil)
+    }
+
+    @Test("401: forced check says reauth required, so no retry, reauth state and notification")
+    func retry401Reauth() async {
+        let (store, repo, tokenProvider, notif, _) = makeSUT()
+        store.notifTogglesProvider = { fixtureToggles() }
+        repo.stubbedError = expired401()
+        tokenProvider.readinessQueue = [.ready, .reauthRequired]
+
+        await store.refresh()
+
+        #expect(repo.refreshCallCount == 1)
+        #expect(tokenProvider.ensureForceHistory == [false, true])
+        #expect(store.errorState == .reauthRequired)
+        #expect(notif.lastTokenExpiredFire == true)
+    }
+
+    @Test("401: forced check says missing, so the store is unconfigured")
+    func retry401Missing() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT()
+        repo.stubbedError = expired401()
+        tokenProvider.readinessQueue = [.ready, .missing]
+
+        await store.refresh()
+
+        #expect(repo.refreshCallCount == 1)
+        #expect(store.hasConfig == false)
+        #expect(store.errorState == .tokenUnavailable)
+    }
+
+    @Test("401: forced check ready but the re-read yields no token falls back to tokenUnavailable")
+    func retry401ReadyWithoutToken() async {
+        let (store, repo, tokenProvider, notif, _) = makeSUT(token: "old")
+        store.notifTogglesProvider = { fixtureToggles() }
+        repo.stubbedError = expired401()
+        tokenProvider.dropTokenOnInvalidate = true
+
+        await store.refresh()
+
+        #expect(repo.refreshCallCount == 1)
+        #expect(tokenProvider.currentTokenCallCount == 2)
+        #expect(store.errorState == .tokenUnavailable)
+        #expect(store.hasConfig == true)
+        #expect(notif.lastTokenExpiredFire == true)
+    }
+
+    @Test("credentialState mirrors the provider after success and after every failure path")
+    func credentialStateMirrored() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT()
+        tokenProvider._credentialState = .ok(expiresAt: nil)
+
+        await store.refresh()
+        #expect(store.credentialState == .ok(expiresAt: nil))
+
+        let soon = Date().addingTimeInterval(600)
+        repo.stubbedError = APIError.invalidResponse(endpoint: "/api/oauth/usage")
+        tokenProvider._credentialState = .expiringSoon(expiresAt: soon)
+        await store.refresh(force: true)
+        #expect(store.errorState == .networkError)
+        #expect(store.credentialState == .expiringSoon(expiresAt: soon))
+
+        repo.stubbedError = APIError.rateLimited(retryAfter: 30, retryAfterRaw: "30", endpoint: "/api/oauth/usage")
+        tokenProvider._credentialState = .ok(expiresAt: soon)
+        await store.refresh(force: true)
+        #expect(store.errorState == .rateLimited)
+        #expect(store.credentialState == .ok(expiresAt: soon))
+    }
+
+    @Test("reloadConfig mirrors the provider's credential state")
+    func reloadConfigMirrorsCredentialState() async throws {
+        let (store, _, tokenProvider, _, _) = makeSUT()
+        tokenProvider._credentialState = .ok(expiresAt: nil)
+
+        store.reloadConfig()
+        #expect(store.credentialState == .ok(expiresAt: nil))
+        try await Task.sleep(for: .milliseconds(100))
+    }
+
+    @Test("isActiveProfile and the credential state are handed to the repository")
+    func isActiveProfilePropagated() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT()
+        tokenProvider._credentialState = .ok(expiresAt: nil)
+        store.isActiveProfile = false
+
+        await store.refresh()
+        #expect(repo.lastIsActiveProfile == false)
+        #expect(repo.lastCredentialState == "ok")
+
+        store.isActiveProfile = true
+        await store.refresh(force: true)
+        #expect(repo.lastIsActiveProfile == true)
+        #expect(repo.isActiveProfileHistory == [false, true])
+    }
+
+    @Test("the post-401 retry keeps the isActiveProfile flag")
+    func retryKeepsIsActiveProfile() async {
+        let (store, repo, _, _, _) = makeSUT()
+        store.isActiveProfile = false
+        repo.failOnceError = expired401()
+
+        await store.refresh()
+
+        #expect(repo.isActiveProfileHistory == [false, false])
+    }
+
+    // MARK: - Per-profile keys and snapshots
+
+    private func makeProfileStore(
+        profileID: UUID?,
+        legacyKeys: Bool,
+        sharedFile: MockSharedFileService = MockSharedFileService(),
+        repo: MockUsageRepository = MockUsageRepository()
+    ) -> UsageStore {
+        let tokenProvider = MockTokenProvider()
+        tokenProvider.token = "tok"
+        return UsageStore(
+            repository: repo,
+            tokenProvider: tokenProvider,
+            sharedFileService: sharedFile,
+            notificationService: MockNotificationService(),
+            profileID: profileID,
+            legacyKeys: legacyKeys
+        )
+    }
+
+    @Test("the pacing-samples key is namespaced per profile and legacy for the migrated default")
+    func sessionSamplesKeyNamespacing() {
+        let id = UUID()
+
+        let legacy = makeProfileStore(profileID: nil, legacyKeys: true)
+        #expect(legacy.sessionSamplesStorageKey == "sessionPacingSamples")
+        #expect(legacy.profileID == nil)
+
+        let migrated = makeProfileStore(profileID: id, legacyKeys: true)
+        #expect(migrated.sessionSamplesStorageKey == "sessionPacingSamples")
+        #expect(migrated.usesLegacyKeys)
+        #expect(migrated.profileID == id)
+
+        let extra = makeProfileStore(profileID: id, legacyKeys: false)
+        #expect(extra.sessionSamplesStorageKey == "sessionPacingSamples.\(id.uuidString)")
+        #expect(extra.usesLegacyKeys == false)
+    }
+
+    @Test("a profile store persists its samples under its own key")
+    func sessionSamplesPersistNamespaced() async {
+        let id = UUID()
+        let key = "sessionPacingSamples." + id.uuidString
+        defer { UserDefaults.standard.removeObject(forKey: key) }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        let repo = MockUsageRepository()
+        repo.stubbedUsage = .fixture(
+            fiveHourUtil: 40,
+            fiveHourResetsAt: formatter.string(from: Date().addingTimeInterval(3600))
+        )
+        let store = makeProfileStore(profileID: id, legacyKeys: false, repo: repo)
+        #expect(store.sessionSamples.isEmpty)
+
+        await store.refresh()
+
+        #expect(store.sessionSamples.count == 1)
+        #expect(UserDefaults.standard.data(forKey: key) != nil)
+        // A fresh store on the same key reloads them; another id sees nothing.
+        #expect(makeProfileStore(profileID: id, legacyKeys: false).sessionSamples.count == 1)
+        #expect(makeProfileStore(profileID: UUID(), legacyKeys: false).sessionSamples.isEmpty)
+    }
+
+    @Test("a profile store loads its own snapshot, never the active profile's legacy one")
+    func cachedUsagePerProfile() {
+        let id = UUID()
+        let sharedFile = MockSharedFileService()
+        let now = Date()
+        sharedFile.updateAfterSync(usage: CachedUsage(usage: .fixture(fiveHourUtil: 11), fetchDate: now), syncDate: now)
+
+        let extra = makeProfileStore(profileID: id, legacyKeys: false, sharedFile: sharedFile)
+        #expect(extra.cachedUsage == nil)
+        extra.loadCached()
+        #expect(extra.lastUsage == nil)
+
+        sharedFile.updateProfileUsage(
+            profileID: id,
+            usage: CachedUsage(usage: .fixture(fiveHourUtil: 22), fetchDate: now),
+            syncDate: now,
+            credentialState: nil
+        )
+        #expect(extra.cachedUsage?.usage.fiveHour?.utilization == 22)
+        extra.loadCached()
+        #expect(extra.fiveHourPct == 22)
+
+        // The migrated default profile falls back to the legacy snapshot
+        // until its own entry exists.
+        let migrated = makeProfileStore(profileID: UUID(), legacyKeys: true, sharedFile: sharedFile)
+        #expect(migrated.cachedUsage?.usage.fiveHour?.utilization == 11)
+
+        // A legacy (profile-less) store keeps reading the top-level snapshot.
+        let legacy = makeProfileStore(profileID: nil, legacyKeys: true, sharedFile: sharedFile)
+        #expect(legacy.cachedUsage?.usage.fiveHour?.utilization == 11)
+    }
+
+    // MARK: - refreshProfile / auto-refresh bookkeeping
+
+    @Test("refreshProfile fills the account identity")
+    func refreshProfileFillsIdentity() async {
+        let (store, repo, _, _, _) = makeSUT()
+        repo.stubbedProfile = .fixture(email: "me@example.com", hasClaudeMax: true)
+
+        await store.refreshProfile()
+
+        #expect(store.accountIdentity == UsageStore.AccountIdentity(
+            email: "me@example.com", uuid: "test-uuid", planTypeRaw: PlanType.max.rawValue
+        ))
+        #expect(store.planType == .max)
+    }
+
+    @Test("refreshProfile skips the request when the provider is not ready")
+    func refreshProfileSkipsWhenNotReady() async {
+        let (store, repo, tokenProvider, _, _) = makeSUT()
+        tokenProvider.readiness = .awaitingClaudeCode
+        tokenProvider._credentialState = .awaitingClaudeCode
+
+        await store.refreshProfile()
+
+        #expect(repo.fetchProfileCallCount == 0)
+        #expect(store.accountIdentity == nil)
+        #expect(store.credentialState == .awaitingClaudeCode)
+        #expect(store.errorState == .none)
+    }
+
+    @Test("startAutoRefresh records the stagger; isAutoRefreshRunning tracks stop")
+    func autoRefreshStaggerBookkeeping() {
+        let (store, _, _, _, _) = makeSUT()
+        #expect(store.isAutoRefreshRunning == false)
+
+        store.startAutoRefresh(interval: 600, initialDelay: 5)
+        #expect(store.autoRefreshInitialDelay == 5)
+        #expect(store.isAutoRefreshRunning == true)
+
+        store.stopAutoRefresh()
+        #expect(store.isAutoRefreshRunning == false)
+    }
 }

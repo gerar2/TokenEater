@@ -5,11 +5,16 @@ extension MenuBarRenderer.RenderData {
     /// Builds render data from the live stores. Shared by the status bar
     /// (`StatusBarController`) and the menu bar editor's live preview, so both
     /// render the exact same pixels for the current composition.
+    ///
+    /// `profile` feeds the `profileLabel` segment; nil (the default, and the
+    /// single-profile case) draws nothing so the menu bar is unchanged for
+    /// users who never added a second account.
     static func live(
         usage: UsageStore,
         theme: ThemeStore,
         settings: SettingsStore,
-        vendor: VendorStatusStore
+        vendor: VendorStatusStore,
+        profile: (label: String, colorHex: String)? = nil
     ) -> MenuBarRenderer.RenderData {
         MenuBarRenderer.RenderData(
             composition: settings.menuBarComposition,
@@ -49,7 +54,9 @@ extension MenuBarRenderer.RenderData {
             outageHealth: vendor.worstHealth,
             nextPollSeconds: vendor.nextPollDate.map { max(0, Int(ceil($0.timeIntervalSinceNow))) },
             extraCreditsPct: usage.extraCreditsPct,
-            hasExtraCredits: usage.hasExtraCredits
+            hasExtraCredits: usage.hasExtraCredits,
+            profileLabel: profile?.label,
+            profileColorHex: profile?.colorHex
         )
     }
 }

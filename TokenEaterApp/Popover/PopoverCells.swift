@@ -60,6 +60,7 @@ struct PopoverElementCellView: View {
             switch element.kind {
             case .watchers: PopoverWatchersToggle()
             case .timestamp: PopoverTimestamp()
+            case .profileSwitcher: PopoverProfileSwitcherCell()
             default: EmptyView()
             }
         case .actionButton:
@@ -596,6 +597,140 @@ private struct PopoverRefreshButtonCell: View {
             withAnimation(.easeInOut(duration: 0.15)) { refreshHovering = hovering }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+// MARK: - Profile switcher (multi-profile utility row)
+//
+// One capsule chip per enabled profile: colour dot + name + that profile's
+// live 5h percentage; the active chip is filled with the profile colour and a
+// tap makes another profile active. The popover root is keyed by the active
+// id (`ActiveProfileHost`), so the rest of the popover re-mounts on the new
+// store by itself - this cell never reads the environment `UsageStore`.
+
+struct PopoverProfileSwitcherCell: View {
+    @EnvironmentObject private var profileStore: ProfileStore
+
+    /// Above this many chips an equal-width row crushes the names (268 px
+    /// usable); the row then scrolls horizontally with content-hugging chips.
+    private static let equalWidthLimit = 3
+
+    var body: some View {
+        let profiles = profileStore.enabledProfiles
+        // Nothing to switch to -> no row at all. The presence gate already
+        // hides the element on single-profile catalogs; this covers "several
+        // profiles, all but one paused".
+        if profiles.count >= 2 {
+            Group {
+                if profiles.count <= Self.equalWidthLimit {
+                    HStack(spacing: 6) {
+                        ForEach(profiles) { profile in
+                            chip(profile, hugging: false)
+                        }
+                    }
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(profiles) { profile in
+                                chip(profile, hugging: true)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(6)
+            .popoverCard()
+            .help(String(localized: "popover.profileSwitcher.hint"))
+        }
+    }
+
+    @ViewBuilder
+    private func chip(_ profile: AccountProfile, hugging: Bool) -> some View {
+        // `usageStore(for:)` creates the store lazily; the enabled profiles
+        // already have one after bootstrap, so this is a dictionary lookup.
+        if let usage = profileStore.usageStore(for: profile.id) {
+            ProfileSwitcherChip(
+                profile: profile,
+                usage: usage,
+                isActive: profile.id == profileStore.activeProfileID,
+                hugging: hugging
+            ) {
+                withAnimation(DS.Motion.springSnap) {
+                    profileStore.setActive(profile.id)
+                }
+            }
+        }
+    }
+}
+
+/// One chip. Holds its own `@ObservedObject` on the profile's store so a
+/// non-active profile's percentage updates live without the parent
+/// re-evaluating for every store's changes.
+private struct ProfileSwitcherChip: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovering = false
+
+    let profile: AccountProfile
+    @ObservedObject var usage: UsageStore
+    let isActive: Bool
+    /// Content-hugging (scrolling row) vs. sharing the row width equally.
+    let hugging: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        let tint = Color(hex: profile.colorHex)
+        Button(action: onSelect) {
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(tint)
+                    .frame(width: 6, height: 6)
+                    .dsGlow(tint, radius: 3, opacity: isActive ? 0.6 : 0)
+                Text(profile.name)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white.opacity(isActive ? 0.95 : 0.6))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Text(valueText)
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(isActive ? tint : .white.opacity(0.4))
+                    // The value never truncates; a long name gives way first.
+                    .layoutPriority(1)
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .frame(maxWidth: hugging ? nil : .infinity)
+            .background(
+                Capsule().fill(isActive ? tint.opacity(0.22) : Color.white.opacity(hovering ? 0.07 : 0.04))
+            )
+            .overlay(
+                Capsule().stroke(
+                    isActive ? tint.opacity(0.7) : Color.white.opacity(hovering ? 0.12 : 0.06),
+                    lineWidth: 1
+                )
+            )
+            .scaleEffect(hovering && !reduceMotion ? 1.03 : 1)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering in
+            withAnimation(DS.Motion.springSnap) { hovering = isHovering }
+        }
+        .accessibilityLabel(accessibilityText)
+        .accessibilityAddTraits(isActive ? .isSelected : [])
+    }
+
+    /// "-" until the profile has fetched once, so a freshly added or paused
+    /// account never reads as a real 0%.
+    private var valueText: String {
+        usage.lastUsage == nil ? "-" : "\(usage.fiveHourPct)%"
+    }
+
+    private var accessibilityText: String {
+        if usage.lastUsage == nil {
+            return String(format: String(localized: "popover.profileSwitcher.chip.noData"), profile.name)
+        }
+        return String(format: String(localized: "popover.profileSwitcher.chip"), profile.name, usage.fiveHourPct)
     }
 }
 
