@@ -36,7 +36,8 @@ struct ClaudeCodeCredentialStoreTests {
         decryptedData: Data? = nil,
         hasEncryptionKey: Bool = false,
         silentRebootstrapResult: Bool = false,
-        exitStatus: Int32 = 0
+        exitStatus: Int32 = 0,
+        globalConfigs: [String: String] = [:]
     ) -> (sut: ClaudeCodeCredentialStore, capture: Capture, decryption: MockElectronDecryptionService) {
         let capture = Capture()
         let decryption = MockElectronDecryptionService()
@@ -70,7 +71,8 @@ struct ClaudeCodeCredentialStoreTests {
                     terminationStatus: exitStatus,
                     stderr: exitStatus == 0 ? "" : "User interaction is not allowed."
                 )
-            }
+            },
+            globalConfigReader: { path in globalConfigs[path].map { Data($0.utf8) } }
         )
         return (sut, capture, decryption)
     }
@@ -308,5 +310,40 @@ struct ClaudeCodeCredentialStoreTests {
             try sut.write(Self.rotated, raw: [:], backing: .claudeDesktop)
         }
         #expect(capture.runs.isEmpty)
+    }
+
+    // MARK: - Signed-in account hint (.claude.json)
+
+    @Test("A read reports the account Claude Code says is signed in: ~/.claude.json for the default dir")
+    func accountHintDefaultDir() throws {
+        let (sut, _, _) = makeSUT(
+            keychainPayload: Self.keychainJSON,
+            globalConfigs: ["/Users/tester/.claude.json": #"{"oauthAccount":{"accountUuid":"acc-1","emailAddress":"a@b.c"},"projects":{}}"#]
+        )
+        #expect(sut.globalConfigPath(configDir: nil) == "/Users/tester/.claude.json")
+        let read = try #require(sut.read(configDir: nil))
+        #expect(read.accountUUID == "acc-1")
+    }
+
+    @Test("A custom config dir reads <dir>/.claude.json, also on the file fallback")
+    func accountHintCustomDir() throws {
+        let dir = "/Users/tester/.claude-work"
+        let (sut, _, _) = makeSUT(
+            filePayload: Self.fileJSON,
+            globalConfigs: [dir + "/.claude.json": #"{"oauthAccount":{"accountUuid":"acc-work"}}"#]
+        )
+        #expect(sut.globalConfigPath(configDir: dir + "/") == dir + "/.claude.json")
+        let read = try #require(sut.read(configDir: dir))
+        #expect(read.backing == .file(path: dir + "/.credentials.json"))
+        #expect(read.accountUUID == "acc-work")
+    }
+
+    @Test("A missing or malformed .claude.json leaves the hint nil")
+    func accountHintMissing() throws {
+        let (missing, _, _) = makeSUT(keychainPayload: Self.keychainJSON)
+        #expect(try #require(missing.read(configDir: nil)).accountUUID == nil)
+        let (broken, _, _) = makeSUT(keychainPayload: Self.keychainJSON, globalConfigs: ["/Users/tester/.claude.json": "{not json"])
+        #expect(try #require(broken.read(configDir: nil)).accountUUID == nil)
+        #expect(ClaudeCodeCredentialStore.accountUUID(fromGlobalConfig: Data(#"{"oauthAccount":{"accountUuid":""}}"#.utf8)) == nil)
     }
 }

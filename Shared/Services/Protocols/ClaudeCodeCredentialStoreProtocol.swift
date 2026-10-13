@@ -22,6 +22,10 @@ struct ClaudeCodeCredentialRead {
     /// the Claude Desktop path).
     let raw: [String: Any]
     let backing: ClaudeCodeCredentialBacking
+    /// `oauthAccount.accountUuid` from the config dir's `.claude.json`: the
+    /// account Claude Code says is signed in there. A hint, read without any
+    /// network call; nil when unknown (file missing, Claude Desktop backing).
+    var accountUUID: String? = nil
 }
 
 enum ClaudeCodeCredentialStoreError: Error, Equatable {

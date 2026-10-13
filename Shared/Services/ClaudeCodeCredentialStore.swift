@@ -21,6 +21,9 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
 
     typealias SecurityReaderFactory = @Sendable (_ service: String) -> SecurityCLIReaderProtocol
     typealias FileReaderFactory = @Sendable (_ path: String) -> CredentialsFileReaderProtocol
+    /// Reads Claude Code's global config (`.claude.json`). Injectable so tests
+    /// never touch the real home.
+    typealias GlobalConfigReader = @Sendable (_ path: String) -> Data?
 
     struct ProcessRunResult: Equatable {
         let terminationStatus: Int32
@@ -39,6 +42,10 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
 
     static let securityExecutable = "/usr/bin/security"
     static let credentialsFileName = ".credentials.json"
+    /// Claude Code's global config: `~/.claude.json` for the default config
+    /// dir, `<dir>/.claude.json` for a `CLAUDE_CONFIG_DIR` (verified 2.1.261).
+    /// Its `oauthAccount.accountUuid` names the account signed in there.
+    static let globalConfigFileName = ".claude.json"
     /// `security add-generic-password` can hang on Keychain authorization the
     /// same way the read does (#217). A bit longer than the 3 s read watchdog
     /// because an update also rewrites the item's ACL.
@@ -51,6 +58,7 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
     private let configReader: ClaudeConfigReaderProtocol
     private let decryptionService: ElectronDecryptionServiceProtocol
     private let processRunner: ProcessRunner
+    private let globalConfigReader: GlobalConfigReader
 
     /// - Parameters:
     ///   - realHome: the real home directory (`getpwuid`), never the sandbox
@@ -64,7 +72,8 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
         fileReaderFactory: @escaping FileReaderFactory = { CredentialsFileReader(filePath: $0) },
         configReader: ClaudeConfigReaderProtocol = ClaudeConfigReader(),
         decryptionService: ElectronDecryptionServiceProtocol = ElectronDecryptionService(),
-        processRunner: @escaping ProcessRunner = { try ClaudeCodeCredentialStore.runProcess(executable: $0, arguments: $1, timeout: $2) }
+        processRunner: @escaping ProcessRunner = { try ClaudeCodeCredentialStore.runProcess(executable: $0, arguments: $1, timeout: $2) },
+        globalConfigReader: @escaping GlobalConfigReader = { FileManager.default.contents(atPath: $0) }
     ) {
         self.realHome = realHome
         self.account = account
@@ -73,6 +82,7 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
         self.configReader = configReader
         self.decryptionService = decryptionService
         self.processRunner = processRunner
+        self.globalConfigReader = globalConfigReader
     }
 
     // MARK: - Read
@@ -81,13 +91,19 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
         let service = ClaudeKeychainServiceName.service(forConfigDir: configDir, realHome: realHome)
         if let payload = securityReaderFactory(service).readPayload(),
            let parsed = ClaudeCredentialsPayload.parse(string: payload) {
-            return ClaudeCodeCredentialRead(credentials: parsed.credentials, raw: parsed.raw, backing: .keychain(service: service))
+            return ClaudeCodeCredentialRead(
+                credentials: parsed.credentials, raw: parsed.raw, backing: .keychain(service: service),
+                accountUUID: accountUUID(configDir: configDir)
+            )
         }
 
         let path = credentialsFilePath(configDir: configDir)
         if let data = fileReaderFactory(path).readPayload(),
            let parsed = ClaudeCredentialsPayload.parse(data) {
-            return ClaudeCodeCredentialRead(credentials: parsed.credentials, raw: parsed.raw, backing: .file(path: path))
+            return ClaudeCodeCredentialRead(
+                credentials: parsed.credentials, raw: parsed.raw, backing: .file(path: path),
+                accountUUID: accountUUID(configDir: configDir)
+            )
         }
 
         // Claude Desktop keeps a single token cache for the machine, so it can
@@ -110,6 +126,29 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
     /// `<resolved config dir>/.credentials.json`.
     func credentialsFilePath(configDir: String?) -> String {
         resolvedConfigDir(configDir) + "/" + Self.credentialsFileName
+    }
+
+    /// Where Claude Code keeps its global config for this config dir: the home
+    /// directory for the default `~/.claude`, the dir itself otherwise.
+    func globalConfigPath(configDir: String?) -> String {
+        if ClaudeKeychainServiceName.isDefaultDir(configDir, realHome: realHome) {
+            return realHome + "/" + Self.globalConfigFileName
+        }
+        return resolvedConfigDir(configDir) + "/" + Self.globalConfigFileName
+    }
+
+    /// The account Claude Code reports as signed in to this config dir.
+    func accountUUID(configDir: String?) -> String? {
+        globalConfigReader(globalConfigPath(configDir: configDir)).flatMap(Self.accountUUID(fromGlobalConfig:))
+    }
+
+    /// `oauthAccount.accountUuid` from a `.claude.json` payload.
+    static func accountUUID(fromGlobalConfig data: Data) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let account = object["oauthAccount"] as? [String: Any],
+              let uuid = account["accountUuid"] as? String,
+              !uuid.isEmpty else { return nil }
+        return uuid
     }
 
     private func resolvedConfigDir(_ configDir: String?) -> String {

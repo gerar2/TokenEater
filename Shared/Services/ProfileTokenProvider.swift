@@ -25,6 +25,10 @@ private let logger = Logger(subsystem: "com.tokeneater.app", category: "ProfileT
 /// synchronous and never touches the network.
 final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     typealias LegacyBootstrap = @Sendable () throws -> Void
+    /// Resolves the account an access token belongs to (`/api/oauth/profile`),
+    /// nil on failure. Guards adoption of a captured account's tokens from
+    /// Claude Code's store (see `followClaudeCodeIfSignedIn`).
+    typealias IdentityVerifier = @Sendable (_ accessToken: String) async -> String?
 
     private let lock = NSLock()
     private var profile: AccountProfile
@@ -37,6 +41,19 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     /// Without this a profile whose token expired kept hitting the token
     /// endpoint on every tick, which is exactly what keeps a 429 going.
     private var renewalBlockedUntil: Date?
+    /// A refresh token the endpoint rejected (400 / 401). Never sent again:
+    /// retrying it cannot succeed, it only burns requests every tick. Cleared
+    /// when the credentials change (adoption, re-capture) or by an explicit
+    /// "Refresh now".
+    private var deadRefreshToken: String?
+    /// Last known answer to "is this captured account signed in to Claude
+    /// Code right now?". While true Claude Code owns the token chain: we follow
+    /// its rotations and never call the refresh grant ourselves, which would
+    /// rotate the chain under Claude Code. Kept on a failed read.
+    private var claudeCodeOwnsAccount = false
+    /// A live access token whose identity check failed, so it is not verified
+    /// again on every tick.
+    private var rejectedLiveAccessToken: String?
     private var consecutiveRenewalFailures = 0
     private var lastRenewalFailureWasRateLimit = false
 
@@ -52,6 +69,7 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
     private let realHome: String
     private let now: @Sendable () -> Date
     private let legacyBootstrap: LegacyBootstrap
+    private let identityVerifier: IdentityVerifier?
     private let serialQueue = AsyncSerialQueue()
 
     /// - Parameters:
@@ -68,7 +86,8 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         proxyProvider: @escaping @Sendable () -> ProxyConfig?,
         realHome: String = ClaudeKeychainServiceName.realHome,
         now: @escaping @Sendable () -> Date = { Date() },
-        legacyBootstrap: @escaping LegacyBootstrap = { try TokenProvider().bootstrap() }
+        legacyBootstrap: @escaping LegacyBootstrap = { try TokenProvider().bootstrap() },
+        identityVerifier: IdentityVerifier? = nil
     ) {
         self.profile = profile
         self.vault = vault
@@ -78,6 +97,7 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         self.realHome = realHome
         self.now = now
         self.legacyBootstrap = legacyBootstrap
+        self.identityVerifier = identityVerifier
     }
 
     // MARK: - Profile
@@ -106,7 +126,15 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         lock.withLock {
             renewalBlockedUntil = nil
             consecutiveRenewalFailures = 0
+            deadRefreshToken = nil
+            rejectedLiveAccessToken = nil
         }
+    }
+
+    /// True while this captured account is signed in to Claude Code's default
+    /// store, i.e. TokenEater follows Claude Code instead of renewing.
+    var isFollowingClaudeCode: Bool {
+        lock.withLock { profile.source == .managed && claudeCodeOwnsAccount }
     }
 
     // MARK: - TokenProviderProtocol
@@ -184,7 +212,14 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
 
         // 2-3. Live store read + adoption. Off the cooperative pool: it may
         // block up to 3 s on `/usr/bin/security`.
-        _ = await blocking { self.reconcileWithLiveStore(profile: profile) }
+        let live = await blocking { self.reconcileWithLiveStore(profile: profile) }
+
+        // 3b. A captured account that is signed in to Claude Code right now:
+        // Claude Code owns the chain and rotates it, so follow its tokens.
+        if profile.source == .managed, let live {
+            await followClaudeCodeIfSignedIn(live, profile: profile)
+        }
+        let claudeCodeOwns = profile.source == .managed && lock.withLock { claudeCodeOwnsAccount }
 
         // 4. Nothing anywhere.
         guard let current = lock.withLock({ cached }) else {
@@ -200,15 +235,21 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
             return .ready
         }
 
-        // 6. Renewal belongs to Claude Code: re-read on the next tick.
-        guard profile.effectiveRenewalPolicy == .tokenEater else {
+        // 6. Renewal belongs to Claude Code (linked policy, or a captured
+        // account Claude Code is signed in to): re-read on the next tick.
+        guard profile.effectiveRenewalPolicy == .tokenEater, !claudeCodeOwns else {
             setState(.awaitingClaudeCode)
             return .awaitingClaudeCode
         }
 
-        // 7. Nothing to renew with (Claude Desktop-only credentials).
-        guard current.refreshToken != nil else {
+        // 7. Nothing to renew with (Claude Desktop-only credentials), or a
+        // refresh token the endpoint already rejected.
+        guard let refreshToken = current.refreshToken else {
             setState(.reauthRequired(reason: "noRefreshToken"))
+            return .reauthRequired
+        }
+        if refreshToken == lock.withLock({ deadRefreshToken }) {
+            setState(.reauthRequired(reason: "invalidGrant"))
             return .reauthRequired
         }
 
@@ -226,7 +267,8 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
         } catch let error as OAuthRefreshError {
             switch error {
             case .invalidGrant(let status, _):
-                logger.error("Refresh grant rejected (\(status, privacy: .public)) for profile \(self.idPrefix, privacy: .public)")
+                logger.error("Refresh grant rejected (\(status, privacy: .public)) for profile \(self.idPrefix, privacy: .public); not retried until the credentials change")
+                lock.withLock { deadRefreshToken = refreshToken }
                 setState(.reauthRequired(reason: "invalidGrant(\(status))"))
                 return .reauthRequired
             case .noRefreshToken:
@@ -332,6 +374,47 @@ final class ProfileTokenProvider: TokenProviderProtocol, @unchecked Sendable {
             logger.info("Adopted live credentials for profile \(self.idPrefix, privacy: .public) from \(self.describe(live.backing, profile: profile), privacy: .public)")
         }
         return live
+    }
+
+    /// Step 3b of `ensureFreshToken` for captured profiles.
+    ///
+    /// A capture copies the chain Claude Code holds at that moment. As long as
+    /// the account stays signed in to `~/.claude`, Claude Code keeps rotating
+    /// that chain (new access AND refresh token), so the copy cannot be tied
+    /// to it by token equality and its refresh token eventually stops working.
+    /// Instead: when `.claude.json` says the account is signed in there, adopt
+    /// whatever tokens Claude Code holds, after checking with
+    /// `/api/oauth/profile` that they really belong to this account (a
+    /// `claude /login` can be caught half-written). Expired live tokens are
+    /// not verified (the endpoint would 401); they are picked up once Claude
+    /// Code refreshes them.
+    private func followClaudeCodeIfSignedIn(_ live: ClaudeCodeCredentialRead, profile: AccountProfile) async {
+        let owns = live.accountUUID != nil && live.accountUUID == profile.accountUUID
+        let candidate: OAuthCredentials? = lock.withLock {
+            claudeCodeOwnsAccount = owns
+            guard owns,
+                  live.credentials.accessToken != cached?.accessToken,
+                  live.credentials.accessToken != rejectedLiveAccessToken else { return nil }
+            return live.credentials
+        }
+        guard let candidate, let verifier = identityVerifier, let expected = profile.accountUUID,
+              !candidate.isExpired(now: now()) else { return }
+
+        guard await verifier(candidate.accessToken) == expected else {
+            lock.withLock { rejectedLiveAccessToken = candidate.accessToken }
+            logger.info("Claude Code's credentials did not verify as the account of profile \(self.idPrefix, privacy: .public); not adopted")
+            return
+        }
+        lock.withLock {
+            cached = candidate
+            _credentialState = ProfileCredentialState.from(candidate, now: now())
+        }
+        do {
+            try vault.save(candidate, profileID: profile.id)
+        } catch {
+            logger.error("Vault save failed for profile \(self.idPrefix, privacy: .public): \(String(describing: error), privacy: .public)")
+        }
+        logger.info("Following Claude Code for profile \(self.idPrefix, privacy: .public): adopted its current credentials (identity verified)")
     }
 
     /// Adoption rule for a live read.

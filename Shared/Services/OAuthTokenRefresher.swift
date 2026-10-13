@@ -114,7 +114,9 @@ final class OAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendabl
             )
         case 400, 401:
             let body = String(decoding: data.prefix(Self.maxErrorBodyBytes), as: UTF8.self)
-            logger.info("refresh grant rejected with \(response.statusCode, privacy: .public)")
+            // OAuth error bodies carry no secret, only the reason (e.g.
+            // `invalid_grant`): log it so a dead chain can be diagnosed.
+            logger.error("refresh grant rejected with \(response.statusCode, privacy: .public): \(Self.oauthErrorSummary(body), privacy: .public)")
             throw OAuthRefreshError.invalidGrant(status: response.statusCode, body: body)
         case 429:
             // The token endpoint rate-limits refreshes. The body and header are
@@ -130,6 +132,20 @@ final class OAuthTokenRefresher: OAuthTokenRefresherProtocol, @unchecked Sendabl
             logger.info("refresh grant failed with HTTP \(response.statusCode, privacy: .public): \(body, privacy: .public)")
             throw OAuthRefreshError.http(status: response.statusCode)
         }
+    }
+
+    /// `error: error_description` from an OAuth error body, else its first
+    /// 200 characters.
+    static func oauthErrorSummary(_ body: String) -> String {
+        if let data = body.data(using: .utf8),
+           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let code = object["error"] as? String {
+            if let description = object["error_description"] as? String, !description.isEmpty {
+                return "\(code): \(description)"
+            }
+            return code
+        }
+        return String(body.prefix(200))
     }
 
     /// The User-Agent Claude Code sends to the token endpoint.

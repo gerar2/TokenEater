@@ -6,10 +6,10 @@
 	<integer>13</integer>
 	<key>logs</key>
 	<dict>
-		<key>761A62B2-91A6-4B0A-B777-55D699F0B7E9</key>
+		<key>0828A250-D674-4324-90CC-A7DE3B1C47AB</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>45B94A47-6521-4CE2-89A5-BBAD3D8E2377</string>
+			<string>DCA07784-AC38-48E8-8631-813D95BC58D1</string>
 			<key>auxiliaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
@@ -21,7 +21,7 @@
 				<key>totalNumberOfTestFailures</key>
 				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>3</integer>
+				<integer>2</integer>
 			</dict>
 			<key>className</key>
 			<string>IDESchemeActionsInvocationRecord</string>
@@ -30,7 +30,7 @@
 			<key>domainType</key>
 			<string>com.apple.dt.unit.cocoaUnitTest</string>
 			<key>fileName</key>
-			<string>Test-TokenEaterTests-2026.10.09_08-26-31-+0100.xcresult</string>
+			<string>Test-TokenEaterTests-2026.10.13_11-23-05-+0100.xcresult</string>
 			<key>hasAuxiliaryLog</key>
 			<true/>
 			<key>hasPrimaryLog</key>
@@ -46,7 +46,7 @@
 				<key>totalNumberOfTestFailures</key>
 				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>3</integer>
+				<integer>2</integer>
 			</dict>
 			<key>schemeIdentifier-containerName</key>
 			<string>TokenEater project</string>
@@ -57,13 +57,13 @@
 			<key>signature</key>
 			<string>Test TokenEaterTests</string>
 			<key>timeStartedRecording</key>
-			<real>813223591.05426097</real>
+			<real>813579785.93890703</real>
 			<key>timeStoppedRecording</key>
-			<real>813223607.55449605</real>
+			<real>813579803.22561502</real>
 			<key>title</key>
 			<string>Test TokenEaterTests</string>
 			<key>uniqueIdentifier</key>
-			<string>761A62B2-91A6-4B0A-B777-55D699F0B7E9</string>
+			<string>0828A250-D674-4324-90CC-A7DE3B1C47AB</string>
 		</dict>
 		<key>F35A99EB-BEC6-4B46-B4E9-EFED39BD06DB</key>
 		<dict>

@@ -273,4 +273,11 @@ struct OAuthTokenRefresherTests {
         #expect(future == 600)
         #expect(OAuthTokenRefresher.parseRetryAfter("Fri, 15 Jan 2027 07:00:00 GMT", now: now) == nil)
     }
+
+    @Test("OAuth error bodies are summarised as error: description for the log")
+    func oauthErrorSummary() {
+        #expect(OAuthTokenRefresher.oauthErrorSummary(#"{"error":"invalid_grant","error_description":"Refresh token not found or invalid"}"#) == "invalid_grant: Refresh token not found or invalid")
+        #expect(OAuthTokenRefresher.oauthErrorSummary(#"{"error":"invalid_request"}"#) == "invalid_request")
+        #expect(OAuthTokenRefresher.oauthErrorSummary("plain text") == "plain text")
+    }
 }

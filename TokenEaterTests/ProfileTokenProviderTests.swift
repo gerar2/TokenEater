@@ -47,7 +47,8 @@ struct ProfileTokenProviderTests {
         vaultSeed: OAuthCredentials? = nil,
         refresher: OAuthTokenRefresherProtocol? = nil,
         legacyBootstrap: ProfileTokenProvider.LegacyBootstrap? = nil,
-        clock: Clock? = nil
+        clock: Clock? = nil,
+        identityVerifier: ProfileTokenProvider.IdentityVerifier? = nil
     ) -> Env {
         let vault = InMemoryProfileCredentialVault()
         if let vaultSeed { vault.storage[profile.id] = vaultSeed }
@@ -62,7 +63,8 @@ struct ProfileTokenProviderTests {
             proxyProvider: { nil },
             realHome: "/Users/tester",
             now: { clock.now },
-            legacyBootstrap: legacyBootstrap ?? {}
+            legacyBootstrap: legacyBootstrap ?? {},
+            identityVerifier: identityVerifier
         )
         return Env(provider: provider, vault: vault, store: store, refresher: mockRefresher)
     }
@@ -629,5 +631,128 @@ struct ProfileTokenProviderTests {
         env.provider.clearRenewalBackoff()
         #expect(await env.provider.ensureFreshToken(force: false) == .ready)
         #expect(env.refresher.refreshCallCount == 2)
+    }
+
+    // MARK: - Captured account signed in to Claude Code / dead refresh tokens
+
+    /// Records identity checks and answers with a fixed account.
+    private final class Verifier: @unchecked Sendable {
+        var answer: String?
+        var calls: [String] = []
+        init(answer: String?) { self.answer = answer }
+        var closure: ProfileTokenProvider.IdentityVerifier {
+            { [self] token in
+                calls.append(token)
+                return answer
+            }
+        }
+    }
+
+    private func captured(account: String = "acc-L") -> AccountProfile {
+        var profile = managed()
+        profile.accountUUID = account
+        return profile
+    }
+
+    @Test("A captured account signed in to Claude Code follows its rotated tokens after an identity check")
+    func followsClaudeCodeRotation() async {
+        let profile = captured()
+        let verifier = Verifier(answer: "acc-L")
+        // The capture's chain is dead (Claude Code rotated it) and expired.
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-capture", refresh: "rt-capture", ttl: -60), identityVerifier: verifier.closure)
+        let rotated = credentials("at-cc", refresh: "rt-cc", ttl: 3600)
+        env.store.stub(configDir: nil, credentials: rotated, accountUUID: "acc-L")
+
+        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        #expect(env.provider.currentToken() == "at-cc")
+        #expect(env.vault.storage[profile.id] == rotated)
+        #expect(verifier.calls == ["at-cc"])
+        #expect(env.refresher.refreshCallCount == 0)
+        #expect(env.provider.isFollowingClaudeCode)
+
+        // Same tokens next tick: no second identity check.
+        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        #expect(verifier.calls.count == 1)
+    }
+
+    @Test("Live tokens that do not verify as the account are not adopted, nor re-checked every tick")
+    func identityMismatchNotAdopted() async {
+        let profile = captured()
+        let verifier = Verifier(answer: "acc-OTHER")
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-capture", refresh: "rt-capture", ttl: -60), identityVerifier: verifier.closure)
+        env.store.stub(configDir: nil, credentials: credentials("at-cc", refresh: "rt-cc", ttl: 3600), accountUUID: "acc-L")
+
+        // The hint says Claude Code owns the account, so we neither adopt
+        // (identity failed) nor renew ourselves (that would rotate its chain).
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+        #expect(env.provider.currentToken() == "at-capture")
+        #expect(env.refresher.refreshCallCount == 0)
+        _ = await env.provider.ensureFreshToken(force: false)
+        #expect(verifier.calls.count == 1)
+    }
+
+    @Test("While Claude Code holds the account a captured profile never calls the refresh grant")
+    func neverRefreshesWhileClaudeCodeOwns() async {
+        let profile = captured()
+        let verifier = Verifier(answer: "acc-L")
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-capture", refresh: "rt-capture", ttl: -60), identityVerifier: verifier.closure)
+        // Claude Code is idle: its own token expired too. Expired tokens are
+        // not verified (the profile endpoint would 401).
+        env.store.stub(configDir: nil, credentials: credentials("at-cc", refresh: "rt-cc", ttl: -30), accountUUID: "acc-L")
+
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+        #expect(await env.provider.ensureFreshToken(force: true) == .awaitingClaudeCode)
+        #expect(env.provider.credentialState == .awaitingClaudeCode)
+        #expect(env.refresher.refreshCallCount == 0)
+        #expect(verifier.calls.isEmpty)
+    }
+
+    @Test("Once Claude Code signs in to another account the captured profile renews on its own again")
+    func renewsAfterAccountLeavesClaudeCode() async {
+        let profile = captured()
+        let verifier = Verifier(answer: "acc-L")
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-capture", refresh: "rt-capture", ttl: -60), identityVerifier: verifier.closure)
+        env.store.stub(configDir: nil, credentials: credentials("at-cc", refresh: "rt-cc", ttl: -30), accountUUID: "acc-L")
+        #expect(await env.provider.ensureFreshToken(force: false) == .awaitingClaudeCode)
+
+        env.store.stub(configDir: nil, credentials: credentials("at-x", refresh: "rt-x", ttl: 3600), accountUUID: "acc-X")
+        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        #expect(env.refresher.refreshCallCount == 1)
+        #expect(env.provider.currentToken() == "at-capture-refreshed")
+        #expect(env.provider.isFollowingClaudeCode == false)
+    }
+
+    @Test("A rejected refresh token is not retried until the credentials change or the user asks")
+    func deadRefreshTokenNotRetried() async {
+        let profile = managed()
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-old", refresh: "rt-dead", ttl: -60))
+        env.refresher.stubbedError = OAuthRefreshError.invalidGrant(status: 400, body: "{\"error\":\"invalid_grant\"}")
+
+        #expect(await env.provider.ensureFreshToken(force: false) == .reauthRequired)
+        #expect(await env.provider.ensureFreshToken(force: false) == .reauthRequired)
+        #expect(await env.provider.ensureFreshToken(force: true) == .reauthRequired)
+        #expect(env.refresher.refreshCallCount == 1)
+
+        // "Refresh now" allows one more attempt.
+        env.provider.clearRenewalBackoff()
+        _ = await env.provider.ensureFreshToken(force: false)
+        #expect(env.refresher.refreshCallCount == 2)
+    }
+
+    @Test("A captured profile stuck on a dead chain recovers when Claude Code signs in with that account")
+    func recoversFromDeadChainViaClaudeCode() async {
+        let profile = captured()
+        let verifier = Verifier(answer: "acc-L")
+        let env = makeSUT(profile: profile, vaultSeed: credentials("at-old", refresh: "rt-dead", ttl: -60), identityVerifier: verifier.closure)
+        env.refresher.stubbedError = OAuthRefreshError.invalidGrant(status: 400, body: "")
+        #expect(await env.provider.ensureFreshToken(force: false) == .reauthRequired)
+
+        env.store.stub(configDir: nil, credentials: credentials("at-cc", refresh: "rt-cc", ttl: 3600), accountUUID: "acc-L")
+        #expect(await env.provider.ensureFreshToken(force: false) == .ready)
+        #expect(env.provider.currentToken() == "at-cc")
+        if case .ok = env.provider.credentialState {} else {
+            Issue.record("expected ok, got \(env.provider.credentialState)")
+        }
+        #expect(env.refresher.refreshCallCount == 1)
     }
 }

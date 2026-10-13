@@ -606,13 +606,18 @@ final class ProfileStore: ObservableObject {
     /// `ProfileTokenProvider` over this store's vault / live store / refresher.
     private func makeDefaultTokenProvider(for profile: AccountProfile) -> TokenProviderProtocol {
         if profile.isDefaultClaudeCodeProfile { return TokenProvider() }
+        let identityClient = self.identityClient
+        let proxyProvider = self.proxyProvider
         return ProfileTokenProvider(
             profile: profile,
             vault: vault,
             store: credentialStore,
             refresher: refresher,
             proxyProvider: proxyProvider,
-            realHome: realHome
+            realHome: realHome,
+            identityVerifier: { accessToken in
+                try? await identityClient.fetchProfile(token: accessToken, proxyConfig: proxyProvider()).account.uuid
+            }
         )
     }
 

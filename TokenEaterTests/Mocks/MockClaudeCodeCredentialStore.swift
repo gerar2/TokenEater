@@ -12,9 +12,9 @@ final class MockClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @u
 
     static func key(_ configDir: String?) -> String { configDir ?? "default" }
 
-    func stub(configDir: String?, credentials: OAuthCredentials, backing: ClaudeCodeCredentialBacking = .keychain(service: "Claude Code-credentials"), raw: [String: Any]? = nil) {
+    func stub(configDir: String?, credentials: OAuthCredentials, backing: ClaudeCodeCredentialBacking = .keychain(service: "Claude Code-credentials"), raw: [String: Any]? = nil, accountUUID: String? = nil) {
         let payload = raw ?? ClaudeCredentialsPayload.merge(credentials, into: [:])
-        reads[Self.key(configDir)] = ClaudeCodeCredentialRead(credentials: credentials, raw: payload, backing: backing)
+        reads[Self.key(configDir)] = ClaudeCodeCredentialRead(credentials: credentials, raw: payload, backing: backing, accountUUID: accountUUID)
     }
 
     func read(configDir: String?) -> ClaudeCodeCredentialRead? {
