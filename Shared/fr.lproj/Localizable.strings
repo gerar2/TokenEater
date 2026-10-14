@@ -1011,3 +1011,10 @@
 "accounts.card.duplicate" = "Même compte que « %@ » : les deux cartes affichent les mêmes chiffres.";
 "accounts.card.duplicate.linkedHint" = "Ce dossier est actuellement connecté à ce compte (claude /login le modifie).";
 /* === end multi-profile: duplicate account warning === */
+
+/* === terminal accounts: foundation === */
+"accounts.error.terminalNameInvalid" = "Utilisez des minuscules, des chiffres et des tirets (31 maximum, en commençant par une lettre ou un chiffre).";
+"accounts.error.terminalNameTaken" = "« %@ » utilise déjà ce nom de commande.";
+"accounts.error.terminalTokenInvalid" = "Ce n’est pas un jeton de `claude setup-token` (il commence par sk-ant-oat01-).";
+"accounts.error.terminalTokenSaveFailed" = "Impossible d’enregistrer le jeton dans le trousseau : %@";
+/* === end terminal accounts: foundation === */

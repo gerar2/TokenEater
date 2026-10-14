@@ -10,6 +10,10 @@ enum ProfileStoreError: LocalizedError, Equatable {
     case identityFailed(String)
     case cannotRemoveLast
     case vault(String)
+    case terminalNameInvalid
+    case terminalNameTaken(existingName: String)
+    case terminalTokenInvalid
+    case terminalTokenSaveFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -21,6 +25,10 @@ enum ProfileStoreError: LocalizedError, Equatable {
         case .identityFailed(let msg): return String(format: String(localized: "accounts.error.identityFailed"), msg)
         case .cannotRemoveLast: return String(localized: "accounts.error.cannotRemoveLast")
         case .vault(let msg): return String(format: String(localized: "accounts.error.vault"), msg)
+        case .terminalNameInvalid: return String(localized: "accounts.error.terminalNameInvalid")
+        case .terminalNameTaken(let name): return String(format: String(localized: "accounts.error.terminalNameTaken"), name)
+        case .terminalTokenInvalid: return String(localized: "accounts.error.terminalTokenInvalid")
+        case .terminalTokenSaveFailed(let msg): return String(format: String(localized: "accounts.error.terminalTokenSaveFailed"), msg)
         }
     }
 }
@@ -55,6 +63,11 @@ final class ProfileStore: ObservableObject {
     /// `credentialState(for:)`, which falls back to the store).
     @Published private(set) var credentialStates: [UUID: ProfileCredentialState] = [:]
     @Published private(set) var lastError: ProfileStoreError?
+    /// Terminal accounts (`docs/terminal-accounts-plan.md` §4): generate the
+    /// `cla` / `claw` commands and the Warp Tab Configs. Off by default.
+    @Published private(set) var terminalIntegrationEnabled: Bool
+    /// Last failure writing the generated terminal files, for Settings.
+    @Published private(set) var terminalIntegrationError: String?
 
     private(set) var usageStores: [UUID: UsageStore] = [:]
     /// Providers built by the production factory, keyed by profile (empty
@@ -77,6 +90,10 @@ final class ProfileStore: ObservableObject {
     private let identityClient: APIClientProtocol
     private let realHome: String
     private let injectedUsageStoreFactory: UsageStoreFactory?
+    let terminalTokenStore: TerminalTokenStoreProtocol
+    let terminalIntegration: TerminalIntegrationServiceProtocol
+    private let settingsDefaults: UserDefaults
+    static let terminalIntegrationEnabledKey = "terminalIntegration.enabled"
     private var configurator: StoreConfigurator?
     private var thresholds: UsageThresholds = .default
     private var didBootstrap = false
@@ -123,8 +140,15 @@ final class ProfileStore: ObservableObject {
         sharedFileService: SharedFileServiceProtocol = SharedFileService(),
         identityClient: APIClientProtocol = APIClient(),
         realHome: String = ClaudeKeychainServiceName.realHome,
-        usageStoreFactory: UsageStoreFactory? = nil
+        usageStoreFactory: UsageStoreFactory? = nil,
+        terminalTokenStore: TerminalTokenStoreProtocol = TerminalTokenStore(),
+        terminalIntegration: TerminalIntegrationServiceProtocol = TerminalIntegrationService(),
+        settingsDefaults: UserDefaults = .standard
     ) {
+        self.terminalTokenStore = terminalTokenStore
+        self.terminalIntegration = terminalIntegration
+        self.settingsDefaults = settingsDefaults
+        self.terminalIntegrationEnabled = settingsDefaults.bool(forKey: Self.terminalIntegrationEnabledKey)
         self.persistence = persistence
         self.vault = vault
         self.credentialStore = credentialStore
@@ -344,6 +368,8 @@ final class ProfileStore: ObservableObject {
         notificationServices[id] = nil
         credentialStates[id] = nil
         vault.delete(profileID: id)
+        let tokenStore = terminalTokenStore
+        DispatchQueue.global(qos: .utility).async { tokenStore.delete(profileID: id) }
         sharedFileService.removeProfile(id: id)
         profiles.removeAll { $0.id == id }
         if activeProfileID == id, let fallback = enabledProfiles.first ?? profiles.first {
@@ -372,6 +398,124 @@ final class ProfileStore: ObservableObject {
         lastError = nil
     }
 
+    // MARK: - Terminal accounts (docs/terminal-accounts-plan.md §4)
+
+    /// Every profile as the generated `cla` / `claw` functions see it, in
+    /// catalog order. Pausing a profile's monitoring keeps its command. Names
+    /// are de-duplicated here as well, so a stale catalog can never generate
+    /// two identical commands.
+    var terminalEntries: [TerminalAccountEntry] {
+        var taken = Set<String>()
+        return profiles.map { profile in
+            let name = TerminalName.uniqued(profile.effectiveTerminalName, taken: taken)
+            taken.insert(name)
+            return TerminalAccountEntry(
+                name: name,
+                profileID: profile.id,
+                profileName: profile.name,
+                accountUUID: profile.accountUUID,
+                warpColor: profile.effectiveWarpColor,
+                keychainService: TerminalTokenKeychain.service(for: profile.id)
+            )
+        }
+    }
+
+    /// The command name actually generated for a profile (after de-duplication).
+    func terminalName(for id: UUID) -> String? {
+        terminalEntries.first { $0.profileID == id }?.name
+    }
+
+    func setTerminalIntegrationEnabled(_ enabled: Bool) {
+        guard enabled != terminalIntegrationEnabled else { return }
+        terminalIntegrationEnabled = enabled
+        settingsDefaults.set(enabled, forKey: Self.terminalIntegrationEnabledKey)
+        if enabled {
+            regenerateTerminalIntegration()
+        } else {
+            do {
+                try terminalIntegration.removeGeneratedFiles()
+                terminalIntegrationError = nil
+            } catch {
+                terminalIntegrationError = String(describing: error)
+            }
+        }
+    }
+
+    /// Writes the script and the Warp Tab Configs for the current catalog.
+    /// No-op while the integration is off. Called after every catalog change.
+    func regenerateTerminalIntegration() {
+        guard terminalIntegrationEnabled else { return }
+        do {
+            try terminalIntegration.regenerate(entries: terminalEntries)
+            terminalIntegrationError = nil
+        } catch {
+            terminalIntegrationError = String(describing: error)
+        }
+    }
+
+    /// Validated, normalised (trimmed, lowercased) and unique across profiles.
+    func setTerminalName(_ id: UUID, _ rawName: String) throws {
+        guard profile(for: id) != nil else { throw record(.notFound) }
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard TerminalName.isValid(name) else { throw record(.terminalNameInvalid) }
+        if let other = profiles.first(where: { $0.id != id && $0.effectiveTerminalName == name }) {
+            throw record(.terminalNameTaken(existingName: other.name))
+        }
+        update(id) { $0.terminalName = name }
+    }
+
+    func setWarpColor(_ id: UUID, _ color: WarpTabColor) {
+        update(id) { $0.warpColor = color }
+    }
+
+    /// Stores a `claude setup-token` token in the Keychain (off the main
+    /// thread: it shells out to `/usr/bin/security`) and records the date.
+    func setTerminalToken(_ id: UUID, token: String) async throws {
+        guard let profile = profile(for: id) else { throw record(.notFound) }
+        guard TerminalTokenFormat.isPlausible(token) else { throw record(.terminalTokenInvalid) }
+        let store = terminalTokenStore
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        let profileName = profile.name
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    do {
+                        try store.save(token: trimmed, profileID: id, profileName: profileName)
+                        continuation.resume()
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+        } catch TerminalTokenStoreError.implausibleToken {
+            throw record(.terminalTokenInvalid)
+        } catch {
+            throw record(.terminalTokenSaveFailed(String(describing: error)))
+        }
+        update(id) { $0.terminalTokenSetAt = Date() }
+    }
+
+    func removeTerminalToken(_ id: UUID) {
+        guard profile(for: id) != nil else { return }
+        let store = terminalTokenStore
+        DispatchQueue.global(qos: .utility).async { store.delete(profileID: id) }
+        update(id) { $0.terminalTokenSetAt = nil }
+    }
+
+    /// Clears `terminalTokenSetAt` for profiles whose Keychain item is gone
+    /// (deleted by hand in Keychain Access, or a new Mac).
+    func verifyTerminalTokens() async {
+        let store = terminalTokenStore
+        let candidates = profiles.filter { $0.terminalTokenSetAt != nil }.map(\.id)
+        guard !candidates.isEmpty else { return }
+        let missing: [UUID] = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                continuation.resume(returning: candidates.filter { !store.exists(profileID: $0) })
+            }
+        }
+        for id in missing { update(id) { $0.terminalTokenSetAt = nil } }
+    }
+
     // MARK: - Lifecycle
 
     /// Starts every enabled profile: applies the configurator, reloads the
@@ -396,6 +540,8 @@ final class ProfileStore: ObservableObject {
         }
         syncCredentialStates()
         syncCatalogToSharedFile()
+        regenerateTerminalIntegration()
+        Task { await verifyTerminalTokens() }
     }
 
     func stopAll() {
@@ -502,6 +648,7 @@ final class ProfileStore: ObservableObject {
         persistence.saveProfiles(profiles)
         persistence.saveActiveProfileID(activeProfileID)
         syncCatalogToSharedFile()
+        regenerateTerminalIntegration()
     }
 
     private func syncCatalogToSharedFile() {

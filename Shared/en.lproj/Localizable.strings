@@ -1011,3 +1011,10 @@
 "accounts.card.duplicate" = "Same account as “%@”: both cards show the same numbers.";
 "accounts.card.duplicate.linkedHint" = "This directory is currently signed in to that account (claude /login changes it).";
 /* === end multi-profile: duplicate account warning === */
+
+/* === terminal accounts: foundation === */
+"accounts.error.terminalNameInvalid" = "Use lowercase letters, digits and dashes (up to 31, starting with a letter or digit).";
+"accounts.error.terminalNameTaken" = "“%@” already uses that command name.";
+"accounts.error.terminalTokenInvalid" = "That does not look like a token from `claude setup-token` (it starts with sk-ant-oat01-).";
+"accounts.error.terminalTokenSaveFailed" = "Could not store the token in the Keychain: %@";
+/* === end terminal accounts: foundation === */

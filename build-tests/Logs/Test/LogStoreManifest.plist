@@ -6,10 +6,10 @@
 	<integer>13</integer>
 	<key>logs</key>
 	<dict>
-		<key>0828A250-D674-4324-90CC-A7DE3B1C47AB</key>
+		<key>4D210030-CCF2-417D-9B6B-51780B818D7D</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>DCA07784-AC38-48E8-8631-813D95BC58D1</string>
+			<string>8708502C-F1C7-4DAF-9428-ACFB313C6102</string>
 			<key>auxiliaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
@@ -30,7 +30,7 @@
 			<key>domainType</key>
 			<string>com.apple.dt.unit.cocoaUnitTest</string>
 			<key>fileName</key>
-			<string>Test-TokenEaterTests-2026.10.13_11-23-05-+0100.xcresult</string>
+			<string>Test-TokenEaterTests-2026.10.14_12-17-40-+0100.xcresult</string>
 			<key>hasAuxiliaryLog</key>
 			<true/>
 			<key>hasPrimaryLog</key>
@@ -57,18 +57,18 @@
 			<key>signature</key>
 			<string>Test TokenEaterTests</string>
 			<key>timeStartedRecording</key>
-			<real>813579785.93890703</real>
+			<real>813669460.53719294</real>
 			<key>timeStoppedRecording</key>
-			<real>813579803.22561502</real>
+			<real>813669474.37622905</real>
 			<key>title</key>
 			<string>Test TokenEaterTests</string>
 			<key>uniqueIdentifier</key>
-			<string>0828A250-D674-4324-90CC-A7DE3B1C47AB</string>
+			<string>4D210030-CCF2-417D-9B6B-51780B818D7D</string>
 		</dict>
-		<key>F35A99EB-BEC6-4B46-B4E9-EFED39BD06DB</key>
+		<key>68EEAD9E-38AB-4D8A-93E6-469EC4B0C839</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>3196C536-DB94-4771-93FA-24007BACF841</string>
+			<string>041F716B-147F-4ABF-AABC-AC54ABAE271D</string>
 			<key>auxiliaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
@@ -89,7 +89,7 @@
 			<key>domainType</key>
 			<string>com.apple.dt.unit.cocoaUnitTest</string>
 			<key>fileName</key>
-			<string>Test-TokenEaterTests-2026.10.09_11-34-48-+0100.xcresult</string>
+			<string>Test-TokenEaterTests-2026.10.14_12-15-50-+0100.xcresult</string>
 			<key>hasAuxiliaryLog</key>
 			<true/>
 			<key>hasPrimaryLog</key>
@@ -116,13 +116,72 @@
 			<key>signature</key>
 			<string>Test TokenEaterTests</string>
 			<key>timeStartedRecording</key>
-			<real>813234888.14222801</real>
+			<real>813669350.62311602</real>
 			<key>timeStoppedRecording</key>
-			<real>813234903.78185105</real>
+			<real>813669368.86899698</real>
 			<key>title</key>
 			<string>Test TokenEaterTests</string>
 			<key>uniqueIdentifier</key>
-			<string>F35A99EB-BEC6-4B46-B4E9-EFED39BD06DB</string>
+			<string>68EEAD9E-38AB-4D8A-93E6-469EC4B0C839</string>
+		</dict>
+		<key>DAF2815B-0AAE-4CDA-8EA6-9634107FDFF9</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>C614A203-3862-4F04-9F8B-C798327ED0BB</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>15</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.unit.cocoaUnitTest</string>
+			<key>fileName</key>
+			<string>Test-TokenEaterTests-2026.10.14_12-16-41-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>16</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>TokenEater project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>TokenEaterTests</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Test TokenEaterTests</string>
+			<key>timeStartedRecording</key>
+			<real>813669401.19873905</real>
+			<key>timeStoppedRecording</key>
+			<real>813669403.16952705</real>
+			<key>title</key>
+			<string>Test TokenEaterTests</string>
+			<key>uniqueIdentifier</key>
+			<string>DAF2815B-0AAE-4CDA-8EA6-9634107FDFF9</string>
 		</dict>
 	</dict>
 </dict>

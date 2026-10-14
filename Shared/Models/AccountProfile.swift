@@ -83,6 +83,13 @@ struct AccountProfile: Codable, Identifiable, Equatable, Hashable {
     var accountUUID: String?
     /// `PlanType.rawValue`, cached for surfaces that render before the first fetch.
     var planTypeRaw: String?
+    /// Terminal accounts (`docs/terminal-accounts-plan.md`): the command-line
+    /// name (`cla <name>`), nil = suggested from `name`.
+    var terminalName: String?
+    /// Warp tab colour for this account, nil = derived from `colorHex`.
+    var warpColor: WarpTabColor?
+    /// When a terminal token (`claude setup-token`) was last stored.
+    var terminalTokenSetAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -94,7 +101,10 @@ struct AccountProfile: Codable, Identifiable, Equatable, Hashable {
         createdAt: Date = Date(),
         accountEmail: String? = nil,
         accountUUID: String? = nil,
-        planTypeRaw: String? = nil
+        planTypeRaw: String? = nil,
+        terminalName: String? = nil,
+        warpColor: WarpTabColor? = nil,
+        terminalTokenSetAt: Date? = nil
     ) {
         self.id = id
         self.name = name
@@ -106,6 +116,9 @@ struct AccountProfile: Codable, Identifiable, Equatable, Hashable {
         self.accountEmail = accountEmail
         self.accountUUID = accountUUID
         self.planTypeRaw = planTypeRaw
+        self.terminalName = terminalName
+        self.warpColor = warpColor
+        self.terminalTokenSetAt = terminalTokenSetAt
     }
 
     /// A managed profile has no other holder, so TokenEater always renews it.
@@ -138,6 +151,7 @@ struct AccountProfile: Codable, Identifiable, Equatable, Hashable {
     private enum CodingKeys: String, CodingKey {
         case id, name, colorHex, source, renewalPolicy, isEnabled, createdAt
         case accountEmail, accountUUID, planTypeRaw
+        case terminalName, warpColor, terminalTokenSetAt
     }
 
     init(from decoder: Decoder) throws {
@@ -152,6 +166,10 @@ struct AccountProfile: Codable, Identifiable, Equatable, Hashable {
         accountEmail = try? c.decodeIfPresent(String.self, forKey: .accountEmail)
         accountUUID = try? c.decodeIfPresent(String.self, forKey: .accountUUID)
         planTypeRaw = try? c.decodeIfPresent(String.self, forKey: .planTypeRaw)
+        terminalName = (try? c.decodeIfPresent(String.self, forKey: .terminalName)).flatMap { $0 }
+            .flatMap { TerminalName.isValid($0) ? $0 : nil }
+        warpColor = (try? c.decodeIfPresent(WarpTabColor.self, forKey: .warpColor)).flatMap { $0 }
+        terminalTokenSetAt = (try? c.decodeIfPresent(Date.self, forKey: .terminalTokenSetAt)).flatMap { $0 }
     }
 }
 
