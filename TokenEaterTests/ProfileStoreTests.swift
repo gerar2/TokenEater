@@ -5,7 +5,7 @@ import Combine
 /// Per-profile mocks captured by the injected store factory, so a test can
 /// drive / inspect each profile's repository and token provider.
 @MainActor
-private final class ProfileMockBag {
+final class ProfileMockBag {
     var repos: [UUID: MockUsageRepository] = [:]
     var providers: [UUID: MockTokenProvider] = [:]
     var notifs: [UUID: MockNotificationService] = [:]
@@ -31,8 +31,12 @@ private final class ProfileMockBag {
     }
 }
 
+/// Shared with `ProfileStoreTerminalTests`. The terminal token store, the
+/// terminal integration service and the settings defaults are always mocks /
+/// a private suite, so no test ever touches the Keychain, the real home or
+/// the app's `UserDefaults`.
 @MainActor
-private final class ProfileHarness {
+final class ProfileHarness {
     static let home = "/Users/tester"
     static let workDir = "/Users/tester/.claude-work"
 
@@ -42,17 +46,28 @@ private final class ProfileHarness {
     let refresher = MockOAuthTokenRefresher()
     let sharedFile: MockSharedFileService
     let identity = MockAPIClient()
+    let terminalTokens = MockTerminalTokenStore()
+    let terminalIntegration = MockTerminalIntegrationService()
+    let defaultsSuite = "ProfileStoreTests.\(UUID().uuidString)"
+    let defaults: UserDefaults
     let bag: ProfileMockBag
     let center = NotificationCenter()
     let store: ProfileStore
 
-    init(profiles: [AccountProfile] = [], activeID: UUID? = nil) {
+    /// `terminalIntegrationEnabled` seeds the persisted flag before the store
+    /// reads it (off by default, like a fresh install).
+    init(profiles: [AccountProfile] = [], activeID: UUID? = nil, terminalIntegrationEnabled: Bool = false) {
         let persistence = InMemoryProfilePersistence(profiles: profiles, activeID: activeID)
         let sharedFile = MockSharedFileService()
         let bag = ProfileMockBag()
+        let defaults = UserDefaults(suiteName: defaultsSuite)!
+        if terminalIntegrationEnabled {
+            defaults.set(true, forKey: ProfileStore.terminalIntegrationEnabledKey)
+        }
         self.persistence = persistence
         self.sharedFile = sharedFile
         self.bag = bag
+        self.defaults = defaults
         self.store = ProfileStore(
             persistence: persistence,
             vault: vault,
@@ -61,10 +76,17 @@ private final class ProfileHarness {
             sharedFileService: sharedFile,
             identityClient: identity,
             realHome: Self.home,
-            usageStoreFactory: { profile in bag.makeStore(for: profile, sharedFile: sharedFile) }
+            usageStoreFactory: { profile in bag.makeStore(for: profile, sharedFile: sharedFile) },
+            terminalTokenStore: terminalTokens,
+            terminalIntegration: terminalIntegration,
+            settingsDefaults: defaults
         )
         store.directoryExists = { _ in true }
         store.notificationCenter = center
+    }
+
+    deinit {
+        UserDefaults.standard.removePersistentDomain(forName: defaultsSuite)
     }
 
     var defaultID: UUID { store.profiles[0].id }
