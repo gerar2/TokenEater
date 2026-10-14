@@ -280,15 +280,14 @@ final class ClaudeCodeCredentialStore: ClaudeCodeCredentialStoreProtocol, @unche
         let stderr = Pipe()
         task.standardOutput = stdout
         task.standardError = stderr
+        // Termination handler rather than waitUntilExit() on a background
+        // thread, which can miss a quick exit (see TerminalTokenStore).
+        let done = DispatchSemaphore(value: 0)
+        task.terminationHandler = { _ in done.signal() }
         do {
             try task.run()
         } catch {
             throw ProcessRunError.launchFailed(error.localizedDescription)
-        }
-        let done = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .userInitiated).async {
-            task.waitUntilExit()
-            done.signal()
         }
         if done.wait(timeout: .now() + timeout) == .timedOut {
             task.terminate()

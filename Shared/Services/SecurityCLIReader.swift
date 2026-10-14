@@ -36,6 +36,10 @@ final class SecurityCLIReader: SecurityCLIReaderProtocol, @unchecked Sendable {
         let stderr = Pipe()
         task.standardOutput = stdout
         task.standardError = stderr
+        // Signalled by the termination handler: waitUntilExit() on a
+        // background thread can miss a quick exit and sit until the timeout.
+        let done = DispatchSemaphore(value: 0)
+        task.terminationHandler = { _ in done.signal() }
 
         do {
             try task.run()
@@ -45,14 +49,9 @@ final class SecurityCLIReader: SecurityCLIReaderProtocol, @unchecked Sendable {
         }
         // Guard against a hung child. On macOS 26 the spawned `security` process
         // can block indefinitely on Keychain authorization when launched by a
-        // headless (LSUIElement) GUI app, so waitUntilExit() never returns and a
-        // caller on the main thread beachballs (see #217). Wait on a background
-        // thread with a 3s timeout, then fall through to the next source.
-        let done = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .userInitiated).async {
-            task.waitUntilExit()
-            done.signal()
-        }
+        // headless (LSUIElement) GUI app, so a blocking wait never returns and a
+        // caller on the main thread beachballs (see #217). Wait at most 3s,
+        // then fall through to the next source.
         if done.wait(timeout: .now() + 3) == .timedOut {
             task.terminate()
             logger.info("security read timed out after 3s; falling through to next source")

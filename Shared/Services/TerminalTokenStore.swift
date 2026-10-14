@@ -191,9 +191,9 @@ final class TerminalTokenStore: TerminalTokenStoreProtocol, @unchecked Sendable 
     /// Default `ProcessRunner`. stdin is a pipe when there is input and
     /// `/dev/null` otherwise (never the app's own stdin, which `security -i`
     /// would read commands from). stdout and stderr are drained while the
-    /// child runs, and the wait happens on a background queue behind a
-    /// watchdog so a child blocked on Keychain authorization cannot hang the
-    /// caller (same pattern as `SecurityCLIReader`).
+    /// child runs, and the wait has a watchdog so a child blocked on Keychain
+    /// authorization cannot hang the caller (same pattern as
+    /// `SecurityCLIReader`).
     static func runProcess(executable: String, arguments: [String], stdin: Data?, timeout: TimeInterval) throws -> ProcessRunResult {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: executable)
@@ -204,6 +204,12 @@ final class TerminalTokenStore: TerminalTokenStoreProtocol, @unchecked Sendable 
         task.standardOutput = stdoutPipe
         task.standardError = stderrPipe
         task.standardInput = stdinPipe ?? FileHandle.nullDevice
+        // Signalled from the termination handler, not from a thread blocked in
+        // waitUntilExit(): that call can miss the exit of a child that ends
+        // quickly and spin until the watchdog fires (seen on macOS 26 with
+        // /bin/cat, the child already reaped and isRunning false).
+        let done = DispatchSemaphore(value: 0)
+        task.terminationHandler = { _ in done.signal() }
         do {
             try task.run()
         } catch {
@@ -224,11 +230,6 @@ final class TerminalTokenStore: TerminalTokenStoreProtocol, @unchecked Sendable 
             }
         }
 
-        let done = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .userInitiated).async {
-            task.waitUntilExit()
-            done.signal()
-        }
         if done.wait(timeout: .now() + timeout) == .timedOut {
             task.terminate()
             throw ProcessRunError.timedOut
