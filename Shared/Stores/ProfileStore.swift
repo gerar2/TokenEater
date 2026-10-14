@@ -68,6 +68,11 @@ final class ProfileStore: ObservableObject {
     @Published private(set) var terminalIntegrationEnabled: Bool
     /// Last failure writing the generated terminal files, for Settings.
     @Published private(set) var terminalIntegrationError: String?
+    /// `oauthAccount.accountUuid` of the account signed in to the default
+    /// `~/.claude` (from `<realHome>/.claude.json`): the account `cla <name>`
+    /// falls back to when no terminal token is stored. nil = unknown.
+    /// Refreshed at `bootstrap` and when the Accounts section appears.
+    @Published private(set) var liveClaudeCodeAccountUUID: String?
 
     private(set) var usageStores: [UUID: UsageStore] = [:]
     /// Providers built by the production factory, keyed by profile (empty
@@ -126,6 +131,9 @@ final class ProfileStore: ObservableObject {
         var isDirectory: ObjCBool = false
         return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
     }
+    /// Reads Claude Code's global config for `liveClaudeCodeAccountUUID`
+    /// (tests inject a stub so the real `~/.claude.json` is never read).
+    var globalConfigReader: @Sendable (String) -> Data? = { FileManager.default.contents(atPath: $0) }
 
     /// Default profile created on first launch / after migration (§1.4).
     static let defaultProfileName = "Claude Code"
@@ -436,7 +444,7 @@ final class ProfileStore: ObservableObject {
                 try terminalIntegration.removeGeneratedFiles()
                 terminalIntegrationError = nil
             } catch {
-                terminalIntegrationError = String(describing: error)
+                terminalIntegrationError = error.localizedDescription
             }
         }
     }
@@ -449,7 +457,7 @@ final class ProfileStore: ObservableObject {
             try terminalIntegration.regenerate(entries: terminalEntries)
             terminalIntegrationError = nil
         } catch {
-            terminalIntegrationError = String(describing: error)
+            terminalIntegrationError = error.localizedDescription
         }
     }
 
@@ -516,6 +524,19 @@ final class ProfileStore: ObservableObject {
         for id in missing { update(id) { $0.terminalTokenSetAt = nil } }
     }
 
+    /// Re-reads which account is signed in to `~/.claude`, off the main
+    /// thread (`.claude.json` can weigh several MB). Publishes only on change.
+    func refreshLiveClaudeCodeAccount() async {
+        let path = realHome + "/" + ClaudeCodeCredentialStore.globalConfigFileName
+        let reader = globalConfigReader
+        let uuid: String? = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                continuation.resume(returning: reader(path).flatMap(ClaudeCodeCredentialStore.accountUUID(fromGlobalConfig:)))
+            }
+        }
+        if liveClaudeCodeAccountUUID != uuid { liveClaudeCodeAccountUUID = uuid }
+    }
+
     // MARK: - Lifecycle
 
     /// Starts every enabled profile: applies the configurator, reloads the
@@ -541,7 +562,10 @@ final class ProfileStore: ObservableObject {
         syncCredentialStates()
         syncCatalogToSharedFile()
         regenerateTerminalIntegration()
-        Task { await verifyTerminalTokens() }
+        Task {
+            await verifyTerminalTokens()
+            await refreshLiveClaudeCodeAccount()
+        }
     }
 
     func stopAll() {

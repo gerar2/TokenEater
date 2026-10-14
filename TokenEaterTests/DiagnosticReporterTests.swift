@@ -159,7 +159,9 @@ struct DiagnosticReporterTests {
                     notificationService: MockNotificationService(),
                     profileID: profile.id
                 )
-            }
+            },
+            terminalTokenStore: MockTerminalTokenStore(),
+            terminalIntegration: MockTerminalIntegrationService()
         )
         let settings = SettingsStore(notificationService: MockNotificationService(), tokenProvider: MockTokenProvider())
         return (store, settings)

@@ -77,6 +77,9 @@ struct SettingsSectionView: View {
                 }
             }
 
+            // Terminal accounts: `cla` / `claw` (docs/terminal-accounts-plan.md §1.2).
+            TerminalIntegrationCard(initialEnabled: profileStore.terminalIntegrationEnabled)
+
             // Update (placed right under Connection so the user spots a
             // pending version straight away).
             glassCard {
@@ -379,6 +382,282 @@ struct SettingsSectionView: View {
         case .reauthRequired:
             return DS.Palette.semanticError
         }
+    }
+}
+
+// MARK: - Terminal integration card
+
+/// Settings -> General -> "Terminal integration": the master switch for the
+/// generated `cla` / `claw` commands and Warp Tab Configs, the `~/.zshrc`
+/// hook that loads them, where the files live, and two usage examples. The
+/// per-account command name, colour and token live on the Accounts cards.
+private struct TerminalIntegrationCard: View {
+    @EnvironmentObject private var profileStore: ProfileStore
+
+    /// Local mirror of the flag for the switch (`@State` + `.onChange`, per
+    /// the SwiftUI rules in AGENTS.md).
+    @State private var enabledDraft: Bool
+    /// Not observable on the service: re-read on appear and after each action.
+    @State private var shellStatus: ShellIntegrationStatus = .notInstalled
+    @State private var isWarpInstalled = false
+    @State private var shellError: String?
+    @State private var didRegenerate = false
+
+    private let home = ClaudeKeychainServiceName.realHome
+
+    init(initialEnabled: Bool) {
+        _enabledDraft = State(initialValue: initialEnabled)
+    }
+
+    private var service: TerminalIntegrationServiceProtocol { profileStore.terminalIntegration }
+
+    var body: some View {
+        glassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                cardLabel(String(localized: "settings.terminal.title"))
+                darkToggle(String(localized: "settings.terminal.toggle"), isOn: $enabledDraft)
+                inlineMarkdownText(String(localized: "settings.terminal.hint"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if profileStore.terminalIntegrationEnabled {
+                    Divider().opacity(0.12)
+                    shellRow
+                    filesBlock
+                    regenerateRow
+                    errorLines
+                    Divider().opacity(0.12)
+                    examples
+                } else if shellStatus == .installed {
+                    // Off, but ~/.zshrc still sources the (now deleted) script:
+                    // harmless thanks to the `-f` guard, offer the cleanup.
+                    leftoverRow
+                    errorLines
+                }
+            }
+        }
+        .onAppear { refreshEnvironment() }
+        .onChange(of: enabledDraft) { _, enabled in
+            if profileStore.terminalIntegrationEnabled != enabled {
+                profileStore.setTerminalIntegrationEnabled(enabled)
+            }
+            refreshEnvironment()
+        }
+        .onChange(of: profileStore.terminalIntegrationEnabled) { _, enabled in
+            if enabledDraft != enabled { enabledDraft = enabled }
+        }
+    }
+
+    // MARK: Shell hook
+
+    private var shellRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(shellTint)
+                    .frame(width: 7, height: 7)
+                Text(shellLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(shellTint)
+                Spacer(minLength: 0)
+                if shellStatus == .installed {
+                    CardActionButton(
+                        title: String(localized: "settings.terminal.shell.uninstall"),
+                        icon: "minus.circle",
+                        tint: DS.Palette.semanticError
+                    ) {
+                        uninstallShell()
+                    }
+                } else {
+                    CardActionButton(
+                        title: String(localized: "settings.terminal.shell.install"),
+                        icon: "plus.circle",
+                        tint: DS.Palette.accentSettings,
+                        isProminent: true
+                    ) {
+                        installShell()
+                    }
+                }
+            }
+            inlineMarkdownText(String(localized: "settings.terminal.shell.newTerminal"))
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.4))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var shellLabel: String {
+        switch shellStatus {
+        case .installed: return String(localized: "settings.terminal.shell.installed")
+        case .notInstalled: return String(localized: "settings.terminal.shell.notInstalled")
+        case .noZshrc: return String(localized: "settings.terminal.shell.noZshrc")
+        }
+    }
+
+    private var shellTint: Color {
+        shellStatus == .installed ? DS.Palette.semanticSuccess : DS.Palette.semanticWarning
+    }
+
+    private var leftoverRow: some View {
+        HStack(spacing: 8) {
+            Text(String(localized: "settings.terminal.shell.leftover"))
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.4))
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            CardActionButton(
+                title: String(localized: "settings.terminal.shell.uninstall"),
+                icon: "minus.circle",
+                tint: DS.Palette.semanticError
+            ) {
+                uninstallShell()
+            }
+        }
+    }
+
+    // MARK: Generated files
+
+    private var filesBlock: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            pathRow(String(localized: "settings.terminal.files.script"), service.scriptPath, note: nil)
+            pathRow(
+                String(localized: "settings.terminal.files.tabConfigs"),
+                service.tabConfigDirectory,
+                note: isWarpInstalled ? nil : String(localized: "settings.terminal.files.noWarp")
+            )
+        }
+    }
+
+    private func pathRow(_ label: String, _ path: String, note: String?) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.5))
+                .frame(width: 120, alignment: .leading)
+            Text(abbreviated(path))
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.7))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .textSelection(.enabled)
+            if let note {
+                Text(note)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.white.opacity(0.35))
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var regenerateRow: some View {
+        HStack {
+            CardActionButton(
+                title: didRegenerate
+                    ? String(localized: "settings.terminal.regenerated")
+                    : String(localized: "settings.terminal.regenerate"),
+                icon: didRegenerate ? "checkmark" : "arrow.clockwise",
+                tint: DS.Palette.accentSettings
+            ) {
+                regenerate()
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private var errorLines: some View {
+        if let error = profileStore.terminalIntegrationError {
+            Text(String(format: String(localized: "settings.terminal.error"), error))
+                .font(.system(size: 11))
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        if let shellError {
+            Text(shellError)
+                .font(.system(size: 11))
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: Examples
+
+    private var examples: some View {
+        let name = profileStore.terminalEntries.first?.name ?? "work"
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(String(localized: "settings.terminal.examples"))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.5))
+            exampleRow("cla \(name) --resume", caption: String(localized: "settings.terminal.example.resume"))
+            exampleRow("claw \(name) --model opus", caption: String(localized: "settings.terminal.example.warp"))
+        }
+    }
+
+    private func exampleRow(_ command: String, caption: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: command)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.9))
+                .textSelection(.enabled)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(.black.opacity(0.35))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(.white.opacity(0.06), lineWidth: 1)
+                        )
+                )
+            Text(caption)
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.4))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: Behaviour
+
+    private func refreshEnvironment() {
+        shellStatus = service.shellIntegrationStatus()
+        isWarpInstalled = service.isWarpInstalled
+    }
+
+    private func installShell() {
+        do {
+            try service.installShellIntegration()
+            shellError = nil
+        } catch {
+            shellError = String(format: String(localized: "settings.terminal.shell.error"), error.localizedDescription)
+        }
+        refreshEnvironment()
+    }
+
+    private func uninstallShell() {
+        do {
+            try service.uninstallShellIntegration()
+            shellError = nil
+        } catch {
+            shellError = String(format: String(localized: "settings.terminal.shell.error"), error.localizedDescription)
+        }
+        refreshEnvironment()
+    }
+
+    private func regenerate() {
+        profileStore.regenerateTerminalIntegration()
+        refreshEnvironment()
+        guard profileStore.terminalIntegrationError == nil else { return }
+        didRegenerate = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { didRegenerate = false }
+    }
+
+    /// Real home abbreviated to `~` for display only.
+    private func abbreviated(_ path: String) -> String {
+        if path == home { return "~" }
+        if path.hasPrefix(home + "/") { return "~" + path.dropFirst(home.count) }
+        return path
     }
 }
 

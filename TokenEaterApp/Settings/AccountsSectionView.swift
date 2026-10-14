@@ -37,6 +37,9 @@ struct AccountsSectionView: View {
             Spacer()
         }
         .padding(24)
+        // Which account `~/.claude` is signed in to drives the terminal
+        // section's "uses the ~/.claude session" hint.
+        .task { await profileStore.refreshLiveClaudeCodeAccount() }
     }
 }
 
@@ -137,6 +140,10 @@ private struct ProfileCard: View {
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+
+                Divider().opacity(0.12)
+
+                ProfileTerminalSection(profile: profile)
 
                 Divider().opacity(0.12)
 
@@ -556,12 +563,386 @@ private struct ColorSwatch: View {
     }
 }
 
+// MARK: - Terminal section
+
+/// The card's "Terminal" block (`docs/terminal-accounts-plan.md` §5): the
+/// `cla <name>` command, the Warp tab colour, the terminal token and "Open in
+/// Warp". Collapsed by default so the card stays compact; a single muted line
+/// while the integration is off.
+private struct ProfileTerminalSection: View {
+    let profile: AccountProfile
+
+    @EnvironmentObject private var profileStore: ProfileStore
+
+    @State private var isExpanded = false
+    @State private var isEditingName = false
+    @State private var draftName = ""
+    @FocusState private var nameFieldFocused: Bool
+    /// Same guard as the profile rename: only a blur after real focus commits.
+    @State private var nameFieldHadFocus = false
+    @State private var nameError: String?
+    @State private var showTokenSheet = false
+    @State private var showRemoveTokenAlert = false
+    @State private var isWarpInstalled = false
+
+    private static let expiryWarning: TimeInterval = 14 * 24 * 3600
+
+    /// The command actually generated (after de-duplication).
+    private var commandName: String {
+        profileStore.terminalName(for: profile.id) ?? profile.effectiveTerminalName
+    }
+
+    private var hasToken: Bool { profile.terminalTokenSetAt != nil }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if profileStore.terminalIntegrationEnabled {
+                disclosureHeader
+                if isExpanded {
+                    expandedContent
+                        .transition(.opacity)
+                }
+            } else {
+                offLine
+            }
+        }
+        .onAppear { isWarpInstalled = profileStore.terminalIntegration.isWarpInstalled }
+        .onChange(of: profileStore.terminalIntegrationEnabled) { _, _ in
+            isWarpInstalled = profileStore.terminalIntegration.isWarpInstalled
+        }
+        .onChange(of: nameFieldFocused) { _, focused in
+            if focused {
+                nameFieldHadFocus = true
+            } else if isEditingName && nameFieldHadFocus {
+                // Blur commits, same as Return.
+                commitName(fromBlur: true)
+            }
+        }
+        .sheet(isPresented: $showTokenSheet) {
+            TerminalTokenSheet(profile: profile, profileStore: profileStore, isPresented: $showTokenSheet)
+        }
+        .alert(String(localized: "accounts.terminal.token.remove.confirm"), isPresented: $showRemoveTokenAlert) {
+            Button(String(localized: "accounts.remove.cancel"), role: .cancel) { }
+            Button(String(localized: "accounts.terminal.token.remove"), role: .destructive) {
+                profileStore.removeTerminalToken(profile.id)
+            }
+        } message: {
+            Text(String(format: String(localized: "accounts.terminal.token.remove.message"), profile.name, commandName))
+        }
+    }
+
+    // MARK: Off / header
+
+    private var offLine: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "terminal")
+                .font(.system(size: 10))
+                .foregroundStyle(.white.opacity(0.35))
+            Text(String(localized: "accounts.terminal.off"))
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.4))
+            Text(verbatim: "·")
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.3))
+            Button {
+                NotificationCenter.default.post(
+                    name: .navigateToSection,
+                    object: nil,
+                    userInfo: ["section": "settings.general"]
+                )
+            } label: {
+                Text(String(localized: "accounts.terminal.off.link"))
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.blue)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var disclosureHeader: some View {
+        Button {
+            withAnimation(DS.Motion.springSnap) { isExpanded.toggle() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "terminal")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.5))
+                Text(String(localized: "accounts.terminal.title"))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.7))
+                Text("cla " + commandName)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Spacer(minLength: 0)
+
+                let status = tokenStatus
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(status.tone.color)
+                        .frame(width: 6, height: 6)
+                    Text(status.short)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(status.tone == .idle ? .white.opacity(0.45) : status.tone.color)
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(String(localized: "accounts.terminal.title"))
+        .accessibilityValue("cla " + commandName)
+    }
+
+    // MARK: Expanded content
+
+    private var expandedContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            commandRow
+
+            if let nameError {
+                Text(nameError)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            warpColorRow
+            tokenRow
+
+            if showsLiveSessionHint {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 10))
+                        .foregroundStyle(DS.Palette.semanticInfo)
+                        .padding(.top, 1)
+                    inlineMarkdownText(String(format: String(localized: "accounts.terminal.liveHint"), commandName))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            actionsRow
+        }
+    }
+
+    private func rowLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12))
+            .foregroundStyle(.white.opacity(0.7))
+    }
+
+    private var commandRow: some View {
+        HStack(spacing: 10) {
+            rowLabel(String(localized: "accounts.terminal.command"))
+            Spacer(minLength: 0)
+            if isEditingName {
+                HStack(spacing: 6) {
+                    Text(verbatim: "cla")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
+                    TextField(profile.effectiveTerminalName, text: $draftName)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(width: 180)
+                        .focused($nameFieldFocused)
+                        // Requested once the field exists (see the profile rename).
+                        .onAppear { nameFieldFocused = true }
+                        .onSubmit { commitName(fromBlur: false) }
+                        .onExitCommand { cancelName() }
+                }
+            } else {
+                Text("cla " + commandName)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .textSelection(.enabled)
+                Button {
+                    beginNameEdit()
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .frame(width: 20, height: 20)
+                        .background(Circle().fill(DS.Palette.glassFill))
+                }
+                .buttonStyle(.plain)
+                .help(String(localized: "accounts.terminal.command.edit"))
+            }
+        }
+    }
+
+    private var warpColorRow: some View {
+        HStack(spacing: 10) {
+            rowLabel(String(localized: "accounts.terminal.warpColor"))
+            Spacer(minLength: 0)
+            HStack(spacing: 8) {
+                ForEach(WarpTabColor.allCases) { color in
+                    ColorSwatch(
+                        hex: color.previewHex,
+                        isSelected: color == profile.effectiveWarpColor
+                    ) {
+                        profileStore.setWarpColor(profile.id, color)
+                    }
+                    .help(color.localizedName)
+                    .accessibilityLabel(color.localizedName)
+                }
+            }
+        }
+    }
+
+    private var tokenRow: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            rowLabel(String(localized: "accounts.terminal.token"))
+            Spacer(minLength: 0)
+            let status = tokenStatus
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(status.tone.color)
+                    .frame(width: 6, height: 6)
+                Text(status.label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(status.tone == .idle ? .white.opacity(0.5) : status.tone.color)
+                    .multilineTextAlignment(.trailing)
+            }
+        }
+    }
+
+    private var actionsRow: some View {
+        HStack(spacing: 8) {
+            CardActionButton(
+                title: hasToken
+                    ? String(localized: "accounts.terminal.token.replace")
+                    : String(localized: "accounts.terminal.token.set"),
+                icon: "key.fill",
+                tint: DS.Palette.accentSettings,
+                isProminent: !hasToken
+            ) {
+                showTokenSheet = true
+            }
+            if hasToken {
+                CardActionButton(
+                    title: String(localized: "accounts.terminal.token.remove"),
+                    icon: "trash",
+                    tint: DS.Palette.semanticError
+                ) {
+                    showRemoveTokenAlert = true
+                }
+            }
+            Spacer(minLength: 0)
+            if !isWarpInstalled {
+                Text(String(localized: "accounts.terminal.openWarp.missing"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.white.opacity(0.35))
+            }
+            CardActionButton(
+                title: String(localized: "accounts.terminal.openWarp"),
+                icon: "macwindow.badge.plus",
+                tint: DS.Palette.accentSettings,
+                isEnabled: isWarpInstalled
+            ) {
+                openInWarp()
+            }
+            .help(String(format: String(localized: "accounts.terminal.openWarp.help"), commandName))
+        }
+    }
+
+    // MARK: Derived
+
+    /// No token, and the card's account is the one signed in to `~/.claude`:
+    /// `cla` falls back to that session.
+    private var showsLiveSessionHint: Bool {
+        guard !hasToken, let uuid = profile.accountUUID, !uuid.isEmpty else { return false }
+        return uuid == profileStore.liveClaudeCodeAccountUUID
+    }
+
+    /// Full label for the token row, short one for the collapsed header.
+    private var tokenStatus: (label: String, short: String, tone: AccountsStatusTone) {
+        guard let setAt = profile.terminalTokenSetAt, let expiresAt = profile.terminalTokenExpiresAt else {
+            return (String(localized: "accounts.terminal.token.none"),
+                    String(localized: "accounts.terminal.token.short.none"), .idle)
+        }
+        let remaining = expiresAt.timeIntervalSinceNow
+        if remaining <= 0 {
+            return (String(format: String(localized: "accounts.terminal.token.expired"), Self.day(expiresAt)),
+                    String(localized: "accounts.terminal.token.short.expired"), .broken)
+        }
+        if remaining < Self.expiryWarning {
+            let days = Int((remaining / (24 * 3600)).rounded(.up))
+            let label = days <= 1
+                ? String(localized: "accounts.terminal.token.expiresSoon")
+                : String(format: String(localized: "accounts.terminal.token.expiresInDays"), days)
+            return (label, label, .attention)
+        }
+        return (String(format: String(localized: "accounts.terminal.token.valid"), Self.day(setAt), Self.day(expiresAt)),
+                String(localized: "accounts.terminal.token.short.set"), .healthy)
+    }
+
+    private static func day(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    // MARK: Behaviour
+
+    private func beginNameEdit() {
+        draftName = commandName
+        nameError = nil
+        nameFieldHadFocus = false
+        isEditingName = true
+    }
+
+    /// Return keeps the editor open on a rejected name so it can be fixed; a
+    /// blur closes it (the current name stays) and keeps the message visible.
+    private func commitName(fromBlur: Bool) {
+        guard isEditingName else { return }
+        let normalized = draftName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard normalized != commandName else {
+            nameError = nil
+            isEditingName = false
+            return
+        }
+        do {
+            try profileStore.setTerminalName(profile.id, draftName)
+            nameError = nil
+            isEditingName = false
+        } catch {
+            nameError = error.localizedDescription
+            if fromBlur { isEditingName = false }
+        }
+    }
+
+    private func cancelName() {
+        nameError = nil
+        isEditingName = false
+    }
+
+    /// Same tab `claw <name>` opens, in the home folder.
+    private func openInWarp() {
+        let stem = TerminalIntegrationGenerator.tabConfigStem(for: commandName)
+        guard let url = URL(string: "warp://tab_config/" + stem) else { return }
+        NSWorkspace.shared.open(url)
+    }
+}
+
+private extension WarpTabColor {
+    var localizedName: String {
+        String(localized: String.LocalizationValue("terminal.warpColor." + rawValue))
+    }
+}
+
 // MARK: - Card action button
 
-/// Compact pill button used on the profile cards and the add card. Mirrors
-/// the `AboutLinkRow` hover: glassFill at rest, tinted fill + border and a
-/// -1pt lift on hover with `springSnap`.
-private struct CardActionButton: View {
+/// Compact pill button used on the profile cards, the add card and the
+/// terminal token sheet. Mirrors the `AboutLinkRow` hover: glassFill at rest,
+/// tinted fill + border and a -1pt lift on hover with `springSnap`.
+struct CardActionButton: View {
     let title: String
     let icon: String
     let tint: Color
