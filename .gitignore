@@ -1,4 +1,6 @@
 build/
+# Separate derived data for xcodebuild test runs
+build-tests/
 *.xcodeproj
 *.xcworkspace
 DerivedData/
