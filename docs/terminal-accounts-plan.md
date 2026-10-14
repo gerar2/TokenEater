@@ -259,3 +259,15 @@ T1, T2, T3 run in parallel after P0. Integration: merge, `xcodebuild test`, sign
 3. `claw gpt --model opus` from a project folder: a magenta Warp tab opens in that folder with the right account and flag.
 4. Change a Warp colour / rename a command in TokenEater: the next `claw` reflects it; the old `tokeneater_*.toml` is gone.
 5. `claude --continue` in a `cla 4gentic` terminal continues the last conversation from another account (shared `~/.claude`).
+
+## 8. Status (2026-10-14)
+
+Implemented and merged into `feat/multi-profile`: P0 `803ccc7e`, T1 `74913c2d` (merge `3919e466`), T2 `83d9284d` (merge `2f5f9b2e`), T3 `0dd1ab72` (merge `31f6c556`). 966 tests pass; signed Release build installed on the maintainer's Mac with the integration off by default.
+
+Deviations and findings during integration:
+
+- `Process.waitUntilExit()` on a GCD worker thread missed the exit of a fast child (`/bin/cat` in `TerminalTokenStoreTests`, reproducible only inside `xctest` after another suite had spawned processes): the child was already reaped and `isRunning` was false, yet the wait spun until the watchdog. Every watchdog-guarded spawn now signals from `terminationHandler` (`7cd9c0c9`), which also covers `SecurityCLIReader` and `ClaudeCodeCredentialStore`.
+- `ProfileStore.terminalIntegrationError` carries `localizedDescription` (the service only throws Foundation file errors), not `String(describing:)`.
+- "Open in Warp" builds its URL from `TerminalIntegrationGenerator.tabConfigStem(for:)`.
+
+Not yet verified (needs the QA pass of §7): Warp actually opening `warp://tab_config/…` tabs with the colour and title, zsh completion under a real `compinit`, the OSC tab title, the UI layout (French string wrapping in particular), and whether claude.ai connectors and web sessions work with `setup-token` tokens (they look inference-only).
