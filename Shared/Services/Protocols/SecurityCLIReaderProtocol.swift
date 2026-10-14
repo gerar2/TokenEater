@@ -7,4 +7,7 @@ import Foundation
 /// so once the user grants access once it sticks across app updates.
 protocol SecurityCLIReaderProtocol: Sendable {
     func readToken() -> String?
+    /// The raw password payload (Claude Code's `claudeAiOauth` JSON), for
+    /// callers that need the refresh token / expiry, not just the access token.
+    func readPayload() -> String?
 }

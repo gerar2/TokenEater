@@ -11,6 +11,21 @@ struct ProxyConfig {
         self.port = port
     }
 
+    /// The proxy the user configured in Settings, read straight from the keys
+    /// `SettingsStore` persists (`proxyEnabled` / `proxyHost` / `proxyPort`).
+    /// UserDefaults is thread-safe, so this is usable from `@Sendable`
+    /// closures (the per-profile token providers refresh off the main actor).
+    /// nil when the proxy is disabled.
+    static func fromUserDefaults(_ defaults: UserDefaults = .standard) -> ProxyConfig? {
+        guard defaults.bool(forKey: "proxyEnabled") else { return nil }
+        let port = defaults.integer(forKey: "proxyPort")
+        return ProxyConfig(
+            enabled: true,
+            host: defaults.string(forKey: "proxyHost") ?? "127.0.0.1",
+            port: port > 0 ? port : 1080
+        )
+    }
+
     /// Returns true when the host + port look like a syntactically valid
     /// SOCKS proxy target. Refuses empty / control-char / slash-injected
     /// hosts and out-of-range ports before they reach

@@ -906,3 +906,184 @@
 "notif.body.fable.red.fallback" = "Fable pool almost out";
 "notif.body.fable.green" = "Fable refilled at %@";
 "notif.body.fable.green.fallback" = "Fable refilled, you're back";
+
+/* === multi-profile: foundation === */
+"sidebar.accounts" = "Accounts";
+"sidebar.accounts.subtitle" = "Monitor several Claude accounts side by side.";
+"popoverElement.profileSwitcher" = "Account switcher";
+"menuBarSegment.profileLabel" = "Account tag";
+"error.banner.reauthRequired" = "Sign in again with this account";
+"error.banner.reauthRequired.action" = "Open Accounts";
+"profile.state.ok" = "Connected";
+"profile.state.expiring" = "Token expiring soon";
+"profile.state.awaiting" = "Waiting for Claude Code";
+"profile.state.reauth" = "Sign-in required";
+"profile.state.missing" = "No credentials";
+"profile.state.unknown" = "Checking…";
+"profile.state.disabled" = "Paused";
+"accounts.error.duplicateDir" = "That directory is already linked to a profile.";
+"accounts.error.duplicateAccount" = "This account is already monitored as “%@”.";
+"accounts.error.notFound" = "Profile not found.";
+"accounts.error.noCredentials" = "No Claude Code credentials found there. Sign in with `claude` first.";
+"accounts.error.noRefreshToken" = "The current sign-in has no refresh token, so it cannot be captured.";
+"accounts.error.identityFailed" = "Could not read the account details: %@";
+"accounts.error.cannotRemoveLast" = "Keep at least one profile.";
+"accounts.error.vault" = "Could not store the credentials in the Keychain: %@";
+/* === end multi-profile: foundation === */
+
+/* === multi-profile: widget === */
+"widget.profile.title" = "Account";
+"widget.profile.description" = "Choose which account this widget shows.";
+"widget.profile.param" = "Account";
+"widget.profile.follow" = "Follows the active account";
+/* === end multi-profile: widget === */
+/* === multi-profile: surfaces === */
+"popover.profileSwitcher.hint" = "Switch the account shown in the menu bar and popover.";
+"popover.profileSwitcher.chip" = "%1$@, session at %2$d%%";
+"popover.profileSwitcher.chip.noData" = "%@, no data yet";
+/* === end multi-profile: surfaces === */
+/* === multi-profile: settings-ui === */
+"accounts.card.active" = "Active";
+"accounts.card.usage" = "5h %d%% · 7d %d%%";
+"accounts.card.updated" = "Updated %@";
+"accounts.card.neverUpdated" = "Not updated yet";
+"accounts.card.rename" = "Rename";
+"accounts.card.rename.placeholder" = "Profile name";
+"accounts.card.color" = "Color";
+"accounts.card.enabled" = "Enabled";
+"accounts.card.setActive" = "Set active";
+"accounts.card.refresh" = "Refresh";
+"accounts.card.remove" = "Remove";
+"accounts.source.claudeCode" = "Claude Code · %@";
+"accounts.source.captured" = "Captured login";
+"accounts.state.rateLimited" = "Rate limited";
+"accounts.state.network" = "Network error";
+"accounts.state.okExpires" = "Connected · token expires %@";
+"accounts.state.expiringAt" = "Token expires %@";
+"accounts.renew.toggle" = "Renew token automatically";
+"accounts.renew.hint" = "When this account’s token expires while Claude Code is idle, TokenEater refreshes it itself and writes the new token back to Claude Code’s store, so Claude Code keeps working with this account. Off: TokenEater waits for Claude Code to refresh it.";
+"accounts.renew.managed" = "Renewed by TokenEater";
+"accounts.renew.managed.hint" = "TokenEater holds its own copy of this sign-in and refreshes it when needed. Claude Code’s own credentials are never touched.";
+"accounts.remove.confirm" = "Remove this profile?";
+"accounts.remove.message" = "“%@” will no longer be monitored and its stored credentials will be deleted from TokenEater’s Keychain item. Claude Code is not affected.";
+"accounts.remove.cancel" = "Cancel";
+"accounts.remove.action" = "Remove";
+"accounts.add.title" = "Add an account";
+"accounts.add.cancel" = "Cancel";
+"accounts.add.name" = "Name";
+"accounts.add.name.placeholder" = "Work";
+"accounts.add.busy" = "Working…";
+"accounts.add.link.title" = "Link a Claude Code config directory…";
+"accounts.add.link.subtitle" = "Follow a second CLAUDE_CONFIG_DIR sign-in. Claude Code keeps owning the credentials.";
+"accounts.add.capture.title" = "Capture the current login…";
+"accounts.add.capture.subtitle" = "Copy the account Claude Code is signed into right now, so TokenEater keeps monitoring it after you switch back.";
+"accounts.link.detected" = "Detected";
+"accounts.link.none" = "No Claude Code config directory found. Run `CLAUDE_CONFIG_DIR=~/.claude-work claude /login` once, or browse for the folder.";
+"accounts.link.browse" = "Browse…";
+"accounts.link.selected" = "Selected";
+"accounts.link.alreadyLinked" = "Linked";
+"accounts.link.action" = "Link";
+"accounts.link.panel.prompt" = "Link";
+"accounts.link.panel.message" = "Choose the CLAUDE_CONFIG_DIR folder of the account to monitor.";
+"accounts.capture.step1" = "In a terminal, sign in with the other account: `claude /login`.";
+"accounts.capture.step2" = "Click Capture. TokenEater copies that sign-in into its own Keychain item.";
+"accounts.capture.step3" = "Sign back in with your usual account (`claude /login`). The captured account keeps refreshing on its own.";
+"accounts.capture.action" = "Capture";
+"settings.accounts.summary.one" = "1 account · active: %@";
+"settings.accounts.summary.many" = "%d accounts · active: %@";
+"settings.accounts.manage" = "Manage accounts";
+/* === end multi-profile: settings-ui === */
+/* === multi-profile: app === */
+"contextmenu.account" = "Account";
+"dashboard.profiles.overview" = "Accounts";
+"dashboard.profiles.active" = "Active";
+"dashboard.profiles.weekly" = "7d %d%%";
+"dashboard.profiles.select" = "Show %@ in the menu bar and popover";
+"dashboard.profiles.state.rateLimited" = "Rate limited";
+/* === end multi-profile: app === */
+
+/* === multi-profile: renewal backoff === */
+"profile.state.deferred.rateLimited" = "Token renewal rate-limited, retrying %@";
+"profile.state.deferred" = "Token renewal failed, retrying %@";
+/* === end multi-profile: renewal backoff === */
+
+/* === multi-profile: duplicate account warning === */
+"accounts.card.duplicate" = "Same account as “%@”: both cards show the same numbers.";
+"accounts.card.duplicate.linkedHint" = "This directory is currently signed in to that account (claude /login changes it).";
+/* === end multi-profile: duplicate account warning === */
+
+/* === terminal accounts: foundation === */
+"accounts.error.terminalNameInvalid" = "Use lowercase letters, digits and dashes (up to 31, starting with a letter or digit).";
+"accounts.error.terminalNameTaken" = "“%@” already uses that command name.";
+"accounts.error.terminalTokenInvalid" = "That does not look like a token from `claude setup-token` (it starts with sk-ant-oat01-).";
+"accounts.error.terminalTokenSaveFailed" = "Could not store the token in the Keychain: %@";
+/* === end terminal accounts: foundation === */
+
+/* === terminal accounts: ui === */
+"accounts.terminal.title" = "Terminal";
+"accounts.terminal.off" = "Terminal commands are off";
+"accounts.terminal.off.link" = "Settings → General";
+"accounts.terminal.command" = "Command";
+"accounts.terminal.command.edit" = "Edit the command name";
+"accounts.terminal.warpColor" = "Warp tab color";
+"accounts.terminal.token" = "Token";
+"accounts.terminal.token.none" = "No terminal token";
+"accounts.terminal.token.valid" = "Set on %1$@ · valid until ~%2$@";
+"accounts.terminal.token.expiresInDays" = "Expires in %d days";
+"accounts.terminal.token.expiresSoon" = "Expires within a day";
+"accounts.terminal.token.expired" = "Expired on %@";
+"accounts.terminal.token.short.none" = "No token";
+"accounts.terminal.token.short.set" = "Token set";
+"accounts.terminal.token.short.expired" = "Expired";
+"accounts.terminal.token.set" = "Set token…";
+"accounts.terminal.token.replace" = "Replace…";
+"accounts.terminal.token.remove" = "Remove";
+"accounts.terminal.token.remove.confirm" = "Remove the terminal token?";
+"accounts.terminal.token.remove.message" = "The token for “%1$@” is deleted from your Keychain. cla %2$@ will no longer sign in as this account.";
+"accounts.terminal.liveHint" = "Without a token, `cla %@` uses the ~/.claude session (this account is signed in there).";
+"accounts.terminal.openWarp" = "Open in Warp";
+"accounts.terminal.openWarp.help" = "Opens a Warp tab for this account in your home folder (same as claw %@)";
+"accounts.terminal.openWarp.missing" = "Warp is not installed";
+"terminal.warpColor.black" = "Black";
+"terminal.warpColor.red" = "Red";
+"terminal.warpColor.green" = "Green";
+"terminal.warpColor.yellow" = "Yellow";
+"terminal.warpColor.blue" = "Blue";
+"terminal.warpColor.magenta" = "Magenta";
+"terminal.warpColor.cyan" = "Cyan";
+"terminal.warpColor.white" = "White";
+"terminal.token.sheet.title" = "Terminal token";
+"terminal.token.sheet.subtitle" = "Lets `cla %1$@` sign in as “%2$@” while every account shares ~/.claude.";
+"terminal.token.sheet.step1" = "In your browser, sign in to claude.ai as **%@**.";
+"terminal.token.sheet.openClaude" = "Open claude.ai";
+"terminal.token.sheet.step2" = "In a terminal, run:";
+"terminal.token.sheet.step2.hint" = "It asks you to authorize in the browser, then prints a one-year token once.";
+"terminal.token.sheet.step3" = "Paste the token below.";
+"terminal.token.sheet.placeholder" = "sk-ant-oat01-…";
+"terminal.token.sheet.format" = "A token from claude setup-token starts with sk-ant-oat01-.";
+"terminal.token.sheet.storage" = "Stored in your login Keychain. TokenEater never shows it again; only the cla command reads it.";
+"terminal.token.sheet.copy" = "Copy";
+"terminal.token.sheet.cancel" = "Cancel";
+"terminal.token.sheet.save" = "Save";
+"terminal.token.sheet.saving" = "Saving…";
+"settings.terminal.title" = "Terminal integration";
+"settings.terminal.toggle" = "Generate cla / claw commands and Warp tabs";
+"settings.terminal.hint" = "`cla <account>` runs Claude Code in the current terminal with that account; `claw <account>` opens a Warp tab colored for it. Every account shares ~/.claude (memory, history, settings). Set each account’s command, color and token in Settings → Accounts.";
+"settings.terminal.shell.installed" = "Loaded from ~/.zshrc ✓";
+"settings.terminal.shell.notInstalled" = "Not in ~/.zshrc";
+"settings.terminal.shell.noZshrc" = "No ~/.zshrc yet";
+"settings.terminal.shell.install" = "Install in ~/.zshrc";
+"settings.terminal.shell.uninstall" = "Remove from ~/.zshrc";
+"settings.terminal.shell.newTerminal" = "Takes effect in newly opened terminals (or run `source ~/.zshrc` in an open one).";
+"settings.terminal.shell.leftover" = "~/.zshrc still loads the TokenEater block. It does nothing while this is off.";
+"settings.terminal.shell.error" = "Could not update ~/.zshrc: %@";
+"settings.terminal.files.script" = "Script";
+"settings.terminal.files.tabConfigs" = "Warp Tab Configs";
+"settings.terminal.files.noWarp" = "Warp not installed";
+"settings.terminal.regenerate" = "Regenerate now";
+"settings.terminal.regenerated" = "Regenerated";
+"settings.terminal.error" = "Could not write the generated files: %@";
+"settings.terminal.examples" = "Examples";
+"settings.terminal.example.resume" = "Claude Code in this terminal with that account, resuming a conversation.";
+"settings.terminal.example.warp" = "A new Warp tab colored for the account, in the same folder, with Opus.";
+/* === end terminal accounts: ui === */

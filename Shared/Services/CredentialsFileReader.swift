@@ -32,4 +32,8 @@ final class CredentialsFileReader: CredentialsFileReaderProtocol, @unchecked Sen
     func tokenExists() -> Bool {
         FileManager.default.fileExists(atPath: filePath)
     }
+
+    func readPayload() -> Data? {
+        FileManager.default.contents(atPath: filePath)
+    }
 }

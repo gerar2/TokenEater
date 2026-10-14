@@ -51,4 +51,7 @@ enum AppErrorState: Equatable {
     case tokenUnavailable
     case rateLimited
     case networkError
+    /// The profile's refresh-token chain is dead: the user must log in again
+    /// with that account (multi-profile only).
+    case reauthRequired
 }

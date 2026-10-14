@@ -380,3 +380,125 @@ struct MenuBarFablePacingRenderTests {
         #expect(image.size.width > 0)
     }
 }
+
+/// Multi-profile account tag. The segment is presence-gated on
+/// `RenderData.profileLabel`: a single-profile install (nil label) must render
+/// exactly as if the segment were not in the composition, and a labelled one
+/// must draw something in both styles.
+@Suite("MenuBarRenderer profile label segment")
+struct MenuBarProfileLabelRenderTests {
+
+    private func data(
+        segments: [MenuBarSegment],
+        profileLabel: String?,
+        profileColorHex: String? = "#60A5FA",
+        monochrome: Bool = false
+    ) -> MenuBarRenderer.RenderData {
+        MenuBarRenderer.RenderData(
+            composition: MenuBarComposition(segments: segments),
+            fiveHourPct: 42, sevenDayPct: 0, sonnetPct: 0,
+            weeklyPacingDelta: 0, weeklyPacingZone: .onTrack, hasWeeklyPacing: false,
+            sessionPacingDelta: 0, sessionPacingZone: .onTrack, hasSessionPacing: false,
+            fablePacingDelta: 0, fablePacingZone: .onTrack, hasFablePacing: false,
+            hasConfig: true, hasError: false, isAwaitingRefresh: false,
+            themeColors: .default, thresholds: .default,
+            menuBarMonochrome: monochrome,
+            fiveHourReset: "", fiveHourResetAbsolute: "",
+            fiveHourResetDate: nil, sevenDayResetDate: nil, sonnetResetDate: nil,
+            hasFiveHourBucket: true,
+            resetTextColorHex: "", sessionPeriodColorHex: "",
+            smartResetColor: false, smartColorProfile: .balanced,
+            pacingMargin: 10,
+            fablePct: 0, hasFable: false, fableResetDate: nil,
+            outageActive: false, outageHealth: .healthy, nextPollSeconds: nil,
+            extraCreditsPct: 0, hasExtraCredits: false,
+            profileLabel: profileLabel,
+            profileColorHex: profileColorHex
+        )
+    }
+
+    private func sessionPlusTag(_ style: MenuBarSegmentStyle) -> [MenuBarSegment] {
+        [MenuBarSegment(kind: .session, style: .labelValue), MenuBarSegment(kind: .profileLabel, style: style)]
+    }
+
+    private let sessionOnly = [MenuBarSegment(kind: .session, style: .labelValue)]
+
+    @Test("nil label: the segment draws nothing, image identical to a composition without it", arguments: [MenuBarSegmentStyle.text, .pill])
+    func nilLabelDrawsNothing(style: MenuBarSegmentStyle) {
+        let withTag = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(style), profileLabel: nil))
+        let without = MenuBarRenderer.renderWithHitRects(data(segments: sessionOnly, profileLabel: nil))
+
+        #expect(withTag.hitRects.count == 1)
+        #expect(withTag.hitRects.map(\.rect) == without.hitRects.map(\.rect))
+        #expect(withTag.image.size == without.image.size)
+        #expect(withTag.image.tiffRepresentation == without.image.tiffRepresentation)
+    }
+
+    @Test("blank label counts as no label")
+    func blankLabelDrawsNothing() {
+        let withTag = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(.text), profileLabel: "   "))
+        let without = MenuBarRenderer.renderWithHitRects(data(segments: sessionOnly, profileLabel: nil))
+        #expect(withTag.hitRects.count == 1)
+        #expect(withTag.image.size == without.image.size)
+    }
+
+    @Test("a label draws the segment: the image widens and a hit rect appears", arguments: [MenuBarSegmentStyle.text, .pill])
+    func labelledSegmentDraws(style: MenuBarSegmentStyle) {
+        let labelled = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(style), profileLabel: "Work"))
+        let unlabelled = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(style), profileLabel: nil))
+
+        #expect(labelled.image.isTemplate == false)
+        #expect(labelled.hitRects.count == 2)
+        #expect(labelled.image.size.width > unlabelled.image.size.width)
+        let tagRect = labelled.hitRects[1].rect
+        #expect(tagRect.width > 0)
+        #expect(tagRect.minX > labelled.hitRects[0].rect.maxX)
+    }
+
+    @Test("tag alone: logo fallback without a label, a real segment with one")
+    func aloneFallsBackToLogo() {
+        let tagOnly = [MenuBarSegment(kind: .profileLabel, style: .pill)]
+        let unlabelled = MenuBarRenderer.renderUncached(data(segments: tagOnly, profileLabel: nil))
+        #expect(unlabelled.isTemplate == true)
+        let labelled = MenuBarRenderer.renderUncached(data(segments: tagOnly, profileLabel: "Personal"))
+        #expect(labelled.isTemplate == false)
+        #expect(labelled.size.width > 0)
+    }
+
+    @Test("label text is trimmed and capped at eight characters")
+    func labelTruncation() {
+        #expect(MenuBarRenderer.profileLabelMaxLength == 8)
+        #expect(MenuBarRenderer.profileLabelText(nil) == nil)
+        #expect(MenuBarRenderer.profileLabelText("") == nil)
+        #expect(MenuBarRenderer.profileLabelText("  \n") == nil)
+        #expect(MenuBarRenderer.profileLabelText(" Work ") == "Work")
+        #expect(MenuBarRenderer.profileLabelText("Personal-Account") == "Personal")
+        // The cap is what the renderer draws: a long name and its 8-char
+        // prefix produce the same width.
+        let long = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(.text), profileLabel: "Personal-Account"))
+        let short = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(.text), profileLabel: "Personal"))
+        #expect(long.image.size.width == short.image.size.width)
+    }
+
+    @Test("tint: monochrome wins, then the profile hex, then the secondary label colour")
+    func tintResolution() {
+        #expect(MenuBarRenderer.profileLabelTint(hex: "#60A5FA", monochrome: true) == NSColor.labelColor)
+        #expect(MenuBarRenderer.profileLabelTint(hex: nil, monochrome: true) == NSColor.labelColor)
+
+        let tinted = MenuBarRenderer.profileLabelTint(hex: "#60A5FA", monochrome: false)
+        #expect(tinted == MenuBarTextColorResolver.resolve(hex: "#60A5FA", fallback: .clear))
+        #expect(tinted != NSColor.secondaryLabelColor)
+
+        #expect(MenuBarRenderer.profileLabelTint(hex: nil, monochrome: false) == NSColor.secondaryLabelColor)
+        #expect(MenuBarRenderer.profileLabelTint(hex: "not-a-color", monochrome: false) == NSColor.secondaryLabelColor)
+    }
+
+    @Test("monochrome renders the tag in a different colour than the tinted one, same geometry", arguments: [MenuBarSegmentStyle.text, .pill])
+    func monochromeChangesPixelsNotLayout(style: MenuBarSegmentStyle) {
+        let tinted = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(style), profileLabel: "Work", monochrome: false))
+        let mono = MenuBarRenderer.renderWithHitRects(data(segments: sessionPlusTag(style), profileLabel: "Work", monochrome: true))
+        #expect(mono.hitRects.count == 2)
+        #expect(mono.hitRects.map(\.rect) == tinted.hitRects.map(\.rect))
+        #expect(mono.image.tiffRepresentation != tinted.image.tiffRepresentation)
+    }
+}

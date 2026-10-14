@@ -35,6 +35,7 @@ enum AppSpace: String, CaseIterable {
 /// the Studio space since 5.9. Order drives the sub-sidebar display.
 enum SettingsSection: String, CaseIterable {
     case general
+    case accounts
     case pacing
     case agentWatchers
     case notifications
@@ -42,6 +43,7 @@ enum SettingsSection: String, CaseIterable {
     var labelKey: String {
         switch self {
         case .general:       "sidebar.general"
+        case .accounts:      "sidebar.accounts"
         case .pacing:        "sidebar.pacing"
         case .agentWatchers: "sidebar.agentWatchers"
         case .notifications: "sidebar.notifications"
@@ -53,6 +55,7 @@ enum SettingsSection: String, CaseIterable {
     var iconName: String {
         switch self {
         case .general:       "slider.horizontal.3"
+        case .accounts:      "person.2.crop.square.stack.fill"
         case .pacing:        "speedometer"
         case .agentWatchers: "waveform.path.ecg"
         case .notifications: "bell.fill"

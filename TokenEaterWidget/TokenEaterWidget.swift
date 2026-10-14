@@ -1,11 +1,17 @@
 import WidgetKit
 import SwiftUI
 
+// Overview, Session Ring and Pacing Glance can be pinned to one account
+// (`SelectProfileIntent`). The `kind` strings are unchanged so widgets placed
+// with the former `StaticConfiguration` keep working: WidgetKit hands them a
+// nil `profile` parameter, which the provider treats as "follow the active
+// account". The other kinds stay static (active profile only).
+
 struct TokenEaterWidget: Widget {
     let kind: String = "TokenEaterWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: StaticProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: SelectProfileIntent.self, provider: ProfileTimelineProvider()) { entry in
             UsageWidgetView(entry: entry)
         }
         .configurationDisplayName("TokenEater")
@@ -18,7 +24,7 @@ struct PacingWidget: Widget {
     let kind: String = "PacingWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: StaticProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: SelectProfileIntent.self, provider: ProfileTimelineProvider()) { entry in
             PacingGlanceWidgetView(entry: entry)
         }
         .configurationDisplayName(String(localized: "widget.title.pacingGlance"))
@@ -32,7 +38,7 @@ struct SessionRingWidget: Widget {
     let kind: String = "SessionRingWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: StaticProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: SelectProfileIntent.self, provider: ProfileTimelineProvider()) { entry in
             SessionRingWidgetView(entry: entry)
         }
         .configurationDisplayName(String(localized: "widget.title.sessionRing"))

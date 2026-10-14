@@ -28,6 +28,19 @@ struct PopoverCompositionModelsTests {
         #expect(!PopoverElementKind.fablePacing.isChrome)
     }
 
+    @Test("profileSwitcher is a full-width utility row, never chrome (multi-profile)")
+    func profileSwitcherElementShape() {
+        #expect(PopoverElementKind.profileSwitcher.family == .utility)
+        #expect(PopoverElementKind.profileSwitcher.allowedStyles == [.utilityRow])
+        #expect(PopoverElementStyle.utilityRow.allowedWidths == [.full])
+        #expect(PopoverElementStyle.utilityRow.defaultWidth == .full)
+        #expect(!PopoverElementKind.profileSwitcher.isChrome)
+        // A switcher stored at a half width (hand-edited blob) still renders
+        // full-width instead of breaking its row.
+        let element = PopoverElement(kind: .profileSwitcher, style: .utilityRow, width: .half)
+        #expect(element.effectiveWidth == .full)
+    }
+
     @Test("effectiveWidth clamps an illegal width to the closest legal one")
     func effectiveWidthClamps() {
         let arc = PopoverElement(kind: .session, style: .arc, width: .third)

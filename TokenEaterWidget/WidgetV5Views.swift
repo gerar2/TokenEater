@@ -41,14 +41,26 @@ enum WidgetTokens {
     static let ringMedium: CGFloat = 5
 }
 
-// MARK: - Shared header (logo + label + optional accessory)
+// MARK: - Shared header (logo + label + optional profile tag + optional accessory)
 
 struct WidgetHeader<Accessory: View>: View {
     let label: LocalizedStringKey
+    /// Account the entry belongs to. nil (every static widget, and the
+    /// profile-aware ones for single-profile users) draws no tag at all, so
+    /// the header is pixel-identical to the pre-profile layout.
+    let profileName: String?
+    let profileColorHex: String?
     let accessory: () -> Accessory
 
-    init(_ label: LocalizedStringKey, @ViewBuilder accessory: @escaping () -> Accessory = { EmptyView() }) {
+    init(
+        _ label: LocalizedStringKey,
+        profileName: String? = nil,
+        profileColorHex: String? = nil,
+        @ViewBuilder accessory: @escaping () -> Accessory = { EmptyView() }
+    ) {
         self.label = label
+        self.profileName = profileName
+        self.profileColorHex = profileColorHex
         self.accessory = accessory
     }
 
@@ -63,8 +75,47 @@ struct WidgetHeader<Accessory: View>: View {
                 .tracking(WidgetTokens.headerTracking)
                 .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText).opacity(WidgetTokens.secondary))
                 .textCase(.uppercase)
+                // The widget label must never be the thing that truncates when
+                // a long account name competes for the same row.
+                .layoutPriority(1)
             Spacer(minLength: 0)
+            if let profileName {
+                WidgetProfileTag(name: profileName, colorHex: profileColorHex)
+            }
             accessory()
+        }
+    }
+}
+
+// MARK: - Profile tag (coloured dot + account name)
+
+/// Header accessory naming the account a profile-aware widget shows. The
+/// dot takes the profile colour; without a usable hex (an entry written by
+/// `updateProfileUsage` before the first catalog sync) it falls back to the
+/// theme's text colour rather than `Color(hex:)`'s black.
+struct WidgetProfileTag: View {
+    let name: String
+    let colorHex: String?
+
+    private var dotColor: Color {
+        if let colorHex, !colorHex.isEmpty {
+            return Color(hex: colorHex)
+        }
+        return Color(hex: WidgetTheme.theme.widgetText).opacity(WidgetTokens.secondary)
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(dotColor)
+                .frame(width: 5, height: 5)
+            Text(name)
+                .font(WidgetTokens.micro)
+                .tracking(0.3)
+                .textCase(.uppercase)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .foregroundStyle(Color(hex: WidgetTheme.theme.widgetText).opacity(WidgetTokens.secondary))
         }
     }
 }
@@ -176,7 +227,7 @@ struct SessionRingWidgetView: View {
             : theme.gaugeGradient(for: pct, thresholds: thresholds)
 
         return VStack(spacing: 0) {
-            WidgetHeader("widget.session") {
+            WidgetHeader("widget.session", profileName: entry.profileName, profileColorHex: entry.profileColorHex) {
                 if let pacing {
                     Image(systemName: pacing.zone.iconName)
                         .font(.system(size: 11, weight: .semibold))
@@ -552,7 +603,7 @@ struct PacingGlanceWidgetView: View {
         let sign = pacing.delta >= 0 ? "+" : ""
 
         return VStack(spacing: 0) {
-            WidgetHeader("pacing.label")
+            WidgetHeader("pacing.label", profileName: entry.profileName, profileColorHex: entry.profileColorHex)
             Spacer(minLength: 8)
             VStack(spacing: 6) {
                 Image(systemName: pacing.zone.iconName)

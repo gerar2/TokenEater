@@ -74,6 +74,23 @@ struct NavigationTargetTests {
         }
     }
 
+    @Test("settings.accounts lands on the Accounts sub-section (multi-profile deep link)")
+    func accountsSection() {
+        #expect(NavigationTarget.parse("settings.accounts")
+                == NavigationTarget(space: .settings, settingsSection: .accounts))
+        #expect(NavigationTarget.parse("accounts")
+                == NavigationTarget(space: .settings, settingsSection: .accounts))
+    }
+
+    @Test("Accounts sits right after General in the settings sub-sidebar")
+    func accountsSidebarOrder() {
+        let sections = SettingsSection.allCases
+        #expect(sections.firstIndex(of: .general) == 0)
+        #expect(sections.firstIndex(of: .accounts) == 1)
+        #expect(SettingsSection.accounts.rawValue == "accounts")
+        #expect(SettingsSection.accounts.labelKey == "sidebar.accounts")
+    }
+
     @Test("legacy flat settings section names keep working")
     func legacyFlatSettingsSections() {
         #expect(NavigationTarget.parse("general")

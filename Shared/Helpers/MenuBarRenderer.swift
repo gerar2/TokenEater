@@ -53,6 +53,11 @@ enum MenuBarRenderer {
         let nextPollSeconds: Int?
         let extraCreditsPct: Int
         let hasExtraCredits: Bool
+        // Multi-profile: the active profile's tag for the `profileLabel`
+        // segment. nil (single profile) draws nothing. Trailing `var`s with
+        // defaults keep the memberwise init source-compatible.
+        var profileLabel: String? = nil
+        var profileColorHex: String? = nil
     }
 
     private static var cachedImage: NSImage?
@@ -358,6 +363,10 @@ enum MenuBarRenderer {
         // check (`has*Pacing`) drives the placeholder in `pacingContent`.
         case .sessionReset, .sessionPacing: return data.hasFiveHourBucket
         case .fablePacing: return data.hasFable
+        // Multi-profile tag: the controller leaves the label nil on a
+        // single-profile install, so the segment vanishes there exactly as if
+        // it were not in the composition.
+        case .profileLabel: return profileLabelText(data.profileLabel) != nil
         default: return true // weeklyPacing + non-gated kinds: present with config
         }
     }
@@ -374,6 +383,7 @@ enum MenuBarRenderer {
             switch segment.kind {
             case .sessionReset: content = resetContent(style: style, format: segment.options.resetFormat, data: data)
             case .serviceStatus: content = statusContent(style: style, data: data)
+            case .profileLabel: content = profileLabelContent(style: style, data: data)
             default: content = nil
             }
         }
@@ -524,6 +534,54 @@ enum MenuBarRenderer {
             ]))
         }
         return .run(s)
+    }
+
+    // MARK: - Profile label (multi-profile)
+
+    /// Max characters drawn for the account tag. The menu bar is shared real
+    /// estate: eight fits "Personal" / "Work" without eating a metric's slot.
+    static let profileLabelMaxLength = 8
+
+    /// The tag as drawn: trimmed and capped at `profileLabelMaxLength`; nil
+    /// when there is nothing to draw (single profile, or a blank name).
+    /// Internal so the presence + truncation rule is unit-testable.
+    static func profileLabelText(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return String(trimmed.prefix(profileLabelMaxLength))
+    }
+
+    /// Tag colour. Monochrome wins (system label, like every other segment),
+    /// then the profile's own hex, then the secondary label colour when the
+    /// hex is missing or malformed. Internal for the tests.
+    static func profileLabelTint(hex: String?, monochrome: Bool) -> NSColor {
+        if monochrome { return .labelColor }
+        return MenuBarTextColorResolver.resolve(hex: hex ?? "", fallback: .secondaryLabelColor)
+    }
+
+    /// `.text`: a small colour dot + the name in the profile colour, so the tag
+    /// reads as a tag rather than as another metric. `.pill`: the same capsule
+    /// path the other segments use, tinted with the profile colour. Returns
+    /// nil (segment dropped) when there is no label.
+    private static func profileLabelContent(style: MenuBarSegmentStyle, data: RenderData) -> SegmentVisual.Content? {
+        guard let label = profileLabelText(data.profileLabel) else { return nil }
+        let tint = profileLabelTint(hex: data.profileColorHex, monochrome: data.menuBarMonochrome)
+        switch style {
+        case .pill:
+            return .pill(text: label, tint: tint)
+        default:
+            let s = NSMutableAttributedString()
+            // U+25CF at 7pt, nudged up so it sits on the x-height centre of
+            // the 11pt name instead of hugging the baseline.
+            s.append(NSAttributedString(string: "\u{25CF} ", attributes: [
+                .font: systemFont(7, .bold), .foregroundColor: tint, .baselineOffset: 1.5,
+            ]))
+            s.append(NSAttributedString(string: label, attributes: [
+                .font: systemFont(11, .semibold), .foregroundColor: tint,
+            ]))
+            return .run(s)
+        }
     }
 
     // MARK: - Metric value lookups

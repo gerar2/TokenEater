@@ -14,6 +14,7 @@ struct MonitoringView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
     @EnvironmentObject private var sessionStore: SessionStore
     @EnvironmentObject private var vendorStatusStore: VendorStatusStore
+    @EnvironmentObject private var profileStore: ProfileStore
 
     /// Lightweight 7d daily-buckets store for the back-of-card stats.
     /// Loaded once on appear, refreshed if older than 60s. Owned by
@@ -35,6 +36,12 @@ struct MonitoringView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: DS.Spacing.md) {
                 header
+                // Every enabled account side by side; the hero/tiles below
+                // stay dedicated to the active one. Hidden for the single
+                // migrated profile so the dashboard is unchanged for them.
+                if profileStore.isMultiProfile {
+                    ProfilesOverviewStrip()
+                }
                 heroTile
                 metricsGrid
                 pacingRow

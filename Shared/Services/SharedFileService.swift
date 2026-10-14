@@ -6,10 +6,7 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     private static let oldDirectoryName = "com.claudeusagewidget.shared"
     private static let fileName = "shared.json"
 
-    private var realHomeDirectory: String {
-        guard let pw = getpwuid(getuid()) else { return NSHomeDirectory() }
-        return String(cString: pw.pointee.pw_dir)
-    }
+    private var realHomeDirectory: String { Self.resolveRealHomeDirectory() }
 
     /// Root directory for shared data. Always uses the home-relative
     /// `~/Library/Application Support/com.tokeneater.shared/` path because :
@@ -29,8 +26,14 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     ///
     /// Will switch back to App Group lookup once we have provisioning profiles
     /// in CI and both entitlements files declare the group.
-    private var rootDirectoryURL: URL {
-        URL(fileURLWithPath: realHomeDirectory)
+    ///
+    /// Stored (not computed) so `init(rootDirectory:)` can point a test
+    /// instance at a temp directory without the migrations or the real home
+    /// ever being touched.
+    private let rootDirectoryURL: URL
+
+    private static func defaultRootDirectoryURL(realHome: String) -> URL {
+        URL(fileURLWithPath: realHome)
             .appendingPathComponent("Library/Application Support")
             .appendingPathComponent(Self.legacyDirectoryName)
     }
@@ -53,9 +56,27 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
             .appendingPathComponent(Self.fileName)
     }
 
+    /// Production initializer: home-relative root plus the two one-shot
+    /// migrations (old product name, stranded Group Container data).
     init() {
+        rootDirectoryURL = Self.defaultRootDirectoryURL(
+            realHome: Self.resolveRealHomeDirectory()
+        )
         migrateFromOldProductName()
         migrateFromGroupContainerToHomeRelative()
+    }
+
+    /// Explicit root (the directory that holds `shared.json`). Meant for tests
+    /// and tooling: the migrations are skipped because they only make sense for
+    /// the real home directory, and running them against a temp root would
+    /// silently move the user's live data.
+    init(rootDirectory: URL) {
+        rootDirectoryURL = rootDirectory
+    }
+
+    private static func resolveRealHomeDirectory() -> String {
+        guard let pw = getpwuid(getuid()) else { return NSHomeDirectory() }
+        return String(cString: pw.pointee.pw_dir)
     }
 
     // MARK: - Migrations
@@ -146,26 +167,43 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
         var pacingHoursEnabled: Bool?
         var pacingStartHour: Int?
         var pacingEndHour: Int?
+        /// Multi-profile catalog (5.14+). Optional so older widget builds
+        /// ignore it and keep reading the top-level `cachedUsage`.
+        var profiles: [SharedProfileSnapshot]?
+        var activeProfileID: String?
     }
 
     /// In-memory cache - avoids redundant disk reads within the same process.
     /// Each process (app, widget) has its own SharedFileService instance, so no cross-process staleness.
     private var cachedData: SharedData?
 
-    private func load() -> SharedData {
-        if let cached = cachedData { return cached }
+    /// Serialises every read-modify-write on `shared.json` inside this
+    /// process. With one `UsageStore` per profile, several auto-refresh loops
+    /// call `updateProfileUsage` concurrently from the cooperative pool;
+    /// unguarded, two of them reassigned `cachedData` at once (a double free,
+    /// crash in `destroy for SharedData`) and could clobber each other's
+    /// entry. Static so the app's several instances (ThemeStore / SettingsStore
+    /// / ProfileStore each own one) share the same critical section; recursive
+    /// because the update paths call `load()` / `save()` while holding it.
+    /// Cross-process safety stays with `NSFileCoordinator`.
+    private static let ioLock = NSRecursiveLock()
 
-        var result = SharedData()
-        let coordinator = NSFileCoordinator()
-        var error: NSError?
-        coordinator.coordinate(readingItemAt: sharedFileURL, options: [], error: &error) { url in
-            guard let data = try? Data(contentsOf: url) else { return }
-            if let decoded = try? JSONDecoder().decode(SharedData.self, from: data) {
-                result = decoded
+    private func load() -> SharedData {
+        Self.ioLock.withLock {
+            if let cached = cachedData { return cached }
+
+            var result = SharedData()
+            let coordinator = NSFileCoordinator()
+            var error: NSError?
+            coordinator.coordinate(readingItemAt: sharedFileURL, options: [], error: &error) { url in
+                guard let data = try? Data(contentsOf: url) else { return }
+                if let decoded = try? JSONDecoder().decode(SharedData.self, from: data) {
+                    result = decoded
+                }
             }
+            cachedData = result
+            return result
         }
-        cachedData = result
-        return result
     }
 
     /// Reads the latest on-disk state, bypassing the in-memory cache. The app
@@ -175,20 +213,24 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     /// wrote (e.g. a usage refresh clobbering the pacing schedule the settings
     /// store saved). Update paths read fresh so writes MERGE instead of clobber.
     private func loadFresh() -> SharedData {
-        cachedData = nil
-        return load()
+        Self.ioLock.withLock {
+            cachedData = nil
+            return load()
+        }
     }
 
     private func save(_ shared: SharedData) {
-        let dir = sharedFileURL.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        Self.ioLock.withLock {
+            let dir = sharedFileURL.deletingLastPathComponent()
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
-        let coordinator = NSFileCoordinator()
-        var error: NSError?
-        coordinator.coordinate(writingItemAt: sharedFileURL, options: .forReplacing, error: &error) { url in
-            try? JSONEncoder().encode(shared).write(to: url, options: .atomic)
+            let coordinator = NSFileCoordinator()
+            var error: NSError?
+            coordinator.coordinate(writingItemAt: sharedFileURL, options: .forReplacing, error: &error) { url in
+                try? JSONEncoder().encode(shared).write(to: url, options: .atomic)
+            }
+            cachedData = shared
         }
-        cachedData = shared
     }
 
     // MARK: - SharedFileServiceProtocol
@@ -196,7 +238,9 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     var fileURL: URL { sharedFileURL }
 
     func invalidateCache() {
-        cachedData = nil
+        Self.ioLock.withLock {
+            cachedData = nil
+        }
     }
 
     var isConfigured: Bool { cachedUsage != nil }
@@ -230,29 +274,37 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     }
 
     func updateAfterSync(usage: CachedUsage, syncDate: Date) {
-        var data = loadFresh()
-        data.cachedUsage = usage
-        data.lastSyncDate = syncDate
-        save(data)
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.cachedUsage = usage
+            data.lastSyncDate = syncDate
+            save(data)
+        }
     }
 
     func updateTheme(_ theme: ThemeColors, thresholds: UsageThresholds) {
-        var data = loadFresh()
-        data.theme = theme
-        data.thresholds = thresholds
-        save(data)
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.theme = theme
+            data.thresholds = thresholds
+            save(data)
+        }
     }
 
     func updateSmartColorEnabled(_ enabled: Bool) {
-        var data = loadFresh()
-        data.smartColorEnabled = enabled
-        save(data)
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.smartColorEnabled = enabled
+            save(data)
+        }
     }
 
     func updateSmartColorProfile(_ profile: SmartColorProfile) {
-        var data = loadFresh()
-        data.smartColorProfile = profile.rawValue
-        save(data)
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.smartColorProfile = profile.rawValue
+            save(data)
+        }
     }
 
     /// Workweek pacing schedule. The widget reads this so it computes pacing
@@ -269,13 +321,15 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     }
 
     func updatePacingSchedule(_ schedule: PacingSchedule) {
-        var data = loadFresh()
-        data.pacingWorkweekEnabled = schedule.enabled
-        data.pacingActiveDays = Array(schedule.activeDays).sorted()
-        data.pacingHoursEnabled = schedule.hoursEnabled
-        data.pacingStartHour = schedule.startHour
-        data.pacingEndHour = schedule.endHour
-        save(data)
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.pacingWorkweekEnabled = schedule.enabled
+            data.pacingActiveDays = Array(schedule.activeDays).sorted()
+            data.pacingHoursEnabled = schedule.hoursEnabled
+            data.pacingStartHour = schedule.startHour
+            data.pacingEndHour = schedule.endHour
+            save(data)
+        }
     }
 
     /// Last 7 daily token totals (oldest first). nil until first MonitoringInsightsStore refresh.
@@ -288,14 +342,74 @@ final class SharedFileService: SharedFileServiceProtocol, @unchecked Sendable {
     }
 
     func updateLastWeekDailyTotals(_ totals: [Int], refreshedAt: Date = Date()) {
-        var data = loadFresh()
-        data.lastWeekDailyTotals = totals
-        data.lastWeekTotalsRefreshedAt = refreshedAt
-        save(data)
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.lastWeekDailyTotals = totals
+            data.lastWeekTotalsRefreshedAt = refreshedAt
+            save(data)
+        }
+    }
+
+    // MARK: - Profiles
+
+    var profileSnapshots: [SharedProfileSnapshot] {
+        load().profiles ?? []
+    }
+
+    var activeProfileID: UUID? {
+        load().activeProfileID.flatMap(UUID.init(uuidString:))
+    }
+
+    func updateProfileCatalog(_ profiles: [SharedProfileSnapshot], activeProfileID: UUID?) {
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            let existing = data.profiles ?? []
+            data.profiles = profiles.map { incoming in
+                var entry = incoming
+                if let old = existing.first(where: { $0.id == incoming.id }) {
+                    if entry.cachedUsage == nil { entry.cachedUsage = old.cachedUsage }
+                    if entry.lastSyncDate == nil { entry.lastSyncDate = old.lastSyncDate }
+                    if entry.credentialState == nil { entry.credentialState = old.credentialState }
+                }
+                return entry
+            }
+            data.activeProfileID = activeProfileID?.uuidString
+            save(data)
+        }
+    }
+
+    func updateProfileUsage(profileID: UUID, usage: CachedUsage, syncDate: Date, credentialState: String?) {
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            var list = data.profiles ?? []
+            if let index = list.firstIndex(where: { $0.id == profileID }) {
+                list[index].cachedUsage = usage
+                list[index].lastSyncDate = syncDate
+                list[index].credentialState = credentialState
+            } else {
+                list.append(SharedProfileSnapshot(
+                    id: profileID, name: "", colorHex: "",
+                    cachedUsage: usage, lastSyncDate: syncDate, credentialState: credentialState
+                ))
+            }
+            data.profiles = list
+            save(data)
+        }
+    }
+
+    func removeProfile(id: UUID) {
+        Self.ioLock.withLock {
+            var data = loadFresh()
+            data.profiles?.removeAll { $0.id == id }
+            if data.activeProfileID == id.uuidString { data.activeProfileID = nil }
+            save(data)
+        }
     }
 
     func clear() {
-        let empty = SharedData()
-        save(empty)
+        Self.ioLock.withLock {
+            let empty = SharedData()
+            save(empty)
+        }
     }
 }

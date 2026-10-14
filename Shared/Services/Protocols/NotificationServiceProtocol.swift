@@ -75,4 +75,13 @@ protocol NotificationServiceProtocol {
         toggles: NotificationToggles
     )
     func checkVendorHealth(_ status: VendorStatus, toggles: NotificationToggles)
+    /// Cancels the scheduled reset reminders that belong to this service's
+    /// `NotificationScope` only. Used when a profile is removed.
+    func cancelPendingReminders()
+}
+
+extension NotificationServiceProtocol {
+    /// Default no-op so conformers that never schedule anything (and older
+    /// mocks) keep compiling without opting in.
+    func cancelPendingReminders() {}
 }

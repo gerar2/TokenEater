@@ -65,6 +65,9 @@ struct ComposablePopoverView: View {
 private struct PopoverGrid: View {
     @EnvironmentObject private var usageStore: UsageStore
     @EnvironmentObject private var settingsStore: SettingsStore
+    // Injected by `ActiveProfileHost` at every popover / dashboard root; the
+    // profile switcher's presence gate reads the catalog from it.
+    @EnvironmentObject private var profileStore: ProfileStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.popoverElementTap) private var tapHandler
     @Environment(\.popoverSelectedElement) private var selectedID
@@ -106,7 +109,7 @@ private struct PopoverGrid: View {
 
     private var visibleElements: [PopoverElement] {
         settingsStore.popoverComposition.visibleElements.filter {
-            PopoverMetricResolver.isAvailable($0.kind, usage: usageStore)
+            PopoverMetricResolver.isAvailable($0.kind, usage: usageStore, profiles: profileStore)
         }
     }
 

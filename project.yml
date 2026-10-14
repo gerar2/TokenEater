@@ -58,6 +58,8 @@ targets:
       - path: TokenEaterTests
       - path: Shared
       - path: TokenEaterApp/Onboarding/OnboardingViewModel.swift
+      # Pure data type from the widget target, covered by UsageEntryTests.
+      - path: TokenEaterWidget/UsageEntry.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tokeneater.tests

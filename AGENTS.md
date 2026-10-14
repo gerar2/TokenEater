@@ -35,10 +35,10 @@ XcodeGen strips the widget's `NSExtension` key from `Info.plist` on every genera
 `Shared/` is compiled into all three targets:
 
 - `Shared/Models/` - pure `Codable` structs and enums (UsageModels, ProfileModels, PacingModels, ThemeModels, SessionModels, MetricModels, ProxyConfig, and the various display-format enums).
-- `Shared/Services/` - protocol-backed I/O. 15 services, each with a protocol in `Shared/Services/Protocols/` and a mock in `TokenEaterTests/Mocks/`.
-- `Shared/Repositories/` - `UsageRepository` (orchestrates `APIClient` then `SharedFileService`).
-- `Shared/Stores/` - 7 `ObservableObject` state containers.
-- `Shared/Helpers/` - 12 pure enums/structs, no I/O (PacingCalculator, MenuBarRenderer, SmartColor, JSONLParser, ProcessResolver, DiagnosticReporter, CurrencyFormatter, MetricsGridLayout, NotificationBodyFormatter, OverlayHitTest, ResetCountdownFormatter, WidgetReloader).
+- `Shared/Services/` - protocol-backed I/O. 23 services, each with a protocol in `Shared/Services/Protocols/` and a mock in `TokenEaterTests/Mocks/` (the four multi-profile ones: `ClaudeCodeCredentialStore`, `ProfileCredentialVault`, `OAuthTokenRefresher`, `ProfileTokenProvider`; the two terminal-account ones: `TerminalTokenStore`, `TerminalIntegrationService`). The OAuth token endpoint only accepts Claude Code's own `claude-cli/<version> (external, cli)` User-Agent (anything else gets 429 `rate_limit_error`), and renewals back off exponentially on failure; keep both when touching the refresher.
+- `Shared/Repositories/` - `UsageRepository` (orchestrates `APIClient` then `SharedFileService`, per profile).
+- `Shared/Stores/` - 8 `ObservableObject` state containers (`ProfileStore` owns one `UsageStore` per account).
+- `Shared/Helpers/` - 25 pure enums/structs, mostly without I/O (PacingCalculator, MenuBarRenderer, SmartColor, JSONLParser, ProcessResolver, DiagnosticReporter, CurrencyFormatter, MetricsGridLayout, NotificationBodyFormatter, OverlayHitTest, ResetCountdownFormatter, WidgetReloader, TerminalIntegrationGenerator, among others).
 - `Shared/Components/` - 12 reusable SwiftUI views shared by app and widget (RingGauge, PacingBar, AnimatedGradient, GlowText, etc.).
 - `Shared/Design/DesignTokens.swift` - the `DS` design-token namespace plus a `View` extension.
 - `Shared/Extensions/` and `Shared/en.lproj` / `Shared/fr.lproj` - shared extensions and EN/FR localization.
@@ -47,28 +47,35 @@ XcodeGen strips the widget's `NSExtension` key from `Info.plist` on every genera
 
 The pattern is MV + Repository + protocol-oriented design, with `ObservableObject` + `@Published` (see the `@Observable` ban below). Dependencies are constructor-injected with protocol defaults; there are no app-wide singletons.
 
-Data flow:
+Data flow (one column per account profile; the *active* profile drives the menu bar, the popover and the dashboard hero):
 
 ```
-TokenProvider                resolves the OAuth token from several sources
+ProfileStore                 catalog of AccountProfiles, one UsageStore each, active profile id
    |
-UsageStore                   drives refresh, owns usage state, schedules auto-refresh
+ProfileTokenProvider         per profile: vault copy + Claude Code's live store + OAuth refresh grant
+   |                         (the migrated default profile keeps the legacy TokenProvider)
+UsageStore                   drives refresh, owns usage state, schedules auto-refresh (staggered)
    |
-UsageRepository              APIClient calls the usage/profile API, then
-   |                         SharedFileService writes the shared JSON cache
+UsageRepository              APIClient calls the usage/profile API, then SharedFileService writes
+   |                         the per-profile snapshot (+ the legacy top-level cache when active)
    v
 ~/Library/Application Support/com.tokeneater.shared/shared.json
    ^
-TokenEaterWidgetExtension    sandboxed widget reads that JSON only (no network, no Keychain)
+TokenEaterWidgetExtension    sandboxed widget reads that JSON only (no network, no Keychain);
+                             Overview / Session Ring / Pacing can be pinned to a profile (AppIntents)
 ```
+
+Multi-profile design, rules and file map: [`docs/multi-profile-plan.md`](docs/multi-profile-plan.md). The short version: a profile is either *linked* to a Claude Code config dir (`CLAUDE_CONFIG_DIR`; Keychain item `Claude Code-credentials[-<sha256(dir) 8 hex>]`, then `<dir>/.credentials.json`) or *managed* (credentials captured into TokenEater's own Keychain item, service `com.tokeneater.profile-credentials`). Linked profiles wait for Claude Code to renew an expired token unless the user opts into "Renew automatically", in which case TokenEater calls the refresh grant and writes the rotated tokens back to the same store; managed profiles renew themselves, except while their account is the one signed in to `~/.claude` (`oauthAccount.accountUuid` in `~/.claude.json`): then they follow Claude Code's rotated tokens (identity-checked) and never call the refresh grant, so they cannot steal the chain from Claude Code. On first launch after the upgrade `ProfileStore` creates a single default profile bound to `~/.claude` that behaves exactly like the pre-5.14 app.
+
+Terminal accounts (opt-in, Settings → General → Terminal integration; design in [`docs/terminal-accounts-plan.md`](docs/terminal-accounts-plan.md)): every profile gets a zsh command name, so `cla <name> [claude args]` runs Claude Code as that account in the current terminal and `claw [-w] <name> [args]` opens a coloured Warp tab doing the same in the current folder. All accounts share one `~/.claude` (memory, settings, history); the account is chosen per process with `CLAUDE_CODE_OAUTH_TOKEN`, a 1-year token from `claude setup-token` that TokenEater stores in the login Keychain (service `TokenEater terminal token: <profile UUID>`) through `/usr/bin/security -i` on stdin, so the shell can read it back without a prompt and the secret never reaches argv or a file. `ProfileStore` regenerates `~/.config/tokeneater/claude-accounts.zsh` and `~/.warp/tab_configs/tokeneater_<name>.toml` on every catalog change; `~/.zshrc` only gets a marked block that sources the script.
 
 `TokenFileMonitor` watches the credential files with a `DispatchSource` filesystem watcher (kqueue/vnode) and triggers an immediate refresh on change. The Agent Watchers overlay scans running Claude Code processes and tail-reads their JSONL logs.
 
 The menu bar is **AppKit `NSStatusItem`** managed by `StatusBarController`, not SwiftUI `MenuBarExtra`. The `App` body is `Settings { EmptyView() }`; the real UI is wired in the `AppDelegate` (`@NSApplicationDelegateAdaptor`) and hosted through `NSHostingController` / `NSHostingView`. That hosting root is where stores get injected with `.environmentObject(...)`. To add a store: construct it as a `private let` in `TokenEaterApp.init`, hand it to the `AppDelegate`, and inject it at the hosting roots in `StatusBarController` and `OverlayWindowController`.
 
-### Token resolution (`TokenProvider`)
+### Token resolution (`TokenProvider` / `ProfileTokenProvider`)
 
-All credential reading goes through `Shared/Services/TokenProvider.swift`. `currentToken()` returns an in-memory cached token; the disk/Keychain is re-read only when the cache is empty or after `invalidateToken()` (called on a 401). Source priority:
+The default `~/.claude` profile still uses `Shared/Services/TokenProvider.swift`; every other profile uses `ProfileTokenProvider` (`ensureFreshToken(force:)` runs before each fetch and after a 401: adopt newer live credentials, then renew if the policy allows). The legacy provider is described below. `currentToken()` returns an in-memory cached token; the disk/Keychain is re-read only when the cache is empty or after `invalidateToken()` (called on a 401). Source priority:
 
 1. `SecurityCLIReader` - shells out to `/usr/bin/security find-generic-password -s "Claude Code-credentials" -w`. Primary path; the stable Apple signing identity means macOS stops prompting for ACL access after the first "Always Allow".
 2. `CredentialsFileReader` - reads `~/.claude/.credentials.json`.
@@ -85,13 +92,14 @@ All credential reading goes through `Shared/Services/TokenProvider.swift`. `curr
 - `Shared/Repositories/UsageRepository.swift` - API to shared-file pipeline.
 - `TokenEaterApp/StatusBarController.swift` - menu bar item and popover hosting.
 
-### The 7 stores
+### The 8 stores
 
 All are `@MainActor final class ...: ObservableObject`.
 
 | Store | Responsibility |
 |-------|----------------|
-| `UsageStore` | Core usage state (5h / 7-day / Sonnet / Opus / cowork / Design percentages, resets, pacing, error/loading). Owns the repository and token provider; auto-refreshes. |
+| `ProfileStore` | The account-profile catalog (persisted as JSON under `accountProfiles.v1`), the active profile id, and one `UsageStore` per profile (created lazily, changes relayed). Add / capture / rename / enable / renewal policy / remove; bootstraps every enabled profile with staggered loops; mirrors the catalog to `shared.json`. |
+| `UsageStore` | Core usage state for ONE profile (5h / 7-day / Sonnet / Opus / cowork / Design percentages, resets, pacing, error/loading, credential state). Owns the repository and token provider; auto-refreshes. |
 | `SettingsStore` | All user preferences (menu bar style, pinned metrics, smart color, refresh interval, watcher settings, workweek pacing). Persists to `UserDefaults`. |
 | `ThemeStore` | Theme preset selection, custom `ThemeColors`, warning/critical thresholds. |
 | `SessionStore` | Live Claude session list from `SessionMonitorService`; powers the Agent Watchers overlay. |
@@ -117,6 +125,8 @@ All are `@MainActor final class ...: ObservableObject`.
 | Onboarding | `OnboardingView.swift`, `OnboardingViewModel.swift`, `Onboarding/Cards/*` |
 | Settings / Themes | `SettingsRootView.swift`, `SettingsSectionView.swift`, `DisplaySectionView.swift`, `ThemesSectionView.swift` |
 | Token / auth | `Services/TokenProvider.swift`, `SecurityCLIReader.swift`, `CredentialsFileReader.swift`, `ClaudeConfigReader.swift`, `ElectronDecryptionService.swift`, `TokenFileMonitor.swift` |
+| Accounts (multi-profile) | `Stores/ProfileStore.swift`, `Models/AccountProfile.swift`, `Services/ProfileTokenProvider.swift`, `ClaudeCodeCredentialStore.swift`, `ProfileCredentialVault.swift`, `OAuthTokenRefresher.swift`, `Helpers/ClaudeKeychainServiceName.swift`, `TokenEaterApp/Settings/AccountsSectionView.swift`, `TokenEaterApp/App/ActiveProfileHost.swift`, `TokenEaterApp/Windows/Monitoring/ProfilesOverviewStrip.swift`, `TokenEaterWidget/ProfileSelectionIntent.swift` |
+| Terminal accounts (`cla` / `claw`) | `Models/TerminalAccounts.swift`, `Services/TerminalTokenStore.swift`, `Services/TerminalIntegrationService.swift`, `Helpers/TerminalIntegrationGenerator.swift`, `Stores/ProfileStore.swift` (terminal section), `TokenEaterApp/Settings/AccountsSectionView.swift`, `TerminalTokenSheet.swift`, `SettingsSectionView.swift` |
 | Widget | `TokenEaterWidget/TokenEaterWidget.swift` (`@main` `WidgetBundle`: usage widget + pacing widget), `Provider.swift`, `*WidgetView.swift` |
 
 ## Hard SwiftUI rules (do not break)
@@ -142,7 +152,7 @@ Prerequisites: macOS 14+, XcodeGen (`brew install xcodegen`), and Xcode (see the
 
 ### Unit tests
 
-The suite uses [Swift Testing](https://developer.apple.com/documentation/testing) (`import Testing`, `@Test`, `#expect`), not XCTest. There are roughly 380 `@Test` cases across 32 files (recompute with `grep -rho '@Test' TokenEaterTests --include='*.swift' | wc -l`). Mocks live in `TokenEaterTests/Mocks/` (one protocol-based mock per service), fixtures in `TokenEaterTests/Fixtures/`. Stores are `@MainActor`, so their test suites are too. Suites that write to the shared `UserDefaults` are marked `.serialized` and clean up after themselves.
+The suite uses [Swift Testing](https://developer.apple.com/documentation/testing) (`import Testing`, `@Test`, `#expect`), not XCTest. There are roughly 970 `@Test` cases across 79 files (recompute with `grep -rho '@Test' TokenEaterTests --include='*.swift' | wc -l`). Mocks live in `TokenEaterTests/Mocks/` (one protocol-based mock per service), fixtures in `TokenEaterTests/Fixtures/`. Stores are `@MainActor`, so their test suites are too. Suites that write to the shared `UserDefaults` are marked `.serialized` and clean up after themselves.
 
 Run the tests (identical to CI):
 
@@ -157,13 +167,17 @@ xcodebuild -project TokenEater.xcodeproj -scheme TokenEaterTests \
 
 Run the tests before any commit that touches `Shared/` (stores, services, repository, helpers, models). CI (`ci.yml`) runs build + tests on every PR and every push to `main`.
 
+#### Without Xcode (Command Line Tools only)
+
+The suite can also run with SwiftPM alone: build a throwaway package whose single test target is a directory of symlinks to `Shared/`, `TokenEaterTests/`, `TokenEaterApp/Onboarding/OnboardingViewModel.swift` and `TokenEaterWidget/UsageEntry.swift`, depend on `swiftlang/swift-testing` (the CLT toolchain has no `Testing` module), exclude the `*.lproj` folders, and link with a stub `lib_TestingInterop.a` that defines `_swift_testing_getFallbackEventHandler`. `swift test -Xlinker -L<stub dir>` then runs the whole Swift Testing suite; `swiftc -typecheck -sdk $(xcrun --show-sdk-path) -target arm64-apple-macos14.0 -swift-version 5 -parse-as-library` over `Shared + TokenEaterApp` (and `Shared + TokenEaterWidget`) catches UI compile errors. Release builds and widget rendering still need Xcode or CI. Keep the harness out of the repo (`.spm-harness/` is gitignored).
+
 For SwiftUI or widget changes, manual testing matters more than unit tests. Build a Release version and try it. Widget rendering in particular cannot be unit-tested; use the build + nuke + install flow below.
 
 ### Build + Nuke + Install (local Release testing)
 
 macOS caches widget extensions aggressively (binary, timeline, rendering). The nuke is mandatory: without it the old widget code stays in memory. This one-liner builds Release, kills processes, wipes every relevant cache, re-registers the app, and launches it.
 
-> External contributors: this hardcodes the maintainer's Team ID (`DEVELOPMENT_TEAM=S7B8M9JYF4`), which will not work on your machine. Either replace it with your own (Xcode > Settings > Accounts), or skip signing with `CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO`. Local Release builds are signed ad-hoc / with your Apple Development identity and are not notarized, so Gatekeeper blocks the first launch (right-click > Open, or System Settings > Privacy & Security > Open Anyway). The notarized DMG from [Releases](https://github.com/AThevon/TokenEater/releases/latest) opens with no prompt.
+> External contributors: this hardcodes the maintainer's Team ID (`DEVELOPMENT_TEAM=S7B8M9JYF4`), which will not work on your machine. Either replace it with your own (Xcode > Settings > Accounts), or skip signing with `CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO`. One thing an ad-hoc build cannot validate: the profile-pinnable widgets (`AppIntentConfiguration` + `ProfileEntity`). Without an Apple-issued signature the AppIntents runtime refuses to resolve the stored entity (`linkd`: "requiresValidatedBundle"), so pinned widgets silently follow the active account; sign with your own team to test that feature. Local Release builds are signed ad-hoc / with your Apple Development identity and are not notarized, so Gatekeeper blocks the first launch (right-click > Open, or System Settings > Privacy & Security > Open Anyway). The notarized DMG from [Releases](https://github.com/AThevon/TokenEater/releases/latest) opens with no prompt.
 
 ```bash
 # Build
@@ -246,4 +260,5 @@ The `release-swift` skill / the maintainer's release flow wraps version bump, PR
 - **Real home directory in the sandbox.** `FileManager.homeDirectoryForCurrentUser` returns the sandbox container path inside the widget, not the real home. Use `getpwuid(getuid())` (as `SharedFileService`, `CredentialsFileReader`, `ClaudeConfigReader`, and others do).
 - **Widget caching.** macOS caches widget extensions hard. Any widget change needs the full nuke above to take effect.
 - **`DEVELOPMENT_TEAM` is hardcoded** in `project.yml` and will not work for external contributors (see the build note above).
+- **Waiting for a spawned process.** Never call `Process.waitUntilExit()` on a GCD worker thread behind a watchdog: it can miss the exit of a child that ends quickly and spin until the timeout (seen on macOS 26: child already reaped, `isRunning` false, the wait still running). Set `terminationHandler` before `run()` and signal a semaphore from it, as `SecurityCLIReader`, `ClaudeCodeCredentialStore` and `TerminalTokenStore` do.
 - **First-launch cleanup.** `LegacyHelperCleanupService` runs once on the first v5.0+ launch (gated by `UserDefaults` flags): it boots out the v4.x `com.tokeneater.helper` LaunchAgent, removes its plist and the old `keychain-token.json`, and migrates v4.x sandbox-container `UserDefaults` into the desandboxed real-path defaults so upgrading users keep their preferences. `BrewMigrationService` detects a Homebrew-cask install so the in-app updater can defer to brew.

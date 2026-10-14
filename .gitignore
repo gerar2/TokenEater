@@ -1,4 +1,6 @@
 build/
+# Separate derived data for xcodebuild test runs
+build-tests/
 *.xcodeproj
 *.xcworkspace
 DerivedData/
@@ -31,3 +33,6 @@ docs/superpowers/
 *.provisionprofile
 secrets.*
 credentials.*
+
+# Local SwiftPM test harness (see docs/multi-profile-plan.md §7.1)
+.spm-harness/
